@@ -1,0 +1,32 @@
+#footer {
+  display: flex;
+  flex-direction: column;
+}
+
+#footer nav ul {
+  display: flex;
+}
+#footer nav {
+  margin: auto;
+}
+#footer nav ul li {
+  margin-right: 3rem;
+  font-size: 1.5rem;
+  color: rgb(107, 114, 128);
+}
+#followUs {
+  margin: 4rem auto;
+  font-size: 1.5rem;
+  color: rgb(107, 114, 128);
+}
+#followUs i {
+  font-size: 2.5rem;
+  margin-right: 3rem;
+}
+#followUs i:nth-of-type(1) {
+  margin-left: 2rem;
+}
+#cpr {
+  color: rgb(107, 114, 128);
+  font-size: 1.4rem;
+}

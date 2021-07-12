@@ -1,0 +1,129 @@
+#loginForm {
+  margin: 0 auto;
+  width: 50rem;
+  background-color: #fff;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  border-radius: 1rem;
+  padding: 4rem 3rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+#loginForm img {
+  width: 2rem;
+}
+#loginForm i {
+  font-size: 2rem;
+  color: #1d4ed8;
+}
+
+#fbgoo {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+}
+
+#fb,
+#goo {
+  cursor: pointer;
+  width: 45%;
+  padding: 0.5rem 0;
+  border-radius: 0.5rem;
+  border: 0.1rem solid #dee2eb;
+}
+#goo {
+  margin-left: 1rem;
+  padding: 0.38rem;
+}
+#goo:hover,
+#fb:hover {
+  background-color: #e5e7eb;
+}
+#nastavite {
+  font-size: 1.3rem;
+  color: #333;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 1.5rem 0;
+}
+
+#nastavite span {
+  width: 30%;
+  height: 0.1rem;
+  background-color: #333;
+  background-color: rgb(209, 213, 219);
+}
+
+#nastavite span:first-of-type {
+  margin-right: 1rem;
+}
+#nastavite span:nth-of-type(2) {
+  margin-left: 1rem;
+}
+
+#username,
+#password {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  margin: 1rem 0;
+}
+#username label,
+#password label {
+  margin-right: auto;
+  font-size: 1.4rem;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  color: rgb(55, 65, 81);
+}
+#username input,
+#password input {
+  border-radius: 0.5rem;
+  font-size: 1.4rem;
+  border: 0.1rem solid #e5e7eb;
+  padding: 1rem;
+  outline: none;
+}
+
+#username input:focus,
+#password input:focus {
+  border: 0.1rem solid #5997fa;
+}
+
+#remember {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  font-size: 1.4rem;
+  margin-top: 1.5rem;
+}
+
+#remember label input {
+  margin-right: 0.5rem;
+  border: 0.1rem solid red;
+}
+#remember a {
+  text-decoration: none;
+  color: rgb(37, 99, 235);
+  font-weight: 500;
+}
+#remember a:hover {
+  color: rgba(37, 99, 235, 0.8);
+}
+#loginForm button[type='submit'] {
+  margin-top: 2rem;
+  background-color: #2563eb;
+  border: none;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  color: #fff;
+  cursor: pointer;
+  width: 100%;
+}
+#loginForm button[type='submit']:hover {
+  background-color: #1d4ed8;
+}

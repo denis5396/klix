@@ -1,0 +1,20 @@
+#border {
+  background-color: #f9fafb;
+  border: 2rem solid #fff;
+  width: 90vw;
+  margin: 10rem auto 5rem;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+#border h1 {
+  font-size: 3.5rem;
+}
+
+#border p {
+  padding: 2rem 0;
+  font-size: 1.4rem;
+  color: #333;
+}
