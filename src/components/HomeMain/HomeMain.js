@@ -1,6 +1,7 @@
 import s from './HomeMain.module.css';
 
-import React from 'react';
+import React, { useEffect } from 'react';
+import { auth } from '../../firebase';
 
 const HomeMain = () => {
   return (

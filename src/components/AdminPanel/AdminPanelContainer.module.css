@@ -1,0 +1,28 @@
+#border {
+  background-color: #f9fafb;
+  border: 2rem solid #fff;
+  width: 98vw;
+  margin: 8rem auto 5rem;
+  height: fit-content;
+  padding: 5rem 1rem;
+}
+#itemContainer {
+  /* border-top: 0.1rem solid #e5e7eb; */
+  display: grid;
+  grid-template-columns: auto 1fr;
+}
+#addArticle {
+  border: 0.2rem solid lightgreen;
+  width: fit-content;
+  height: fit-content;
+  padding: 2rem 4rem;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  font-size: 3rem;
+  color: lightseagreen;
+  font-weight: bolder;
+}
+#articles {
+  display: flex;
+  flex-wrap: wrap;
+}

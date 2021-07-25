@@ -1,0 +1,316 @@
+#addArticle {
+  padding: 1rem;
+}
+#addTitle {
+  display: flex;
+  flex-direction: column;
+}
+#addArticleBody {
+  display: grid;
+  grid-template-columns: 4fr 1fr;
+}
+#addTitle input {
+  width: 95%;
+  border: 0.1rem solid #e5e7eb;
+  padding: 1rem;
+  border-radius: 0.4rem;
+}
+#addTitle input:focus {
+  outline: none;
+  border: 0.1rem solid lightskyblue;
+}
+#addText,
+#addImages {
+  background-color: #fff;
+}
+#addImages {
+  margin-top: 1rem;
+}
+#addTextHeader {
+  padding: 1rem;
+  margin-top: 1rem;
+  border-radius: 0.5rem;
+  display: flex;
+  color: #3f87e5;
+  font-size: 1.7rem;
+  align-items: center;
+  justify-content: flex-start;
+}
+#addImagesHeader {
+  display: flex;
+  justify-content: space-between;
+}
+#addImagesBundleLeft {
+  color: #3f87e5;
+  display: flex;
+  font-size: 1.7rem;
+  justify-content: flex-start;
+  align-items: center;
+}
+#addImagesBundleRight i {
+  font-size: 1.7rem;
+  color: gray;
+  cursor: pointer;
+}
+#addImagesBundleRight i:hover {
+  color: #3f87e5;
+}
+#addImagesBundleRight {
+  display: flex;
+}
+#addTextHeader i,
+#addImagesBundleLeft i {
+  font-size: 1.5rem;
+  margin-right: 1rem;
+}
+#addTextBody {
+  border: 0.1rem solid #e5e7eb;
+  border-radius: 0.5rem;
+  margin: 0 1rem;
+  background-color: #f8fafb;
+}
+#addTextBody textarea {
+  width: 100%;
+  border: none;
+  resize: vertical;
+  min-height: 20rem;
+  padding: 1rem;
+}
+#addTextBody textarea:focus {
+  outline: none;
+  border: 0.1rem solid rgba(63, 135, 229, 0.5);
+}
+#addTextBodyHeader ul {
+  display: flex;
+}
+#addTextBodyHeader ul li {
+  cursor: pointer;
+  border: 0.1rem solid #e5e7eb;
+}
+#addTextBodyHeader ul li:nth-of-type(1) {
+  padding: 0.5rem 0.915rem;
+  transition: background-color 0.2s ease-in-out;
+}
+#addTextBodyHeader ul li:nth-of-type(1):hover,
+#addTextBodyHeader ul li:nth-of-type(2):hover,
+#addTextBodyHeader ul li:nth-of-type(3):hover {
+  background-color: rgba(63, 135, 229, 0.5);
+}
+#addTextBodyHeader ul li:nth-of-type(2) {
+  padding: 0.3rem 0.52rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: background-color 0.2s ease-in-out;
+}
+#addTextBodyHeader ul li:nth-of-type(3) {
+  padding: 0.3rem 0.7rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: #3f87e5;
+  transition: background-color 0.2s ease-in-out;
+}
+#imageContainer {
+  width: 100%;
+  height: 100%;
+  margin-left: 2rem;
+  /* background-color: red; */
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.deletable {
+  background-color: rgba(255, 0, 0, 0.5);
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
+
+.imageWrapper {
+  max-width: 20%;
+  margin-right: 0.5rem;
+  margin-bottom: 0.5rem;
+  border-radius: 0.3rem;
+  overflow: hidden;
+  cursor: pointer;
+  position: relative;
+  height: 5rem;
+}
+
+.previewImage {
+  width: 100%;
+  height: 100%;
+}
+
+#addImages {
+  border-radius: 0.5rem;
+  padding: 1rem;
+}
+#addImagesBody {
+  display: flex;
+  flex-direction: column;
+}
+.uploadImageContainer,
+.imageCaptionContainer {
+  display: flex;
+  justify-content: flex-start;
+}
+.uploadImageContainer {
+  margin: 3rem 0;
+}
+.uploadImageContainer #uploadImageText,
+.imageCaptionContainer #imageCaptionText {
+  color: #858c99;
+  font-weight: bolder;
+  font-size: 1.7rem;
+}
+#uploadImageText {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+#uploadImage {
+  border-style: dashed;
+  border-radius: 0.5rem;
+  padding: 3rem;
+  border-color: #d8dee4;
+  /* border: 0.1rem solid red; */
+  width: 70%;
+  margin-left: auto;
+  transition: border 0.3s ease;
+  display: flex;
+}
+
+#uploadImage input[type='file'] {
+  display: none;
+  width: 50%;
+}
+#uploadImage label {
+  color: #fff;
+  height: 6rem;
+  width: 25rem;
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  font-size: 1.8rem;
+}
+#uploadImage label i {
+  color: #858c99;
+  color: #3f87e5;
+  font-size: 3rem;
+  cursor: pointer;
+}
+#uploadImage label span {
+  color: #3f87e5;
+  margin-left: 2rem;
+  cursor: pointer;
+}
+#uploadImage label span:hover {
+  text-decoration: underline;
+}
+#imageCaption {
+  margin-left: auto;
+  width: 70%;
+}
+#imageCaptionText {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+#imageCaption input {
+  background-color: #fff;
+  border-radius: 0.4rem;
+  width: 100%;
+  outline: none;
+  padding: 1rem;
+  border: 0.1rem solid #d8dee4;
+}
+#imageCaption input:focus {
+  border: 0.1rem solid #3f87e5;
+}
+#author {
+  margin-left: 1rem;
+}
+#authorInfo {
+  display: flex;
+  justify-content: flex-start;
+}
+#author h3 {
+  text-align: left;
+  font-size: 1.4rem;
+}
+#authorInfo i {
+  margin-right: 0.5rem;
+  margin-top: 0.25rem;
+  padding: 1rem;
+  background-color: #c1c1c1;
+  color: #fff;
+  border-radius: 0.3rem;
+  font-size: 1.3rem;
+}
+#authorInfo span {
+  display: flex;
+  align-items: center;
+  font-size: 1.5rem;
+}
+#category {
+  display: flex;
+  flex-direction: column;
+  margin-left: 1rem;
+  margin-top: 3rem;
+  font-size: 1.5rem;
+}
+#category label {
+  font-weight: 500;
+  text-align: left;
+}
+#category select {
+  margin-top: 0.5rem;
+  outline: none;
+  border-radius: 0.3rem;
+  border: 0.1rem solid #c1c1c1;
+  padding: 0.3rem;
+}
+#tag {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+  margin-left: 1rem;
+  margin-top: 1rem;
+}
+
+#tag h4 {
+  font-weight: 500;
+  font-size: 1.4rem;
+  margin-bottom: 0.5rem;
+}
+#tag input {
+  outline: none;
+  border: 0.1rem solid #c1c1c1;
+  padding: 0.5rem;
+}
+.tagItem {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-right: 1rem;
+  margin-bottom: 1rem;
+  border: 0.1rem solid #c1c1c1;
+  border-radius: 0.4rem;
+  padding: 0.5rem 1rem;
+}
+.tagItem i {
+  margin-left: 1rem;
+  color: #858c99;
+  cursor: pointer;
+}
+#tagContainer {
+  display: flex;
+  padding: 1rem 0;
+  flex-wrap: wrap;
+}

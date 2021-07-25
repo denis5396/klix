@@ -13,6 +13,9 @@ body {
   background-color: #f3f4f6;
 }
 
+iframe.instagram-media {
+  width: 50vw !important;
+}
 * {
   box-sizing: border-box;
   margin: 0;

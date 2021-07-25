@@ -1,13 +1,21 @@
-import React from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import LoginContext from '../../context';
 import s from './Nav.module.css';
 
 const Nav = () => {
+  const ctx = useContext(LoginContext);
+  const [avatarColor, setAvatarColor] = useState('');
+  const isLogged = ctx.isLoggedIn;
+  useEffect(() => {
+    setAvatarColor(localStorage.getItem('avatarColor'));
+  }, []);
+
   return (
     <header id={s.navHeader}>
       <div id={s.logo}>
         <Link to="/">
-          <h1>klix</h1>
+          <h1>plus</h1>
         </Link>
       </div>
       <ul id={s.headerUl}>
@@ -38,8 +46,25 @@ const Nav = () => {
       </ul>
       <div id={s.bundle}>
         <i class="fas fa-search"></i>
-        <Link to="/login">
-          <i class="far fa-user"></i>
+        <Link
+          to={
+            ctx.user.displayName ? `/profil/${ctx.user.displayName}` : '/login'
+          }
+        >
+          {!ctx.isLoggedIn && <i class="far fa-user"></i>}
+
+          {ctx.isLoggedIn && (
+            <i
+              class="fas fa-user"
+              style={{
+                backgroundColor: `#${ctx.user.avatarColor}`,
+                color: '#fff',
+                padding: '.7rem',
+                borderRadius: '.3rem',
+                fontSize: '1.3rem',
+              }}
+            ></i>
+          )}
         </Link>
         <i class="fas fa-bars"></i>
       </div>

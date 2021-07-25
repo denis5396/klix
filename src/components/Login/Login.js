@@ -1,16 +1,27 @@
-import React from 'react';
+import React, { useContext, useEffect } from 'react';
+import { useHistory } from 'react-router-dom';
+import LoginContext from '../../context';
+import { auth } from '../../firebase';
+import UserInfo from '../UserInfo/UserInfo';
 import s from './Login.module.css';
 import LoginForm from './LoginForm';
 
-const LoginP = () => {
+const LoginP = (props) => {
+  const ctx = useContext(LoginContext);
+  const user = auth.currentUser;
+  const history = useHistory();
+
+  useEffect(() => {
+    // if (ctx.user.displayName) {
+    //   history.replace(`/profil/${ctx.user.displayName}`);
+    // }
+  }, []);
+
   return (
-    <div id={s.border}>
-      <h1>Prijava korisnika</h1>
-      <p>
-        Na portal se možeš prijaviti ili registrovati putem svog Facebook ili
-        Google računa.
-      </p>
-      <LoginForm />
+    <div id={!ctx.isLoggedIn ? s.border : s.borderTwo}>
+      {/* {!ctx.user.displayName && <LoginForm />}
+      {ctx.user.displayName && <UserInfo />} */}
+      {props.children}
     </div>
   );
 };
