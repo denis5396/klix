@@ -67,7 +67,8 @@ export const LoginContextProvider = (props) => {
   );
   const [token, setToken] = useState(initialToken);
 
-  const userIsLoggedIn = !!token;
+  const curUser = auth.currentUser;
+  const userIsLoggedIn = !!token && userObj.displayName;
 
   const [overlay, setOverlay] = useState(false);
 
@@ -79,57 +80,73 @@ export const LoginContextProvider = (props) => {
     }
   };
 
-  useEffect(() => {
-    auth.onAuthStateChanged((user) => {
-      if (user) {
-        const dbRef = db.ref();
-        dbRef
-          .child('users')
-          .get()
-          .then((snapshot) => {
-            if (snapshot.exists) {
-              console.log(snapshot.val());
-              const data = snapshot.val();
-              for (let key in data) {
-                if (data[key].uId === user.uid) {
-                  setUserObj({ ...data[key] });
-                }
-              }
-            }
-          });
-      }
-    });
+  // useEffect(() => {
+  //   console.log('rerender');
+  //   console.log(userObj);
+  //   console.log(userIsLoggedIn);
+  // });
 
+  useEffect(() => {
+    // auth.onAuthStateChanged((user) => {
+    //   if (user) {
+    //     const dbRef = db.ref();
+    //     dbRef
+    //       .child('users')
+    //       .get()
+    //       .then((snapshot) => {
+    //         if (snapshot.exists) {
+    //           console.log(snapshot.val());
+    //           const data = snapshot.val();
+    //           for (let key in data) {
+    //             if (data[key].uId === user.uid) {
+    //               setUserObj({ ...data[key] });
+    //             }
+    //           }
+    //         }
+    //       });
+    //   }
+    // });
     return () => {
       logoutHandler();
     };
   }, []);
 
   useEffect(() => {
-    if (userObj) {
+    if (curUser) {
+      // localStorage.setItem('userObj', JSON.stringify(userObj));
+      console.log('userhere');
+    }
+  }, [curUser]);
+
+  useEffect(() => {
+    if (userObj && curUser) {
+      console.log(userObj);
       localStorage.setItem('userObj', JSON.stringify(userObj));
     }
   }, [userObj]);
 
   const signUp = (uid, displayName, date) => {
-    const userObjCopy = { ...userObj, displayName, uId: uid, registered: date };
+    console.log('signupstart');
+    const userObjCopy = { ...userObj, displayName, uId: uid };
     const dbRef = db.ref();
+    console.log(dbRef);
     let check = false;
     dbRef
       .child('users')
       .get()
       .then((snapshot) => {
         if (snapshot.exists) {
+          console.log('signupsuccess');
           console.log(snapshot.val());
           const data = snapshot.val();
           for (let key in data) {
             if (data[key].uId === uid) {
               check = true;
-              setUserObj({ ...userObjCopy });
+              setUserObj({ ...data[key], registered: data[key].registered });
             }
           }
           if (!check) {
-            setUserObj({ ...userObjCopy });
+            setUserObj({ ...userObjCopy, registered: date });
             auth.onAuthStateChanged((user) => {
               if (user) {
                 user.getIdToken(true).then((idToken) => {
@@ -137,7 +154,10 @@ export const LoginContextProvider = (props) => {
                     `https://klix-74c29-default-rtdb.europe-west1.firebasedatabase.app/users.json?auth=${idToken}`,
                     {
                       method: 'POST',
-                      body: JSON.stringify({ ...userObjCopy }),
+                      body: JSON.stringify({
+                        ...userObjCopy,
+                        registered: date,
+                      }),
                       headers: {
                         'Content-Type': 'application/json',
                       },
@@ -150,7 +170,8 @@ export const LoginContextProvider = (props) => {
             });
           }
         }
-      });
+      })
+      .catch((err) => console.log(err));
   };
 
   const logoutHandler = useCallback(() => {
@@ -166,6 +187,7 @@ export const LoginContextProvider = (props) => {
   }, []);
 
   const loginHandler = (token, expirationTime) => {
+    console.log('signin');
     setToken(token);
     console.log(token);
     localStorage.setItem('token', token);

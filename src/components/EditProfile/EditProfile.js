@@ -39,6 +39,8 @@ const EditProfile = () => {
     const ok =
       username.current.value.trim().length >= 3 &&
       username.current.value.trim().length <= 20;
+    console.log(ok);
+    console.log(usernameVal);
     let passwordNum;
     if (password.current.value.trim().length > 0) {
       passwordNum = /\d/.test(password.current.value.trim());
@@ -185,67 +187,78 @@ const EditProfile = () => {
     }
     passwordVal = passwordVal ? passwordVal : '';
     genderVal = genderVal ? genderVal : '';
-    // if (check) {
-    //   setUData({
-    //     username: usernameVal ? usernameVal : ctx.user.displayName,
-    //     avatarColor: clr ? clr : ctx.user.avatarColor,
-    //     password: passwordVal ? passwordVal : '',
-    //     gender: genderVal ? genderVal : '',
-    //   });
-    //   let oldObjCopy;
-    //   ctx.setUserObj((oldObj) => {
-    //     oldObjCopy = {
-    //       ...oldObj,
-    //       displayName: usernameVal,
-    //       avatarColor: clr ? clr : ctx.user.avatarColor,
-    //       password: passwordVal,
-    //       gender: genderVal,
-    //     };
-    //     return oldObjCopy;
-    //   });
-    //   let keyId;
-    // auth.onAuthStateChanged((user) => {
-    //   if (user) {
-    //     const dbRef = db.ref('/users');
-    //     dbRef.get().then((snapshot) => {
-    //       if (snapshot.exists) {
-    //         console.log(snapshot.val());
-    //         const data = snapshot.val();
-    //         console.log(user.uid);
-    //         for (let key in data) {
-    //           console.log(data[key]);
-    //           if (data[key].uId === user.uid) {
-    //             keyId = key;
-    //             console.log(key);
-    //             dbRef
-    //               .child(`${key}`)
-    //               .update({ ...oldObjCopy })
-    //               .then((res) => {
-    //                 setError((old) => {
-    //                   return {
-    //                     ...old,
-    //                     success: 'Uspješno ste editovali profil.',
-    //                   };
-    //                 });
-    //               });
-    //             break;
-    //           }
-    //         }
-    //       }
-    //     });
-    //   }
-    // });
-    // }
+    if (check) {
+      setUData({
+        username: usernameVal ? usernameVal : ctx.user.displayName,
+        avatarColor: clr ? clr : ctx.user.avatarColor,
+        password: passwordVal ? passwordVal : '',
+        gender: genderVal ? genderVal : '',
+      });
+      let oldObjCopy;
+      ctx.setUserObj((oldObj) => {
+        oldObjCopy = {
+          ...oldObj,
+          displayName: usernameVal,
+          avatarColor: clr ? clr : ctx.user.avatarColor,
+          password: passwordVal,
+          gender: genderVal,
+        };
+        return oldObjCopy;
+      });
+      let keyId;
+      auth.onAuthStateChanged((user) => {
+        if (user) {
+          user
+            .updatePassword('robben123')
+            .then(() => {
+              // Update successful.
+              console.log('update successful');
+            })
+            .catch((error) => {
+              // An error ocurred
+              // ...
+              console.log(error);
+            });
+          const dbRef = db.ref('/users');
+          dbRef.get().then((snapshot) => {
+            if (snapshot.exists) {
+              console.log(snapshot.val());
+              const data = snapshot.val();
+              console.log(user.uid);
+              for (let key in data) {
+                console.log(data[key]);
+                if (data[key].uId === user.uid) {
+                  keyId = key;
+                  console.log(key);
+                  dbRef
+                    .child(`${key}`)
+                    .update({ ...oldObjCopy })
+                    .then((res) => {
+                      setError((old) => {
+                        return {
+                          ...old,
+                          success: 'Uspješno ste editovali profil.',
+                        };
+                      });
+                    });
+                  break;
+                }
+              }
+            }
+          });
+        }
+      });
+    }
 
     window.scrollTo(0, 0);
   };
 
   useEffect(() => {
-    // auth.onAuthStateChanged(user => {
-    //   if(user){
-    //     setUData({...uData})
+    // auth.onAuthStateChanged((user) => {
+    //   if (user) {
+    //     setUData({ ...uData });
     //   }
-    // })
+    // });
   }, []);
 
   return (

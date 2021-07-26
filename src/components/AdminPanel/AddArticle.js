@@ -18,12 +18,15 @@ const AddArticle = () => {
   const [imagePreview, setImagePreview] = useState({});
   const [savedNames, setSavedNames] = useState([]);
   const [deleteMode, setDeleteMode] = useState(false);
+  const [tags, setTags] = useState([]);
 
   const postaviSlikeText = useRef();
   const postaviSlikeBorder = useRef();
   const textareaRef = useRef();
   const imgCnt = useRef();
   const overlayRef = useRef();
+  const tagContainer = useRef();
+
   const handleHoverEnter = () => {
     postaviSlikeBorder.current.style.borderColor = '#3f87e5';
   };
@@ -536,12 +539,6 @@ const AddArticle = () => {
     }
   };
 
-  const handleRemoveOverlay = (e) => {
-    if (e.target.id.includes('overlay')) {
-      alert('d');
-    }
-  };
-
   const handleDeleteImg = (e) => {
     for (let i = 0; i < imgCnt.current.children.length; i++) {
       if (
@@ -620,6 +617,34 @@ const AddArticle = () => {
       });
     }
   }, [savedNames]);
+
+  const handleAddTags = (e) => {
+    if (e.keyCode === 13) {
+      let { value } = e.target;
+      value = value.split('');
+      value[0] = value[0].toUpperCase();
+      value = value.join('');
+      e.target.value = '';
+      setTags((old) => {
+        const oldCopy = [...old];
+        oldCopy.push(value);
+        return oldCopy;
+      });
+    }
+  };
+
+  const handleRemoveTag = (e) => {
+    for (let i = 0; i < tagContainer.current.children.length; i++) {
+      if (tagContainer.current.children[i].contains(e.target)) {
+        setTags((old) => {
+          const oldCopy = [...old];
+          oldCopy.splice(i, 1);
+
+          return oldCopy;
+        });
+      }
+    }
+  };
 
   const handleUpload = () => {};
 
@@ -750,9 +775,15 @@ const AddArticle = () => {
             </div>
             <div id={s.tag}>
               <h4>Tagovi</h4>
-              <input type="text" />
-              <div id={s.tagContainer}>
-                <div className={s.tagItem}>
+              <input type="text" onKeyDown={handleAddTags} />
+              <div id={s.tagContainer} ref={tagContainer}>
+                {tags.map((tag) => (
+                  <div className={s.tagItem} key={uuid()}>
+                    <span>{tag}</span>
+                    <i onClick={handleRemoveTag} class="fas fa-times"></i>
+                  </div>
+                ))}
+                {/* <div className={s.tagItem}>
                   <span>Hello</span>
                   <i class="fas fa-times"></i>
                 </div>
@@ -779,7 +810,7 @@ const AddArticle = () => {
                 <div className={s.tagItem}>
                   <span>Helloasdasd</span>
                   <i class="fas fa-times"></i>
-                </div>
+                </div> */}
               </div>
             </div>
           </div>

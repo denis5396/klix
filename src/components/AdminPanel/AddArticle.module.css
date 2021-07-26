@@ -303,11 +303,16 @@
   border: 0.1rem solid #c1c1c1;
   border-radius: 0.4rem;
   padding: 0.5rem 1rem;
+  cursor: pointer;
 }
 .tagItem i {
   margin-left: 1rem;
   color: #858c99;
   cursor: pointer;
+  transition: color 0.2s ease-in;
+}
+.tagItem i:hover {
+  color: rgba(255, 0, 0, 0.8);
 }
 #tagContainer {
   display: flex;

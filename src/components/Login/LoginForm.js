@@ -56,9 +56,14 @@ const LoginForm = () => {
           expirationTime = new Date(
             new Date().getTime() + +data.expiresIn * 1000
           );
-          ctx.login(data.idToken, expirationTime.toISOString());
-          console.log(data);
-          history.push('/');
+          auth.onAuthStateChanged((user) => {
+            if (user) {
+              ctx.signUp(user.uid);
+              ctx.login(data.idToken, expirationTime.toISOString());
+              console.log(data);
+              history.push('/');
+            }
+          });
         }
       })
       .catch((error) => {
