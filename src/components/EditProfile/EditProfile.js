@@ -23,6 +23,24 @@ const EditProfile = () => {
     gender: '',
   });
 
+  useEffect(() => {
+    let clrUser = ctx.user.avatarColor;
+
+    for (let i = 0; i < avatarColor.current.children.length; i++) {
+      let temp = window
+        .getComputedStyle(avatarColor.current.children[i])
+        .getPropertyValue('background-color')
+        .match(/(\d+)/g);
+      temp = rgbToHex(+temp[0], +temp[1], +temp[2]);
+      if (temp === clrUser) {
+        avatarColor.current.children[i].children[0].click();
+      }
+    }
+    if (ctx.user.gender === 'Ženski') {
+      gender.current.children[1].children[0].click();
+    }
+  }, []);
+
   const rgbToHex = (r, g, b) =>
     [r, g, b].map((x) => x.toString(16).padStart(2, '0')).join('');
   //  '#' + [r, g, b].map((x) => x.toString(16).padStart(2, '0')).join('');
@@ -32,12 +50,12 @@ const EditProfile = () => {
       return { ...old, success: '' };
     });
     let usernameVal =
-      username.current.value.trim().length >= 3 &&
+      username.current.value.trim().length >= 4 &&
       username.current.value.trim().length <= 20
         ? username.current.value.trim()
         : '';
     const ok =
-      username.current.value.trim().length >= 3 &&
+      username.current.value.trim().length >= 4 &&
       username.current.value.trim().length <= 20;
     console.log(ok);
     console.log(usernameVal);
@@ -165,7 +183,7 @@ const EditProfile = () => {
         return {
           ...old,
           username:
-            'Korisničko ime ne može imati razmak, koristite _ ili -, i mora imati između 3 i 20 karaktera',
+            'Korisničko ime ne može imati razmak, koristite _ ili -, i mora imati između 4 i 20 karaktera',
         };
       });
     } else if (!usernameVal.includes(' ') && !ok) {
@@ -173,7 +191,7 @@ const EditProfile = () => {
       setError((old) => {
         return {
           ...old,
-          username: 'Korisničko ime mora imati između 3 i 20 karaktera',
+          username: 'Korisničko ime mora imati između 4 i 20 karaktera',
         };
       });
     } else {
@@ -208,17 +226,19 @@ const EditProfile = () => {
       let keyId;
       auth.onAuthStateChanged((user) => {
         if (user) {
-          user
-            .updatePassword('robben123')
-            .then(() => {
-              // Update successful.
-              console.log('update successful');
-            })
-            .catch((error) => {
-              // An error ocurred
-              // ...
-              console.log(error);
-            });
+          if (passwordVal) {
+            user
+              .updatePassword(passwordVal)
+              .then(() => {
+                // Update successful.
+                console.log('update successful');
+              })
+              .catch((error) => {
+                // An error ocurred
+                // ...
+                console.log(error);
+              });
+          }
           const dbRef = db.ref('/users');
           dbRef.get().then((snapshot) => {
             if (snapshot.exists) {
@@ -269,6 +289,7 @@ const EditProfile = () => {
             <h2>{error.success}</h2>
           ) : (
             <>
+              <h2>{error.username.length > 0 ? error.username : ''}</h2>
               <h2>{error.password.length > 0 ? error.password : ''}</h2>
             </>
           )}
@@ -371,7 +392,7 @@ const EditProfile = () => {
                 id="spol"
                 name="spol"
                 type="radio"
-                checked
+                defaultChecked
               />
               <label htmlFor="spol">Muški</label>
             </div>
@@ -395,7 +416,7 @@ const EditProfile = () => {
           </p>
         </div>
         <div id={s.saveBtn}>
-          <button onClick={saveInfo}>Save</button>
+          <button onClick={saveInfo}>Spasi</button>
         </div>
       </div>
     </div>

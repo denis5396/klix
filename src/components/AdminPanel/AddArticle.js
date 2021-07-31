@@ -5,6 +5,8 @@ import s from './AddArticle.module.css';
 import Overlay from '../Overlay/Overlay';
 import Modal from '../Modal/Modal';
 import LoginContext from '../../context';
+import { auth, db, storage } from '../../firebase';
+import ProgressBar from '../ProgressBar/ProgressBar';
 
 const AddArticle = () => {
   const ctx = useContext(LoginContext);
@@ -19,13 +21,26 @@ const AddArticle = () => {
   const [savedNames, setSavedNames] = useState([]);
   const [deleteMode, setDeleteMode] = useState(false);
   const [tags, setTags] = useState([]);
+  const [progress, setCurProgress] = useState([]);
+  const [articleAdded, setArticleAdded] = useState(false);
+  const [sending, setSending] = useState(false);
 
+  const didMountRef = useRef(false);
   const postaviSlikeText = useRef();
   const postaviSlikeBorder = useRef();
   const textareaRef = useRef();
   const imgCnt = useRef();
   const overlayRef = useRef();
   const tagContainer = useRef();
+  const titles = useRef();
+  const captionText = useRef();
+  const categorySelect = useRef();
+  const progressRef = useRef();
+  const sendArticleOverlay = useRef();
+
+  useEffect(() => {
+    console.log(progress);
+  }, [progress]);
 
   const handleHoverEnter = () => {
     postaviSlikeBorder.current.style.borderColor = '#3f87e5';
@@ -646,7 +661,198 @@ const AddArticle = () => {
     }
   };
 
-  const handleUpload = () => {};
+  const handleUpload = () => {
+    const title = titles.current.children[0].value;
+    const subTitle = titles.current.children[1].value;
+    console.log(title);
+    console.log(subTitle);
+    const articleText = textareaRef.current.value;
+    const captionTxt = captionText.current.value;
+    const catSel = categorySelect.current.value;
+    console.log(imageArray);
+
+    if (title && subTitle && articleText && tags.length > 0) {
+      if (imageArray.length > 0 && captionTxt) {
+        const articleFinished = {
+          title: title,
+          subTitle: subTitle,
+          articleText: articleText,
+          category: catSel,
+          images: imageArray,
+          imageText: captionTxt,
+        };
+        setSending(true);
+        auth.onAuthStateChanged((user) => {
+          if (user) {
+            user.getIdToken(true).then((idToken) => {
+              fetch(
+                `https://klix-74c29-default-rtdb.europe-west1.firebasedatabase.app/articles.json?auth=${idToken}`,
+                {
+                  method: 'POST',
+                  body: JSON.stringify(articleFinished),
+                  headers: {
+                    'Content-Type': 'application/json',
+                  },
+                }
+              )
+                .then((response) => response.json())
+                .then((data) => {
+                  console.log(data);
+                  let id = data.name;
+                  const imgUrls = [];
+                  id = id.slice(1);
+                  // id.split('');
+                  // console.log(id);
+                  // id.join('');
+                  console.log(id);
+                  articleFinished.id = id;
+                  console.log(articleFinished);
+                  let progressArray = [];
+                  if (imageArray) {
+                    // console.log(image);
+                    if (imageArray.length >= 1) {
+                      imageArray.forEach((img, i) => {
+                        progressArray.push({
+                          imageName: img.name,
+                          percent: '',
+                        });
+                        const uploadTask = storage
+                          .ref(`images/${catSel}/-${id}/${img.name}`)
+                          .put(img);
+                        uploadTask.on(
+                          'state_changed',
+                          (snapshot) => {
+                            console.log(snapshot);
+                            console.log(
+                              `bytesTransfered: ${
+                                snapshot.bytesTransferred
+                              }, percent: ${Math.floor(
+                                (snapshot.bytesTransferred /
+                                  snapshot.totalBytes) *
+                                  100
+                              )}% fileName: ${img.name}`
+                            );
+
+                            progressArray.forEach((arr, i) => {
+                              if (arr.imageName === img.name) {
+                                if (progressRef.current.children[0]) {
+                                  progressRef.current.children[
+                                    i
+                                  ].children[1].children[0].style.width = `${Math.floor(
+                                    (snapshot.bytesTransferred /
+                                      snapshot.totalBytes) *
+                                      100
+                                  )}%`;
+                                  if (
+                                    Math.floor(
+                                      (snapshot.bytesTransferred /
+                                        snapshot.totalBytes) *
+                                        100
+                                    ) !== 0
+                                  ) {
+                                    progressRef.current.children[
+                                      i
+                                    ].children[1].children[0].textContent = `${Math.floor(
+                                      (snapshot.bytesTransferred /
+                                        snapshot.totalBytes) *
+                                        100
+                                    )}%`;
+                                  }
+
+                                  if (
+                                    Math.floor(
+                                      (snapshot.bytesTransferred /
+                                        snapshot.totalBytes) *
+                                        100
+                                    ) === 100
+                                  ) {
+                                    setTimeout(() => {
+                                      progressRef.current.children[
+                                        i
+                                      ].children[2].children[0].style.display =
+                                        'inline-block';
+                                    }, 200);
+                                  }
+                                  // progressRef.current.children[i].children[1]
+                                  // .children[0]
+                                }
+                              }
+                            });
+                            setCurProgress(progressArray);
+                            console.log(snapshot.totalBytes);
+                          },
+                          (error) => {
+                            console.log(error);
+                          },
+                          () => {
+                            storage
+                              .ref(`images/${catSel}/-${id}`)
+                              .child(img.name)
+                              .getDownloadURL()
+                              .then((url) => {
+                                console.log(url);
+                                imgUrls.push(url);
+                                if (i === imageArray.length - 1) {
+                                  articleFinished.images = [...imgUrls];
+                                  console.log(articleFinished);
+                                  const dbRef = db.ref(`articles/-${id}`);
+                                  dbRef.update(articleFinished).then((res) => {
+                                    dbRef.once('value').then((snapshot) => {
+                                      setArticleAdded(true);
+                                    });
+                                  });
+                                }
+                              });
+                          }
+                        );
+                      });
+                    }
+                  }
+                });
+            });
+          }
+        });
+      }
+    }
+  };
+
+  const emptyFields = () => {
+    console.log('starting');
+    titles.current.children[0].value = '';
+    titles.current.children[1].value = '';
+    textareaRef.current.value = '';
+    captionText.current.value = '';
+    categorySelect.current.value = 'Vijesti';
+    tagContainer.current.previousSibling.value = '';
+    setImageArray([]);
+    setImagePreview([]);
+    setTags([]);
+    setArticleAdded(false);
+  };
+
+  useEffect(() => {
+    if (didMountRef.current) {
+      if (!sending) {
+        emptyFields();
+      }
+    } else {
+      didMountRef.current = true;
+    }
+  }, [sending]);
+
+  const handleCloseOverlay = (e) => {
+    if (
+      (sendArticleOverlay.current.contains(e.target) &&
+        !progressRef.current.contains(e.target) &&
+        articleAdded) ||
+      (progressRef.current.children[0] &&
+        progressRef.current.children[0].children[1].contains(e.target) &&
+        articleAdded)
+    ) {
+      setSending(false);
+      // emptyFields();
+    }
+  };
 
   return (
     <>
@@ -661,10 +867,24 @@ const AddArticle = () => {
           <Modal />
         </Overlay>
       )}
+
+      {sending && (
+        <Overlay
+          ref={sendArticleOverlay}
+          handleCloseOverlay={handleCloseOverlay}
+        >
+          <ProgressBar
+            progress={progress}
+            ref={progressRef}
+            articleAdded={articleAdded}
+          />
+        </Overlay>
+      )}
+
       <div id={s.addArticle}>
         <div id={s.addArticleBody}>
           <div id={s.addArticleContent}>
-            <div id={s.addTitle}>
+            <div id={s.addTitle} ref={titles}>
               <input type="text" placeholder="Naslov članka" />
               <input type="text" placeholder="Podnaslov članka" />
             </div>
@@ -748,7 +968,7 @@ const AddArticle = () => {
                 <div className={s.imageCaptionContainer}>
                   <div id={s.imageCaptionText}>Natpis</div>
                   <div id={s.imageCaption}>
-                    <input type="text" />
+                    <input ref={captionText} type="text" />
                   </div>
                 </div>
               </div>
@@ -757,13 +977,16 @@ const AddArticle = () => {
           <div id={s.addArticleInfo}>
             <div id={s.author}>
               <h3>Autor</h3>
-              <div id={s.authorInfo}>
-                <i class="fas fa-user"></i> <span>C.H.</span>
+              <div id={s.authorCnt}>
+                <div id={s.authorInfo}>
+                  <i class="fas fa-user"></i> <span>C.H.</span>
+                </div>
+                <button onClick={handleUpload}>Spasi</button>
               </div>
             </div>
             <div id={s.category}>
               <label htmlFor="category">Kategorija</label>
-              <select id="category">
+              <select id="category" ref={categorySelect}>
                 <option>Vijesti</option>
                 <option>Biznis</option>
                 <option>Sport</option>

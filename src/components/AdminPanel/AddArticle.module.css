@@ -240,6 +240,24 @@
   display: flex;
   justify-content: flex-start;
 }
+#authorCnt {
+  display: flex;
+  justify-content: space-between;
+}
+
+#authorCnt button {
+  cursor: pointer;
+  padding: 0.5rem 2rem;
+  /* background-color: #3f87e5;
+  border: none;
+  border-radius: 0.3rem;
+  color: #fff; */
+}
+
+#authorCnt button:hover {
+  /* background-color: rgba(63, 135, 229, 0.9); */
+}
+
 #author h3 {
   text-align: left;
   font-size: 1.4rem;

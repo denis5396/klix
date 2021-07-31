@@ -9,7 +9,7 @@ import ReactDOM from 'react-dom';
 import LoginContext from '../../context';
 import s from './Overlay.module.css';
 
-const Overlay = (props) => {
+const Overlay = (props, ref) => {
   const ctx = useContext(LoginContext);
   const handleClick = (e) => {
     const id = e.target.id;
@@ -33,10 +33,15 @@ const Overlay = (props) => {
   }, []);
 
   return (
-    <div id={s.overlay} onClick={handleClick}>
+    <div
+      id={s.overlay}
+      onClick={handleClick}
+      ref={ref}
+      onMouseDown={props.handleCloseOverlay}
+    >
       {props.children}
     </div>
   );
 };
 
-export default Overlay;
+export default React.forwardRef(Overlay);
