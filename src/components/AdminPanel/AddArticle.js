@@ -138,13 +138,13 @@ const AddArticle = () => {
               value[i + 1] === '/' &&
               value[i + 2] === 'b' &&
               value[i + 3] === '>' &&
-              selectionStart >= start &&
+              selectionStart >= start + 1 &&
               selectionStart <= i + 3) ||
             (value[i] === '<' &&
               value[i + 1] === '/' &&
               value[i + 2] === 'b' &&
               value[i + 3] === '>' &&
-              selectionEnd >= start &&
+              selectionEnd >= start + 1 &&
               selectionEnd <= i + 4) ||
             (value[i] === '<' &&
               value[i + 1] === '/' &&
@@ -172,14 +172,14 @@ const AddArticle = () => {
               value[i + 2] === 'e' &&
               value[i + 3] === 'm' &&
               value[i + 4] === 'b' &&
-              selectionStart >= start &&
+              selectionStart >= start + 1 &&
               selectionStart <= i + 7) ||
             (value[i] === '<' &&
               value[i + 1] === '/' &&
               value[i + 2] === 'e' &&
               value[i + 3] === 'm' &&
               value[i + 4] === 'b' &&
-              selectionEnd >= start &&
+              selectionEnd >= start + 1 &&
               selectionEnd <= i + 8) ||
             (value[i] === '<' &&
               value[i + 1] === '/' &&
@@ -210,7 +210,7 @@ const AddArticle = () => {
               value[i + 3] === 'i' &&
               value[i + 4] === 'n' &&
               value[i + 6] === '>' &&
-              selectionStart >= start &&
+              selectionStart >= start + 1 &&
               selectionStart <= i + 6) ||
             (value[i] === '<' &&
               value[i + 1] === '/' &&
@@ -218,7 +218,7 @@ const AddArticle = () => {
               value[i + 3] === 'i' &&
               value[i + 4] === 'n' &&
               value[i + 6] === '>' &&
-              selectionEnd >= start &&
+              selectionEnd >= start + 1 &&
               selectionEnd <= i + 7) ||
             (value[i] === '<' &&
               value[i + 1] === '/' &&
@@ -423,20 +423,808 @@ const AddArticle = () => {
   };
 
   const handleEnter = (e) => {
-    if (e.keyCode === 13) {
-      // console.log(e.target.value);
-      // console.log(e.target.value.split(''));
-      console.log(
-        textareaRef.current.value[textareaRef.current.selectionStart]
-      );
-      // if (
-      //   textareaRef.current.value[textareaRef.current.selectionStart + 1] !==
-      //   '\n'
-      // ) {
-      //   alert('d');
-      // }
-      // setSelStart({ num: textareaRef.current.selectionStart, enter: true });
+    // console.log(e.target.value);
+    // console.log(e.target.value.split(''));
+    const { value } = textareaRef.current;
+    const slStart = textareaRef.current.selectionStart;
+    const slEnd = textareaRef.current.selectionEnd;
+    if (
+      e.keyCode !== 46 &&
+      e.keyCode !== 37 &&
+      e.keyCode !== 38 &&
+      e.keyCode !== 39 &&
+      e.keyCode !== 40 &&
+      e.keyCode !== 35 &&
+      e.keyCode !== 36
+    ) {
+      for (let i = 0; i < value.length; i++) {
+        if (
+          (value[i] === '<' &&
+            value[i + 1] === 'b' &&
+            value[i + 2] === '>' &&
+            slStart < [i + 3] &&
+            slStart >= [i + 1]) ||
+          (value[i] === '<' &&
+            value[i + 1] === '/' &&
+            value[i + 2] === 'b' &&
+            value[i + 3] === '>' &&
+            slStart < [i + 4] &&
+            slStart >= [i + 1])
+        ) {
+          textareaRef.current.readOnly = true;
+          setTimeout(() => {
+            textareaRef.current.readOnly = false;
+          }, 100);
+        } else if (
+          (value[i] === '<' &&
+            value[i + 1] === 'e' &&
+            value[i + 2] === 'm' &&
+            value[i + 3] === 'b' &&
+            value[i + 4] === 'e' &&
+            value[i + 5] === 'd' &&
+            value[i + 6] === '>' &&
+            slStart < [i + 7] &&
+            slStart >= [i + 1]) ||
+          (value[i] === '<' &&
+            value[i + 1] === '/' &&
+            value[i + 2] === 'e' &&
+            value[i + 3] === 'm' &&
+            value[i + 4] === 'b' &&
+            value[i + 5] === 'e' &&
+            value[i + 6] === 'd' &&
+            value[i + 7] === '>' &&
+            slStart < [i + 8] &&
+            slStart >= [i + 1])
+        ) {
+          textareaRef.current.readOnly = true;
+          setTimeout(() => {
+            textareaRef.current.readOnly = false;
+          }, 100);
+        } else if (
+          (value[i] === '<' &&
+            value[i + 1] === 'l' &&
+            value[i + 2] === 'i' &&
+            value[i + 3] === 'n' &&
+            value[i + 4] === 'k' &&
+            value[i + 5] === '>' &&
+            slStart < [i + 6] &&
+            slStart >= [i + 1]) ||
+          (value[i] === '<' &&
+            value[i + 1] === '/' &&
+            value[i + 2] === 'l' &&
+            value[i + 3] === 'i' &&
+            value[i + 4] === 'n' &&
+            value[i + 5] === 'k' &&
+            value[i + 6] === '>' &&
+            slStart < [i + 7] &&
+            slStart >= [i + 1])
+        ) {
+          textareaRef.current.readOnly = true;
+          setTimeout(() => {
+            textareaRef.current.readOnly = false;
+          }, 100);
+        }
+      }
+    } else if (e.keyCode === 46) {
+      let startStart = 0;
+      let startEnd = 0;
+      let num = undefined;
+      let endStart = 0;
+      let endEnd = 0;
+      for (let i = 0; i < value.length; i++) {
+        if (
+          (value[i] === '<' &&
+            value[i + 1] === 'b' &&
+            value[i + 2] === '>' &&
+            slStart === i &&
+            slEnd === i) ||
+          (value[i] === '<' &&
+            value[i + 1] === '/' &&
+            value[i + 2] === 'b' &&
+            value[i + 3] === '>' &&
+            slStart === i &&
+            slEnd === i)
+        ) {
+          textareaRef.current.readOnly = true;
+          setTimeout(() => {
+            textareaRef.current.readOnly = false;
+          }, 100);
+          break;
+        } else if (
+          (value[i] === '<' &&
+            value[i + 1] === 'e' &&
+            value[i + 2] === 'm' &&
+            value[i + 3] === 'b' &&
+            value[i + 4] === 'e' &&
+            value[i + 5] === 'd' &&
+            value[i + 6] === '>' &&
+            slStart === i &&
+            slEnd === i) ||
+          (value[i] === '<' &&
+            value[i + 1] === '/' &&
+            value[i + 2] === 'e' &&
+            value[i + 3] === 'm' &&
+            value[i + 4] === 'b' &&
+            value[i + 5] === 'e' &&
+            value[i + 6] === 'd' &&
+            value[i + 7] === '>' &&
+            slStart === i &&
+            slEnd === i)
+        ) {
+          textareaRef.current.readOnly = true;
+          setTimeout(() => {
+            textareaRef.current.readOnly = false;
+          }, 100);
+          break;
+        } else if (
+          (value[i] === '<' &&
+            value[i + 1] === 'l' &&
+            value[i + 2] === 'i' &&
+            value[i + 3] === 'n' &&
+            value[i + 4] === 'k' &&
+            value[i + 5] === '>' &&
+            slStart === i &&
+            slEnd === i) ||
+          (value[i] === '<' &&
+            value[i + 1] === '/' &&
+            value[i + 2] === 'l' &&
+            value[i + 3] === 'i' &&
+            value[i + 4] === 'n' &&
+            value[i + 5] === 'k' &&
+            value[i + 6] === '>' &&
+            slStart === i &&
+            slEnd === i)
+        ) {
+          textareaRef.current.readOnly = true;
+          setTimeout(() => {
+            textareaRef.current.readOnly = false;
+          }, 100);
+          break;
+        } else if (
+          value[i] === '<' &&
+          value[i + 1] === 'b' &&
+          value[i + 2] === '>' &&
+          slStart < [i + 3] &&
+          slStart >= [i]
+        ) {
+          startStart = i;
+          startEnd = i + 3;
+          const copyTxt1 = textareaRef.current.value.split('');
+          const copyTxt2 = textareaRef.current.value.split('');
+          const copyTxt3 = textareaRef.current.value.split('');
+          for (let j = i; j < value.length; j++) {
+            if (
+              value[j] === '<' &&
+              value[j + 1] === '/' &&
+              value[j + 2] === 'b' &&
+              value[j + 3] === '>'
+            ) {
+              const slice = copyTxt1.splice(0, startStart);
+              const slice2 = copyTxt2.slice(startEnd, j);
+              const slice3 = copyTxt3.splice(j + 4);
+              console.log(slice);
+              console.log(slice2);
+              console.log(slice3);
+              let newStr = [slice.join(''), slice2.join(''), slice3.join('')];
+              newStr = newStr.join('');
+              // console.log(newStr);
+              textareaRef.current.value = newStr;
+
+              break;
+            }
+          }
+
+          textareaRef.current.readOnly = true;
+          setTimeout(() => {
+            textareaRef.current.readOnly = false;
+          }, 100);
+        } else if (
+          value[i] === '<' &&
+          value[i + 1] === '/' &&
+          value[i + 2] === 'b' &&
+          value[i + 3] === '>' &&
+          slStart < [i + 4] &&
+          slStart >= [i + 1]
+        ) {
+          startStart = i;
+          startEnd = i + 3;
+          const copyTxt1 = textareaRef.current.value.split('');
+          const copyTxt2 = textareaRef.current.value.split('');
+          const copyTxt3 = textareaRef.current.value.split('');
+          for (let j = i; j >= 0; j--) {
+            if (
+              value[j] === '<' &&
+              value[j + 1] === 'b' &&
+              value[j + 2] === '>'
+            ) {
+              const slice = copyTxt1.splice(0, j);
+              const slice2 = copyTxt2.slice(j + 3, startStart);
+              const slice3 = copyTxt3.splice(startStart + 4);
+              console.log(slice);
+              console.log(slice2);
+              console.log(slice3);
+              let newStr = [slice.join(''), slice2.join(''), slice3.join('')];
+              newStr = newStr.join('');
+              // console.log(newStr);
+              textareaRef.current.value = newStr;
+
+              break;
+            }
+          }
+          textareaRef.current.readOnly = true;
+          setTimeout(() => {
+            textareaRef.current.readOnly = false;
+          }, 100);
+        } else if (
+          value[i] === '<' &&
+          value[i + 1] === 'e' &&
+          value[i + 2] === 'm' &&
+          value[i + 3] === 'b' &&
+          value[i + 4] === 'e' &&
+          value[i + 5] === 'd' &&
+          value[i + 6] === '>' &&
+          slStart < [i + 7] &&
+          slStart >= [i]
+          // (value[i] === '<' &&
+          //   value[i + 1] === '/' &&
+          //   value[i + 2] === 'e' &&
+          //   value[i + 3] === 'm' &&
+          //   value[i + 4] === 'b' &&
+          //   value[i + 5] === 'e' &&
+          //   value[i + 6] === 'd' &&
+          //   value[i + 7] === '>' &&
+          //   slStart < [i + 8] &&
+          //   slStart >= [i + 1])
+        ) {
+          startStart = i;
+          startEnd = i + 7;
+          const copyTxt1 = textareaRef.current.value.split('');
+          const copyTxt2 = textareaRef.current.value.split('');
+          const copyTxt3 = textareaRef.current.value.split('');
+          for (let j = i; j < value.length; j++) {
+            if (
+              value[j] === '<' &&
+              value[j + 1] === '/' &&
+              value[j + 2] === 'e' &&
+              value[j + 3] === 'm' &&
+              value[j + 4] === 'b' &&
+              value[j + 5] === 'e' &&
+              value[j + 6] === 'd' &&
+              value[j + 7] === '>'
+            ) {
+              const slice = copyTxt1.splice(0, startStart);
+              const slice2 = copyTxt2.slice(startEnd, j);
+              const slice3 = copyTxt3.splice(j + 8);
+              // console.log(slice);
+              // console.log(slice2);
+              // console.log(slice3);
+              let newStr = [slice.join(''), slice2.join(''), slice3.join('')];
+              newStr = newStr.join('');
+              // console.log(newStr);
+              textareaRef.current.value = newStr;
+              break;
+            }
+          }
+          textareaRef.current.readOnly = true;
+          setTimeout(() => {
+            textareaRef.current.readOnly = false;
+          }, 100);
+        } else if (
+          value[i] === '<' &&
+          value[i + 1] === '/' &&
+          value[i + 2] === 'e' &&
+          value[i + 3] === 'm' &&
+          value[i + 4] === 'b' &&
+          value[i + 5] === 'e' &&
+          value[i + 6] === 'd' &&
+          value[i + 7] === '>' &&
+          slStart < [i + 8] &&
+          slStart >= [i + 1]
+        ) {
+          startStart = i;
+          startEnd = i + 3;
+          const copyTxt1 = textareaRef.current.value.split('');
+          const copyTxt2 = textareaRef.current.value.split('');
+          const copyTxt3 = textareaRef.current.value.split('');
+          for (let j = i; j >= 0; j--) {
+            if (
+              value[j] === '<' &&
+              value[j + 1] === 'e' &&
+              value[j + 2] === 'm' &&
+              value[j + 3] === 'b' &&
+              value[j + 4] === 'e' &&
+              value[j + 5] === 'd' &&
+              value[j + 6] === '>'
+            ) {
+              const slice = copyTxt1.splice(0, j);
+              const slice2 = copyTxt2.slice(j + 7, startStart);
+              const slice3 = copyTxt3.splice(startStart + 8);
+              console.log(slice);
+              console.log(slice2);
+              console.log(slice3);
+              let newStr = [slice.join(''), slice2.join(''), slice3.join('')];
+              newStr = newStr.join('');
+              // console.log(newStr);
+              textareaRef.current.value = newStr;
+
+              break;
+            }
+          }
+          textareaRef.current.readOnly = true;
+          setTimeout(() => {
+            textareaRef.current.readOnly = false;
+          }, 100);
+        } else if (
+          value[i] === '<' &&
+          value[i + 1] === 'l' &&
+          value[i + 2] === 'i' &&
+          value[i + 3] === 'n' &&
+          value[i + 4] === 'k' &&
+          value[i + 5] === '>' &&
+          slStart < [i + 6] &&
+          slStart >= [i]
+          // (value[i] === '<' &&
+          //   value[i + 1] === '/' &&
+          //   value[i + 2] === 'l' &&
+          //   value[i + 3] === 'i' &&
+          //   value[i + 4] === 'n' &&
+          //   value[i + 5] === 'k' &&
+          //   value[i + 6] === '>' &&
+          //   slStart < [i + 7] &&
+          //   slStart >= [i + 1])
+        ) {
+          startStart = i;
+          startEnd = i + 6;
+          const copyTxt1 = textareaRef.current.value.split('');
+          const copyTxt2 = textareaRef.current.value.split('');
+          const copyTxt3 = textareaRef.current.value.split('');
+          for (let j = i; j < value.length; j++) {
+            if (
+              value[j] === '<' &&
+              value[j + 1] === '/' &&
+              value[j + 2] === 'l' &&
+              value[j + 3] === 'i' &&
+              value[j + 4] === 'n' &&
+              value[j + 5] === 'k' &&
+              value[j + 6] === '>'
+            ) {
+              const slice = copyTxt1.splice(0, startStart);
+              const slice2 = copyTxt2.slice(startEnd, j);
+              const slice3 = copyTxt3.splice(j + 7);
+              // console.log(slice);
+              // console.log(slice2);
+              // console.log(slice3);
+              let newStr = [slice.join(''), slice2.join(''), slice3.join('')];
+              newStr = newStr.join('');
+              // console.log(newStr);
+              textareaRef.current.value = newStr;
+              break;
+            }
+          }
+          textareaRef.current.readOnly = true;
+          setTimeout(() => {
+            textareaRef.current.readOnly = false;
+          }, 100);
+        } else if (
+          value[i] === '<' &&
+          value[i + 1] === '/' &&
+          value[i + 2] === 'l' &&
+          value[i + 3] === 'i' &&
+          value[i + 4] === 'n' &&
+          value[i + 5] === 'k' &&
+          value[i + 6] === '>' &&
+          slStart < [i + 7] &&
+          slStart >= [i + 1]
+        ) {
+          startStart = i;
+          startEnd = i + 3;
+          const copyTxt1 = textareaRef.current.value.split('');
+          const copyTxt2 = textareaRef.current.value.split('');
+          const copyTxt3 = textareaRef.current.value.split('');
+          for (let j = i; j >= 0; j--) {
+            if (
+              value[j] === '<' &&
+              value[j + 1] === 'l' &&
+              value[j + 2] === 'i' &&
+              value[j + 3] === 'n' &&
+              value[j + 4] === 'k' &&
+              value[j + 5] === '>'
+            ) {
+              const slice = copyTxt1.splice(0, j);
+              const slice2 = copyTxt2.slice(j + 6, startStart);
+              const slice3 = copyTxt3.splice(startStart + 7);
+              console.log(slice);
+              console.log(slice2);
+              console.log(slice3);
+              let newStr = [slice.join(''), slice2.join(''), slice3.join('')];
+              newStr = newStr.join('');
+              // console.log(newStr);
+              textareaRef.current.value = newStr;
+
+              break;
+            }
+          }
+          textareaRef.current.readOnly = true;
+          setTimeout(() => {
+            textareaRef.current.readOnly = false;
+          }, 100);
+        }
+      }
     }
+    if (e.keyCode === 8) {
+      for (let i = 0; i < value.length; i++) {
+        if (
+          (value[i] === '<' &&
+            value[i + 1] === 'b' &&
+            value[i + 2] === '>' &&
+            slStart === i + 3 &&
+            slEnd === i + 3) ||
+          (value[i] === '<' &&
+            value[i + 1] === '/' &&
+            value[i + 2] === 'b' &&
+            value[i + 3] === '>' &&
+            slStart === i + 4 &&
+            slEnd === i + 4)
+        ) {
+          textareaRef.current.readOnly = true;
+          setTimeout(() => {
+            textareaRef.current.readOnly = false;
+          }, 100);
+          break;
+        } else if (
+          (value[i] === '<' &&
+            value[i + 1] === 'e' &&
+            value[i + 2] === 'm' &&
+            value[i + 3] === 'b' &&
+            value[i + 4] === 'e' &&
+            value[i + 5] === 'd' &&
+            value[i + 6] === '>' &&
+            slStart === i + 7 &&
+            slEnd === i + 7) ||
+          (value[i] === '<' &&
+            value[i + 1] === '/' &&
+            value[i + 2] === 'e' &&
+            value[i + 3] === 'm' &&
+            value[i + 4] === 'b' &&
+            value[i + 5] === 'e' &&
+            value[i + 6] === 'd' &&
+            value[i + 7] === '>' &&
+            slStart === i + 8 &&
+            slEnd === i + 8)
+        ) {
+          textareaRef.current.readOnly = true;
+          setTimeout(() => {
+            textareaRef.current.readOnly = false;
+          }, 100);
+          break;
+        } else if (
+          (value[i] === '<' &&
+            value[i + 1] === 'l' &&
+            value[i + 2] === 'i' &&
+            value[i + 3] === 'n' &&
+            value[i + 4] === 'k' &&
+            value[i + 5] === '>' &&
+            slStart === i + 6 &&
+            slEnd === i + 6) ||
+          (value[i] === '<' &&
+            value[i + 1] === '/' &&
+            value[i + 2] === 'l' &&
+            value[i + 3] === 'i' &&
+            value[i + 4] === 'n' &&
+            value[i + 5] === 'k' &&
+            value[i + 6] === '>' &&
+            slStart === i + 7 &&
+            slEnd === i + 7)
+        ) {
+          textareaRef.current.readOnly = true;
+          setTimeout(() => {
+            textareaRef.current.readOnly = false;
+          }, 100);
+          break;
+        }
+      }
+    }
+    if (
+      document.activeElement === textareaRef.current &&
+      textareaRef.current.selectionStart !== textareaRef.current.selectionEnd
+    ) {
+      for (let i = 0; i < value.length; i++) {
+        if (
+          value[i] === '<' &&
+          value[i + 1] === 'b' &&
+          value[i + 2] === '>' &&
+          slStart > i &&
+          slStart <= i + 2
+        ) {
+          textareaRef.current.readOnly = true;
+          setTimeout(() => {
+            textareaRef.current.readOnly = false;
+            textareaRef.current.selectionEnd = slStart;
+            textareaRef.current.selectionStart = slStart;
+          }, 100);
+        } else if (
+          value[i] === '<' &&
+          value[i + 1] === 'b' &&
+          value[i + 2] === '>' &&
+          slEnd > i &&
+          slEnd <= i + 3
+        ) {
+          textareaRef.current.readOnly = true;
+          setTimeout(() => {
+            textareaRef.current.readOnly = false;
+            textareaRef.current.selectionEnd = slStart;
+            textareaRef.current.selectionStart = slStart;
+          }, 100);
+        } else if (
+          value[i] === '<' &&
+          value[i + 1] === 'b' &&
+          value[i + 2] === '>' &&
+          slStart <= i &&
+          slEnd >= i + 3
+        ) {
+          textareaRef.current.readOnly = true;
+          setTimeout(() => {
+            textareaRef.current.readOnly = false;
+            textareaRef.current.selectionEnd = slStart;
+            textareaRef.current.selectionStart = slStart;
+          }, 100);
+        } else if (
+          value[i] === '<' &&
+          value[i + 1] === '/' &&
+          value[i + 2] === 'b' &&
+          value[i + 3] === '>' &&
+          slStart >= i &&
+          slStart <= i + 3
+        ) {
+          textareaRef.current.readOnly = true;
+          setTimeout(() => {
+            textareaRef.current.readOnly = false;
+            textareaRef.current.selectionEnd = slStart;
+            textareaRef.current.selectionStart = slStart;
+          }, 100);
+        } else if (
+          value[i] === '<' &&
+          value[i + 1] === '/' &&
+          value[i + 2] === 'b' &&
+          value[i + 3] === '>' &&
+          slEnd > i &&
+          slEnd <= i + 4
+        ) {
+          textareaRef.current.readOnly = true;
+          setTimeout(() => {
+            textareaRef.current.readOnly = false;
+            textareaRef.current.selectionEnd = slStart;
+            textareaRef.current.selectionStart = slStart;
+          }, 100);
+        } else if (
+          value[i] === '<' &&
+          value[i + 1] === '/' &&
+          value[i + 2] === 'b' &&
+          value[i + 3] === '>' &&
+          slStart <= i &&
+          slEnd >= i + 4
+        ) {
+          textareaRef.current.readOnly = true;
+          setTimeout(() => {
+            textareaRef.current.readOnly = false;
+            textareaRef.current.selectionEnd = slStart;
+            textareaRef.current.selectionStart = slStart;
+          }, 100);
+        } else if (
+          value[i] === '<' &&
+          value[i + 1] === 'e' &&
+          value[i + 2] === 'm' &&
+          value[i + 3] === 'b' &&
+          value[i + 4] === 'e' &&
+          value[i + 5] === 'd' &&
+          value[i + 6] === '>' &&
+          slStart > i &&
+          slStart <= i + 6
+        ) {
+          textareaRef.current.readOnly = true;
+          setTimeout(() => {
+            textareaRef.current.readOnly = false;
+            textareaRef.current.selectionEnd = slStart;
+            textareaRef.current.selectionStart = slStart;
+          }, 100);
+        } else if (
+          value[i] === '<' &&
+          value[i + 1] === 'e' &&
+          value[i + 2] === 'm' &&
+          value[i + 3] === 'b' &&
+          value[i + 4] === 'e' &&
+          value[i + 5] === 'd' &&
+          value[i + 6] === '>' &&
+          slEnd > i &&
+          slEnd <= i + 7
+        ) {
+          textareaRef.current.readOnly = true;
+          setTimeout(() => {
+            textareaRef.current.readOnly = false;
+            textareaRef.current.selectionEnd = slStart;
+            textareaRef.current.selectionStart = slStart;
+          }, 100);
+        } else if (
+          value[i] === '<' &&
+          value[i + 1] === 'e' &&
+          value[i + 2] === 'm' &&
+          value[i + 3] === 'b' &&
+          value[i + 4] === 'e' &&
+          value[i + 5] === 'd' &&
+          value[i + 6] === '>' &&
+          slStart <= i &&
+          slEnd >= i + 7
+        ) {
+          textareaRef.current.readOnly = true;
+          setTimeout(() => {
+            textareaRef.current.readOnly = false;
+            textareaRef.current.selectionEnd = slStart;
+            textareaRef.current.selectionStart = slStart;
+          }, 100);
+        } else if (
+          value[i] === '<' &&
+          value[i + 1] === '/' &&
+          value[i + 2] === 'e' &&
+          value[i + 3] === 'm' &&
+          value[i + 4] === 'b' &&
+          value[i + 5] === 'e' &&
+          value[i + 6] === 'd' &&
+          value[i + 7] === '>' &&
+          slStart >= i &&
+          slStart <= i + 7
+        ) {
+          textareaRef.current.readOnly = true;
+          setTimeout(() => {
+            textareaRef.current.readOnly = false;
+            textareaRef.current.selectionEnd = slStart;
+            textareaRef.current.selectionStart = slStart;
+          }, 100);
+        } else if (
+          value[i] === '<' &&
+          value[i + 1] === '/' &&
+          value[i + 2] === 'e' &&
+          value[i + 3] === 'm' &&
+          value[i + 4] === 'b' &&
+          value[i + 5] === 'e' &&
+          value[i + 6] === 'd' &&
+          value[i + 7] === '>' &&
+          slEnd > i &&
+          slEnd <= i + 8
+        ) {
+          textareaRef.current.readOnly = true;
+          setTimeout(() => {
+            textareaRef.current.readOnly = false;
+            textareaRef.current.selectionEnd = slStart;
+            textareaRef.current.selectionStart = slStart;
+          }, 100);
+        } else if (
+          value[i] === '<' &&
+          value[i + 1] === '/' &&
+          value[i + 2] === 'e' &&
+          value[i + 3] === 'm' &&
+          value[i + 4] === 'b' &&
+          value[i + 5] === 'e' &&
+          value[i + 6] === 'd' &&
+          value[i + 7] === '>' &&
+          slStart <= i &&
+          slEnd >= i + 8
+        ) {
+          textareaRef.current.readOnly = true;
+          setTimeout(() => {
+            textareaRef.current.readOnly = false;
+            textareaRef.current.selectionEnd = slStart;
+            textareaRef.current.selectionStart = slStart;
+          }, 100);
+        } else if (
+          value[i] === '<' &&
+          value[i + 1] === 'l' &&
+          value[i + 2] === 'i' &&
+          value[i + 3] === 'n' &&
+          value[i + 4] === 'k' &&
+          value[i + 5] === '>' &&
+          slStart > i &&
+          slStart <= i + 5
+        ) {
+          textareaRef.current.readOnly = true;
+          setTimeout(() => {
+            textareaRef.current.readOnly = false;
+            textareaRef.current.selectionEnd = slStart;
+            textareaRef.current.selectionStart = slStart;
+          }, 100);
+        } else if (
+          value[i] === '<' &&
+          value[i + 1] === 'l' &&
+          value[i + 2] === 'i' &&
+          value[i + 3] === 'n' &&
+          value[i + 4] === 'k' &&
+          value[i + 5] === '>' &&
+          slEnd > i &&
+          slEnd <= i + 6
+        ) {
+          textareaRef.current.readOnly = true;
+          setTimeout(() => {
+            textareaRef.current.readOnly = false;
+            textareaRef.current.selectionEnd = slStart;
+            textareaRef.current.selectionStart = slStart;
+          }, 100);
+        } else if (
+          value[i] === '<' &&
+          value[i + 1] === 'l' &&
+          value[i + 2] === 'i' &&
+          value[i + 3] === 'n' &&
+          value[i + 4] === 'k' &&
+          value[i + 5] === '>' &&
+          slStart <= i &&
+          slEnd >= i + 6
+        ) {
+          textareaRef.current.readOnly = true;
+          setTimeout(() => {
+            textareaRef.current.readOnly = false;
+            textareaRef.current.selectionEnd = slStart;
+            textareaRef.current.selectionStart = slStart;
+          }, 100);
+        } else if (
+          value[i] === '<' &&
+          value[i + 1] === '/' &&
+          value[i + 2] === 'l' &&
+          value[i + 3] === 'i' &&
+          value[i + 4] === 'n' &&
+          value[i + 5] === 'k' &&
+          value[i + 6] === '>' &&
+          slStart >= i &&
+          slStart <= i + 6
+        ) {
+          textareaRef.current.readOnly = true;
+          setTimeout(() => {
+            textareaRef.current.readOnly = false;
+            textareaRef.current.selectionEnd = slStart;
+            textareaRef.current.selectionStart = slStart;
+          }, 100);
+        } else if (
+          value[i] === '<' &&
+          value[i + 1] === '/' &&
+          value[i + 2] === 'l' &&
+          value[i + 3] === 'i' &&
+          value[i + 4] === 'n' &&
+          value[i + 5] === 'k' &&
+          value[i + 6] === '>' &&
+          slEnd > i &&
+          slEnd <= i + 7
+        ) {
+          textareaRef.current.readOnly = true;
+          setTimeout(() => {
+            textareaRef.current.readOnly = false;
+            textareaRef.current.selectionEnd = slStart;
+            textareaRef.current.selectionStart = slStart;
+          }, 100);
+        } else if (
+          value[i] === '<' &&
+          value[i + 1] === '/' &&
+          value[i + 2] === 'l' &&
+          value[i + 3] === 'i' &&
+          value[i + 4] === 'n' &&
+          value[i + 5] === 'k' &&
+          value[i + 6] === '>' &&
+          slStart <= i &&
+          slEnd >= i + 7
+        ) {
+          textareaRef.current.readOnly = true;
+          setTimeout(() => {
+            textareaRef.current.readOnly = false;
+            textareaRef.current.selectionEnd = slStart;
+            textareaRef.current.selectionStart = slStart;
+          }, 100);
+        }
+      }
+    }
+    console.log(textareaRef.current.value[textareaRef.current.selectionStart]);
+    // if (
+    //   textareaRef.current.value[textareaRef.current.selectionStart + 1] !==
+    //   '\n'
+    // ) {
+    //   alert('d');
+    // }
+    // setSelStart({ num: textareaRef.current.selectionStart, enter: true });
   };
 
   const handlePaste = (e) => {
@@ -659,6 +1447,13 @@ const AddArticle = () => {
         });
       }
     }
+  };
+
+  const checkTextBeforeSubmit = (e) => {
+    if (e.keyCode === 13) {
+      alert('d');
+    }
+    // textareaRef.current.readOnly = true
   };
 
   const handleUpload = () => {
