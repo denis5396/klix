@@ -1,0 +1,40 @@
+#articleLinkImage img {
+  width: 100%;
+  height: 100%;
+}
+#articleLink {
+  /* display: grid;
+  grid-template-columns: auto auto; */
+  border: 0.1rem solid #e5e7eb;
+  border-radius: 0.3rem;
+  padding: 1rem;
+  padding-bottom: 1.5rem;
+  cursor: pointer;
+  margin-top: 1rem;
+  transition: background-color 0.2s ease-in;
+  margin-bottom: 1rem;
+}
+#articleLink:hover {
+  background-color: #f8f8f8;
+}
+#articleLinkImage {
+  height: 8rem;
+  width: 8rem;
+  margin-right: 1rem;
+  float: left;
+  display: inline;
+}
+#articleLinkText {
+  font-size: 1.4rem;
+  line-height: 2.5rem;
+  color: #333;
+  width: 100%;
+  grid-column: 1/-1;
+  display: inline;
+}
+#articleLinkText h3:first-of-type {
+  font-size: 1.25rem;
+}
+#articleLinkText h3:nth-of-type(2) {
+  font-weight: 700;
+}

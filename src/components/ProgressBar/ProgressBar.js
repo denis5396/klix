@@ -1,4 +1,5 @@
 import React from 'react';
+import { v1 as uuid } from 'uuid';
 import s from './ProgressBar.module.css';
 
 const ProgressBar = (props, ref) => {
@@ -7,7 +8,7 @@ const ProgressBar = (props, ref) => {
       {!props.articleAdded &&
         props.progress.map((item) => {
           return (
-            <div className={s.progressItem}>
+            <div className={s.progressItem} key={uuid()}>
               <div>
                 <h3>{item.imageName}</h3>
               </div>

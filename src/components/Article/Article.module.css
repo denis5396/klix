@@ -1,0 +1,207 @@
+#articleParent {
+  width: 128rem;
+  background-color: #fff;
+  margin: 6.5rem auto;
+  margin-bottom: 4rem;
+  padding: 1.5rem 2rem;
+  border: 0.1rem solid #e5e7eb;
+  height: fit-content;
+}
+#articleHeader {
+  text-align: left;
+  padding-bottom: 2rem;
+  border-bottom: 0.1rem solid #e5e7eb;
+}
+#articleHeader h3 {
+  font-size: 1.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+#articleHeader h1 {
+  font-size: 3.5rem;
+  font-weight: 600;
+}
+#articleBody {
+  display: grid;
+  grid-template-columns: repeat(18, 1fr);
+  grid-template-columns: 18% 55% 27%;
+  height: 100%;
+  margin-top: 2rem;
+}
+#articleSidebarLeft {
+  /* background-color: green; */
+  /* grid-column: 1 / span 3; */
+  grid-column: 1/2;
+  border-right: 0.1rem solid #e5e7eb;
+}
+#articleBodyContent {
+  /* background-color: red; */
+  grid-column: 2/3;
+  padding: 0 1.5rem;
+}
+#articleSidebarRight {
+  border-left: 0.1rem solid #e5e7eb;
+  /* background-color: yellow; */
+  grid-column: 3/4;
+  /* grid-column: 13 / span 4; */
+}
+#postedData {
+  display: flex;
+}
+#postedDataTwo {
+  text-align: left;
+  margin-left: 1.2rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+#postedDataTwo h3 {
+  font-weight: 600;
+  font-size: 1.3rem;
+  color: #333;
+}
+#postedDataTwo p {
+  font-size: 1.3rem;
+  color: rgba(107, 114, 128, 1);
+}
+#commentsShare {
+  padding: 2rem 0;
+  display: flex;
+  justify-content: space-around;
+  padding-right: 1.5rem;
+}
+#commentsShare h2 {
+  font-size: 2.7rem;
+  font-weight: 600;
+}
+#commentsShare #comments {
+}
+#commentsShare p {
+  color: rgba(107, 114, 128, 1);
+  font-size: 1.5rem;
+}
+#shareArticle ul {
+  display: flex;
+}
+#shareArticle ul li {
+  margin-right: 2rem;
+  cursor: pointer;
+}
+#shareArticle ul li:hover i {
+  color: #6b7280;
+}
+#shareArticle ul li:last-of-type {
+  margin-right: 0;
+}
+#shareArticle ul li i {
+  font-size: 2rem;
+  color: #9ca3af;
+}
+#shareArticle {
+  margin: auto;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border: 0.1rem solid #cdcfd1;
+  padding: 1rem 2rem;
+  width: fit-content;
+  margin-right: auto;
+}
+#imageContainer img {
+  width: 100%;
+}
+#captionTxt {
+  margin-top: 0.3rem;
+}
+#captionTxt p {
+  color: #9ca3af;
+  font-size: 1.3rem;
+  text-align: left;
+}
+#articleText {
+  font-size: 1.7rem;
+  text-align: left;
+  line-height: 2.8rem;
+}
+#tags span {
+  background-color: #f3f4f6;
+  padding: 0.5rem 1rem;
+  margin-right: 1rem;
+  cursor: pointer;
+  font-size: 1.3rem;
+  color: rgba(55, 65, 81, 1);
+  border-radius: 0.5rem;
+  margin-top: 1rem;
+}
+#tags {
+  margin-top: 0.5rem;
+  display: flex;
+  flex-wrap: wrap;
+  margin-bottom: 2.5rem;
+}
+#addComment {
+  background-color: #f3f4f6;
+  width: calc(100% + 3rem);
+  margin-left: -1.5rem;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+}
+#addComment .showComments {
+  background-color: #9ca3af;
+  border: none;
+  border-radius: 0.5rem;
+  font-size: 1.2rem;
+  font-weight: 600;
+  cursor: pointer;
+  color: #fff;
+  padding: 1rem 0;
+  margin-top: 1rem;
+  transition: background-color 0.1s ease-in;
+}
+#addComment .showComments:hover {
+  background-color: #6b7280;
+}
+#addComment h3 {
+  color: rgb(75, 85, 99);
+  font-size: 1.5rem;
+  font-weight: 650;
+  margin-bottom: 1rem;
+}
+#linkedArticlesBody {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+}
+#linkedArticlesHeader {
+  display: flex;
+  justify-content: space-between;
+  padding: 1.3rem 0;
+  border-bottom: 0.1rem solid #e5e7eb;
+  margin-bottom: 1rem;
+}
+#linkedArticlesHeader h3:nth-of-type(1) {
+  font-size: 1.5rem;
+  color: rgb(75, 85, 99);
+}
+#linkedArticlesHeader i {
+  font-size: 1.6rem;
+  color: rgb(75, 85, 99);
+}
+#linkedPromoHeader {
+  display: flex;
+  justify-content: space-between;
+  padding-bottom: 1.5rem;
+}
+#linkedPromo {
+  margin-top: 2rem;
+}
+#linkedPromoHeader h3 {
+  font-size: 1.5rem;
+  color: rgb(75, 85, 99);
+}
+#linkedPromo i {
+  font-size: 1.5rem;
+  color: rgb(75, 85, 99);
+}

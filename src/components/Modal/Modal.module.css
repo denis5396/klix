@@ -8,6 +8,7 @@
   transform: translateY(-50%);
   font-size: 2rem;
   padding: 1rem 0;
+  border: 0.1rem solid #e5e7eb;
 }
 #modal #modalBtns {
   margin-top: 1rem;
@@ -29,3 +30,6 @@
 #modal #modalBtns button:nth-of-type(2) {
   background-color: #ff2252;
 }
+/* .modalUp {
+  margin: 10vh auto !important;
+} */

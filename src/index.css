@@ -14,7 +14,12 @@ body {
 }
 
 iframe.instagram-media {
-  width: 50vw !important;
+  /* width: 50vw !important; */
+  margin: 2rem auto !important;
+}
+iframe {
+  margin: 2rem auto !important;
+  display: block;
 }
 * {
   box-sizing: border-box;

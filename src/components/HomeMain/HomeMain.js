@@ -1,9 +1,18 @@
 import s from './HomeMain.module.css';
 
 import React, { useEffect } from 'react';
-import { auth } from '../../firebase';
+import { auth, db } from '../../firebase';
 
 const HomeMain = () => {
+  useEffect(() => {
+    const dbRef = db.ref('articles');
+    dbRef.get().then((snapshot) => {
+      if (snapshot.exists()) {
+        console.log(snapshot.val());
+      }
+    });
+  }, []);
+
   return (
     <div id={s.homeMain}>
       <div id={s.main}>

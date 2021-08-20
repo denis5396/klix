@@ -12,6 +12,8 @@ import AdminPanel from './pages/AdminPanel';
 import LoginForm from './components/Login/LoginForm';
 import UserInfo from './components/UserInfo/UserInfo';
 import Overlay from './components/Overlay/Overlay';
+import Article from './pages/Article';
+import EditArticlesPage from './pages/EditArticles';
 
 function App() {
   const ctx = useContext(LoginContext);
@@ -58,6 +60,12 @@ function App() {
         </Route>
         <Route path="/adminpanel">
           <AdminPanel />
+        </Route>
+        <Route path="/editarticles">
+          <EditArticlesPage />
+        </Route>
+        <Route path="/article">
+          <Article />
         </Route>
       </Switch>
       <Footer />

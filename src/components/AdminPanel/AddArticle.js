@@ -8,6 +8,60 @@ import LoginContext from '../../context';
 import { auth, db, storage } from '../../firebase';
 import ProgressBar from '../ProgressBar/ProgressBar';
 
+export const subcategories = {
+  početna: [
+    'Vijesti',
+    'Biznis',
+    'Sport',
+    'Magazin',
+    'Lifestyle',
+    'Auto',
+    'Scitech',
+  ],
+  vijesti: [
+    'BiH',
+    'Regija',
+    'Svijet',
+    'Dijaspora',
+    'Crna hronika',
+    'Humanitarne akcije',
+  ],
+  biznis: [
+    'Privreda',
+    'Finansije',
+    'Investicije',
+    'Smart Cash',
+    'Berza',
+    'Startupi',
+    'Posao',
+  ],
+  sport: [
+    'Nogomet',
+    'Košarka',
+    'Tenis',
+    'Rukomet',
+    'Formula 1',
+    'Skijanje',
+    'Atletika',
+    'Borilački sportovi',
+    'Plivanje',
+  ],
+  magazin: ['Kultura', 'Muzika', 'Film/TV', 'Showbiz', 'Zanimljivosti'],
+  lifestyle: [
+    'Moda i ljepota',
+    'Zdravlje',
+    'Veze i seks',
+    'Gastro',
+    'Kuća i ured',
+    'Putovanja',
+    'Bebe',
+    'Fitness',
+    'Ljubimci',
+  ],
+  scitech: ['Nauka', 'Tehnologija'],
+  auto: ['Testovi', 'Noviteti', 'Koncepti', 'Tuning'],
+};
+
 const AddArticle = () => {
   const ctx = useContext(LoginContext);
   const [paste, setPaste] = useState(false);
@@ -24,6 +78,8 @@ const AddArticle = () => {
   const [progress, setCurProgress] = useState([]);
   const [articleAdded, setArticleAdded] = useState(false);
   const [sending, setSending] = useState(false);
+  const [subcategoriesMap, setSubcategoriesMap] = useState([]);
+  const [saveSubcat, setSaveSubcat] = useState('BiH');
 
   const didMountRef = useRef(false);
   const postaviSlikeText = useRef();
@@ -37,10 +93,14 @@ const AddArticle = () => {
   const categorySelect = useRef();
   const progressRef = useRef();
   const sendArticleOverlay = useRef();
+  const commentsRadio = useRef();
+  const subcategorySelect = useRef();
 
   useEffect(() => {
     console.log(progress);
   }, [progress]);
+
+  useEffect(() => {}, []);
 
   const handleHoverEnter = () => {
     postaviSlikeBorder.current.style.borderColor = '#3f87e5';
@@ -1424,15 +1484,17 @@ const AddArticle = () => {
   const handleAddTags = (e) => {
     if (e.keyCode === 13) {
       let { value } = e.target;
-      value = value.split('');
-      value[0] = value[0].toUpperCase();
-      value = value.join('');
-      e.target.value = '';
-      setTags((old) => {
-        const oldCopy = [...old];
-        oldCopy.push(value);
-        return oldCopy;
-      });
+      if (value) {
+        value = value.split('');
+        value[0] = value[0].toUpperCase();
+        value = value.join('');
+        e.target.value = '';
+        setTags((old) => {
+          const oldCopy = [...old];
+          oldCopy.push(value);
+          return oldCopy;
+        });
+      }
     }
   };
 
@@ -1456,15 +1518,34 @@ const AddArticle = () => {
     // textareaRef.current.readOnly = true
   };
 
+  const checkIfContainsPromo = (string) => {
+    const str = string.toLowerCase();
+    if (str.includes(' promo') || str.includes('promo ') || str === 'promo') {
+      return true;
+    }
+  };
+
   const handleUpload = () => {
     const title = titles.current.children[0].value;
-    const subTitle = titles.current.children[1].value;
+    const subTitle = titles.current.children[1].value.toUpperCase();
     console.log(title);
     console.log(subTitle);
     const articleText = textareaRef.current.value;
     const captionTxt = captionText.current.value;
-    const catSel = categorySelect.current.value;
+    let catSel = categorySelect.current.value;
+    let subcatSel = subcategorySelect.current.value;
+
+    const checkIfPromo = checkIfContainsPromo(subTitle);
+
+    if (catSel === 'Promo') {
+    }
+    const commentChoice =
+      commentsRadio.current.children[0].children[1].checked &&
+      !commentsRadio.current.children[0].children[1].disabled
+        ? 'Da'
+        : 'Ne';
     console.log(imageArray);
+    // alert(commentChoice);
 
     if (title && subTitle && articleText && tags.length > 0) {
       if (imageArray.length > 0 && captionTxt) {
@@ -1473,137 +1554,185 @@ const AddArticle = () => {
           subTitle: subTitle,
           articleText: articleText,
           category: catSel,
+          subCategory: subcatSel,
           images: imageArray,
           imageText: captionTxt,
+          tags: tags,
+          commentsAllowed: commentChoice,
+          shares: [''],
         };
+        if (commentChoice) {
+          articleFinished.comments = [''];
+        }
         setSending(true);
+        let length = !checkIfPromo ? 1 : 2;
+        // alert(length);
         auth.onAuthStateChanged((user) => {
           if (user) {
             user.getIdToken(true).then((idToken) => {
-              fetch(
-                `https://klix-74c29-default-rtdb.europe-west1.firebasedatabase.app/articles.json?auth=${idToken}`,
-                {
-                  method: 'POST',
-                  body: JSON.stringify(articleFinished),
-                  headers: {
-                    'Content-Type': 'application/json',
-                  },
-                }
-              )
-                .then((response) => response.json())
-                .then((data) => {
-                  console.log(data);
-                  let id = data.name;
-                  const imgUrls = [];
-                  id = id.slice(1);
-                  // id.split('');
-                  // console.log(id);
-                  // id.join('');
-                  console.log(id);
-                  articleFinished.id = id;
-                  console.log(articleFinished);
-                  let progressArray = [];
-                  if (imageArray) {
-                    // console.log(image);
-                    if (imageArray.length >= 1) {
-                      imageArray.forEach((img, i) => {
-                        progressArray.push({
-                          imageName: img.name,
-                          percent: '',
-                        });
-                        const uploadTask = storage
-                          .ref(`images/${catSel}/-${id}/${img.name}`)
-                          .put(img);
-                        uploadTask.on(
-                          'state_changed',
-                          (snapshot) => {
-                            console.log(snapshot);
-                            console.log(
-                              `bytesTransfered: ${
-                                snapshot.bytesTransferred
-                              }, percent: ${Math.floor(
-                                (snapshot.bytesTransferred /
-                                  snapshot.totalBytes) *
-                                  100
-                              )}% fileName: ${img.name}`
-                            );
+              for (let k = 0; k < length; k++) {
+                fetch(
+                  `https://klix-74c29-default-rtdb.europe-west1.firebasedatabase.app/articles/${
+                    k === 1 ? 'Promo' : catSel
+                  }/${k === 1 ? catSel : subcatSel}.json?auth=${idToken}`,
+                  {
+                    method: 'POST',
+                    body: JSON.stringify(articleFinished),
+                    headers: {
+                      'Content-Type': 'application/json',
+                    },
+                  }
+                )
+                  .then((response) => response.json())
+                  .then((data) => {
+                    console.log(data);
+                    let id = data.name;
+                    const imgUrls = [];
+                    id = id.slice(1);
+                    // id.split('');
+                    // console.log(id);
+                    // id.join('');
+                    console.log(id);
+                    articleFinished.id = id;
+                    console.log(articleFinished);
+                    let progressArray = [];
+                    if (imageArray) {
+                      // console.log(image);
+                      if (imageArray.length >= 1) {
+                        imageArray.forEach((img, i) => {
+                          progressArray.push({
+                            imageName: img.name,
+                            percent: '',
+                          });
+                          console.log(k);
+                          console.log(
+                            `images/${catSel}/${subcatSel}/-${id}/${img.name}`
+                          );
+                          const uploadTask = storage
+                            .ref(
+                              `images/${k === 1 ? 'Promo' : catSel}/${
+                                k === 1 ? catSel : subcatSel
+                              }/-${id}/${img.name}`
+                            )
+                            .put(img);
+                          uploadTask.on(
+                            'state_changed',
+                            (snapshot) => {
+                              console.log(snapshot);
+                              console.log(
+                                `bytesTransfered: ${
+                                  snapshot.bytesTransferred
+                                }, percent: ${Math.floor(
+                                  (snapshot.bytesTransferred /
+                                    snapshot.totalBytes) *
+                                    100
+                                )}% fileName: ${img.name}`
+                              );
 
-                            progressArray.forEach((arr, i) => {
-                              if (arr.imageName === img.name) {
-                                if (progressRef.current.children[0]) {
-                                  progressRef.current.children[
-                                    i
-                                  ].children[1].children[0].style.width = `${Math.floor(
-                                    (snapshot.bytesTransferred /
-                                      snapshot.totalBytes) *
-                                      100
-                                  )}%`;
-                                  if (
-                                    Math.floor(
-                                      (snapshot.bytesTransferred /
-                                        snapshot.totalBytes) *
-                                        100
-                                    ) !== 0
-                                  ) {
+                              progressArray.forEach((arr, i) => {
+                                if (arr.imageName === img.name && k === 0) {
+                                  if (progressRef.current.children[0]) {
+                                    console.log(
+                                      progressRef.current.children[i]
+                                        .children[1].children[0]
+                                    );
                                     progressRef.current.children[
                                       i
-                                    ].children[1].children[0].textContent = `${Math.floor(
+                                    ].children[1].children[0].style.width = `${Math.floor(
                                       (snapshot.bytesTransferred /
                                         snapshot.totalBytes) *
                                         100
                                     )}%`;
-                                  }
-
-                                  if (
-                                    Math.floor(
-                                      (snapshot.bytesTransferred /
-                                        snapshot.totalBytes) *
-                                        100
-                                    ) === 100
-                                  ) {
-                                    setTimeout(() => {
+                                    if (
+                                      Math.floor(
+                                        (snapshot.bytesTransferred /
+                                          snapshot.totalBytes) *
+                                          100
+                                      ) !== 0
+                                    ) {
                                       progressRef.current.children[
                                         i
-                                      ].children[2].children[0].style.display =
-                                        'inline-block';
-                                    }, 200);
+                                      ].children[1].children[0].textContent = `${Math.floor(
+                                        (snapshot.bytesTransferred /
+                                          snapshot.totalBytes) *
+                                          100
+                                      )}%`;
+                                    }
+
+                                    if (
+                                      Math.floor(
+                                        (snapshot.bytesTransferred /
+                                          snapshot.totalBytes) *
+                                          100
+                                      ) === 100
+                                    ) {
+                                      setTimeout(() => {
+                                        progressRef.current.children[
+                                          i
+                                        ].children[2].children[0].style.display =
+                                          'inline-block';
+                                      }, 200);
+                                    }
+                                    // progressRef.current.children[i].children[1]
+                                    // .children[0]
                                   }
-                                  // progressRef.current.children[i].children[1]
-                                  // .children[0]
-                                }
-                              }
-                            });
-                            setCurProgress(progressArray);
-                            console.log(snapshot.totalBytes);
-                          },
-                          (error) => {
-                            console.log(error);
-                          },
-                          () => {
-                            storage
-                              .ref(`images/${catSel}/-${id}`)
-                              .child(img.name)
-                              .getDownloadURL()
-                              .then((url) => {
-                                console.log(url);
-                                imgUrls.push(url);
-                                if (i === imageArray.length - 1) {
-                                  articleFinished.images = [...imgUrls];
-                                  console.log(articleFinished);
-                                  const dbRef = db.ref(`articles/-${id}`);
-                                  dbRef.update(articleFinished).then((res) => {
-                                    dbRef.once('value').then((snapshot) => {
-                                      setArticleAdded(true);
-                                    });
-                                  });
                                 }
                               });
-                          }
-                        );
-                      });
+                              if (k === 0) {
+                                setCurProgress(progressArray);
+                              }
+                              console.log(snapshot.totalBytes);
+                              console.log(
+                                `images/${catSel}/${subcatSel}/-${id}`
+                              );
+                            },
+                            (error) => {
+                              console.log(error);
+                            },
+                            () => {
+                              storage
+                                .ref(
+                                  `images/${k === 1 ? 'Promo' : catSel}/${
+                                    k === 1 ? catSel : subcatSel
+                                  }/-${id}`
+                                )
+                                .child(img.name)
+                                .getDownloadURL()
+                                .then((url) => {
+                                  console.log(url);
+                                  imgUrls.push(url);
+                                  if (i === imageArray.length - 1) {
+                                    articleFinished.images = [...imgUrls];
+                                    const date = new Date();
+                                    const time = `${date.getFullYear()}-${
+                                      date.getMonth() + 1
+                                    }-${date.getDate()} ${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}`;
+                                    articleFinished.date = time;
+                                    console.log(articleFinished);
+                                    articleFinished.id = id;
+
+                                    const dbRef = db.ref(
+                                      `articles/${k === 1 ? 'Promo' : catSel}/${
+                                        k === 1 ? catSel : subcatSel
+                                      }/-${id}`
+                                    );
+                                    dbRef
+                                      .update(articleFinished)
+                                      .then((res) => {
+                                        dbRef.once('value').then((snapshot) => {
+                                          setArticleAdded(true);
+                                        });
+                                      });
+                                  }
+                                })
+                                .catch((error) => console.log(error));
+                            }
+                          );
+                        });
+                      }
                     }
-                  }
-                });
+                  });
+              }
             });
           }
         });
@@ -1619,10 +1748,15 @@ const AddArticle = () => {
     captionText.current.value = '';
     categorySelect.current.value = 'Vijesti';
     tagContainer.current.previousSibling.value = '';
+    commentsRadio.current.children[0].children[1].disabled = false;
+    commentsRadio.current.children[1].children[1].disabled = false;
+    commentsRadio.current.children[0].children[1].checked = true;
+    setSubcategoriesMap(subcategories.vijesti);
     setImageArray([]);
     setImagePreview([]);
     setTags([]);
     setArticleAdded(false);
+    setCurProgress([]);
   };
 
   useEffect(() => {
@@ -1632,6 +1766,7 @@ const AddArticle = () => {
       }
     } else {
       didMountRef.current = true;
+      setSubcategoriesMap([...subcategories.vijesti]);
     }
   }, [sending]);
 
@@ -1647,6 +1782,55 @@ const AddArticle = () => {
       setSending(false);
       // emptyFields();
     }
+  };
+
+  const handleIfPromo = (e) => {
+    if (e.target.value.length === 0) {
+      commentsRadio.current.children[0].children[1].disabled = false;
+      commentsRadio.current.children[1].children[1].disabled = false;
+      commentsRadio.current.children[0].children[1].checked = true;
+    }
+    if (e.target.value) {
+      const contains = checkIfContainsPromo(e.target.value);
+      if (contains) {
+        commentsRadio.current.children[0].children[1].disabled = true;
+        commentsRadio.current.children[1].children[1].disabled = true;
+      } else {
+        commentsRadio.current.children[0].children[1].disabled = false;
+        commentsRadio.current.children[1].children[1].disabled = false;
+      }
+    }
+  };
+
+  const handleCategoryChange = (e) => {
+    const { value } = e.target;
+    switch (value) {
+      case 'Vijesti':
+        setSubcategoriesMap([...subcategories.vijesti]);
+        break;
+      case 'Biznis':
+        setSubcategoriesMap([...subcategories.biznis]);
+        break;
+      case 'Sport':
+        setSubcategoriesMap([...subcategories.sport]);
+        break;
+      case 'Magazin':
+        setSubcategoriesMap([...subcategories.magazin]);
+        break;
+      case 'Lifestyle':
+        setSubcategoriesMap([...subcategories.lifestyle]);
+        break;
+      case 'Scitech':
+        setSubcategoriesMap([...subcategories.scitech]);
+        break;
+      case 'Auto':
+        setSubcategoriesMap([...subcategories.auto]);
+        break;
+    }
+  };
+
+  const saveSubcategory = (e) => {
+    setSaveSubcat(e.target.value);
   };
 
   return (
@@ -1681,7 +1865,11 @@ const AddArticle = () => {
           <div id={s.addArticleContent}>
             <div id={s.addTitle} ref={titles}>
               <input type="text" placeholder="Naslov članka" />
-              <input type="text" placeholder="Podnaslov članka" />
+              <input
+                type="text"
+                placeholder="Podnaslov članka"
+                onChange={handleIfPromo}
+              />
             </div>
             <div id={s.addText}>
               <div id={s.addTextHeader}>
@@ -1774,14 +1962,26 @@ const AddArticle = () => {
               <h3>Autor</h3>
               <div id={s.authorCnt}>
                 <div id={s.authorInfo}>
-                  <i class="fas fa-user"></i> <span>C.H.</span>
+                  <i class="fas fa-user"></i>{' '}
+                  <span style={{ textTransform: 'capitalize' }}>
+                    {ctx.user.displayName}
+                  </span>
                 </div>
-                <button onClick={handleUpload}>Spasi</button>
+                <button
+                  onClick={handleUpload}
+                  disabled={sending ? true : false}
+                >
+                  Spasi
+                </button>
               </div>
             </div>
             <div id={s.category}>
               <label htmlFor="category">Kategorija</label>
-              <select id="category" ref={categorySelect}>
+              <select
+                id="category"
+                ref={categorySelect}
+                onChange={handleCategoryChange}
+              >
                 <option>Vijesti</option>
                 <option>Biznis</option>
                 <option>Sport</option>
@@ -1789,6 +1989,16 @@ const AddArticle = () => {
                 <option>Lifestyle</option>
                 <option>Scitech</option>
                 <option>Auto</option>
+              </select>
+              <label id={s.subcategory}>Podkategorija</label>
+              <select
+                ref={subcategorySelect}
+                value={saveSubcat}
+                onChange={saveSubcategory}
+              >
+                {subcategoriesMap.map((item) => {
+                  return <option key={uuid()}>{item}</option>;
+                })}
               </select>
             </div>
             <div id={s.tag}>
@@ -1829,6 +2039,26 @@ const AddArticle = () => {
                   <span>Helloasdasd</span>
                   <i class="fas fa-times"></i>
                 </div> */}
+              </div>
+            </div>
+            <div id={s.commentsAllowed}>
+              <div>
+                <h3>Dozvoli komentare:</h3>
+              </div>
+              <div id={s.commentBundle} ref={commentsRadio}>
+                <div className={s.commentItem}>
+                  <label htmlFor="komentda">Da</label>
+                  <input
+                    type="radio"
+                    id="komentda"
+                    name="koment"
+                    defaultChecked
+                  />
+                </div>
+                <div className={s.commentItem}>
+                  <label htmlFor="komentne">Ne</label>
+                  <input type="radio" id="komentne" name="koment" />
+                </div>
               </div>
             </div>
           </div>

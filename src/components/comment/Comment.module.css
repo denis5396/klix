@@ -1,0 +1,31 @@
+.postCommentTextarea {
+  min-height: 12.9rem;
+  width: 100%;
+  resize: vertical;
+  padding: 1rem;
+  border: 0.1rem solid #cdcfd1;
+}
+
+.postCommentTextarea:focus {
+  outline: none;
+}
+.postCommentBundle {
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 2px 5px -1px rgb(0 0 0 / 10%);
+}
+.postCommentBundle button {
+  display: flex;
+  background-color: #fff;
+  border: 0.1rem solid #cdcfd1;
+  border-top: none;
+  justify-content: flex-end;
+  padding: 1rem;
+}
+.postCommentBundle button span {
+  cursor: pointer;
+  color: rgb(75, 85, 99);
+}
+.postCommentBundle button span i {
+  color: #333;
+}

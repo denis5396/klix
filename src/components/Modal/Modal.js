@@ -1,9 +1,10 @@
 import React from 'react';
+
 import s from './Modal.module.css';
 
-const Modal = () => {
+const Modal = (props, ref) => {
   return (
-    <div id={s.modal}>
+    <div id={s.modal} ref={ref} onClick={props.handleClick}>
       <div>Da li ste sigurni?</div>
       <div id={s.modalBtns}>
         <button>Da</button>
@@ -13,4 +14,4 @@ const Modal = () => {
   );
 };
 
-export default Modal;
+export default React.forwardRef(Modal);
