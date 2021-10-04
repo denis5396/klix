@@ -49,13 +49,7 @@
   width: 100%;
   height: 100%;
 }
-.articleImageCntBg img {
-  /* position: absolute;
-  top: 0.8rem;
-  left: 0.8rem;
-  right: 0.8rem;
-  bottom: 0.8rem; */
-}
+
 .articleImgCnt i {
   position: absolute;
   bottom: 0.7rem;
@@ -74,6 +68,12 @@
 }
 .articleTitles h3:nth-of-type(2) {
   line-height: 2.08rem;
+  text-overflow: ellipsis;
+  overflow: scroll;
+  height: 5rem;
+}
+.articleTitles h3:nth-of-type(2)::-webkit-scrollbar {
+  display: none;
 }
 .articleFooter {
   margin-top: auto;
@@ -102,7 +102,7 @@
 .articleItemBgHeader {
   position: absolute;
   bottom: 20%;
-  font-size: 1.5rem;
+  font-size: 1.2rem;
   text-align: left;
   padding-left: 0.7rem;
   color: #fff;
@@ -143,6 +143,9 @@
   grid-template-columns: 72.5% 27.5%;
   gap: 0.1rem;
   border: 0.1rem solid #e5e7eb;
+  height: 20.4rem;
+  border-right: 0.1rem solid #e5e7eb;
+  overflow: hidden;
 }
 
 .subLeft {
@@ -177,7 +180,15 @@
 }
 .subLeftItemText h3:nth-of-type(1) {
   margin: 0.3rem 0;
-  font-size: 1.3rem;
+  font-size: 1.2rem;
+}
+.subLeftItemText h3:nth-of-type(2) {
+  font-size: 1.2rem;
+  overflow: scroll;
+  height: 4.8rem;
+}
+.subLeftItemText h3:nth-of-type(2)::-webkit-scrollbar {
+  display: none;
 }
 .subLeftItemBundle {
   margin-top: auto;
@@ -220,7 +231,14 @@
 }
 .subRightText h3 {
   color: #333;
-  font-size: 1.5rem;
+  font-size: 1.2rem;
+}
+.subRightText h3:nth-of-type(2) {
+  height: 5rem;
+  overflow: scroll;
+}
+.subRightText h3:nth-of-type(2)::-webkit-scrollbar {
+  display: none;
 }
 .subRightBundle {
   margin-top: auto;
@@ -335,4 +353,45 @@
 }
 .articleItemFetchTitles h3 {
   font-weight: 500;
+}
+#saveChanges {
+  margin-top: 1rem;
+}
+#saveChanges button {
+  padding: 0.2rem 0.5rem;
+  background-color: #fff;
+  outline: none;
+  border: 0.1rem solid #9ca3af;
+  border-radius: 0.3rem;
+  cursor: pointer;
+  width: 20rem;
+  transition: background-color 0.2s ease-in;
+}
+#saveChanges button:hover {
+  background-color: #c6cedd;
+}
+#chooseModeCnt {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 1rem;
+  font-size: 1.3rem;
+  -moz-user-select: none;
+  -webkit-user-select: none;
+}
+#chooseModeCnt input:nth-of-type(1),
+#chooseModeCnt input:nth-of-type(2) {
+  margin-right: 0.4rem;
+}
+#chooseModeCnt label:nth-of-type(1) {
+  margin-right: 1rem;
+}
+.empty {
+  background-color: #fff;
+  border: 0.1rem solid #e5e7eb;
+}
+.emptySub {
+  background-color: #fff;
+  border-left: 0.1rem solid #e5e7eb;
+  border-right: 0.1rem solid #e5e7eb;
 }
