@@ -1,12 +1,22 @@
-import React, { useEffect, useRef, useState } from 'react';
-import s from './EditArticle.module.css';
-import { subcategories } from '../AddArticle';
-import { v1 as uuid } from 'uuid';
-import Overlay from '../../Overlay/Overlay';
+import React, { useEffect, useRef, useState } from "react";
+import s from "./EditArticle.module.css";
+import { subcategories } from "../AddArticle";
+import { v1 as uuid } from "uuid";
+import Overlay from "../../Overlay/Overlay";
 
-import { useHistory } from 'react-router-dom';
-import { db } from '../../../firebase';
-import Modal from '../../Modal/Modal';
+import { Link, useHistory } from "react-router-dom";
+import { db } from "../../../firebase";
+import Modal from "../../Modal/Modal";
+
+export const articleColors = {
+  vijesti: "#d33d3d",
+  biznis: "#ef6f3e",
+  sport: "#55ac53",
+  magazin: "#a45091",
+  lifestyle: "#e2a600",
+  scitech: "#40afee",
+  auto: "#487baf",
+};
 
 function daysInMonth(month, year) {
   return new Date(year, month, 0).getDate();
@@ -23,7 +33,12 @@ export const timeDifference = (time) => {
     date.getSeconds(),
   ];
   let difference;
-  let transformedDate = time.split(/-|:| /);
+  let transformedDate;
+  if (time) {
+    transformedDate = time.split(/-|:| /);
+  } else {
+    return;
+  }
   for (let i = 0; i < transformedDate.length; i++) {
     transformedDate[i] = +transformedDate[i];
   }
@@ -35,20 +50,20 @@ export const timeDifference = (time) => {
   let second;
   year = curTime[0] - transformedDate[0];
   month = curTime[1] - transformedDate[1];
-  console.log(month);
+  // console.log(month);
   dateDiff = curTime[2] - transformedDate[2];
-  console.log(dateDiff);
+  // console.log(dateDiff);
   hour = curTime[3] - transformedDate[3];
-  console.log(hour);
+  // console.log(hour);
   minute = curTime[4] - transformedDate[4];
   second = curTime[5] - transformedDate[5];
-  console.log(transformedDate);
+  // console.log(transformedDate);
   let monthLower = false;
   let dateLower = false;
   let hourLower = false;
   let minuteLower = false;
   let secondLower = false;
-  console.log(second);
+  // console.log(second);
   if (month < 0) {
     monthLower = true;
   }
@@ -65,8 +80,8 @@ export const timeDifference = (time) => {
     secondLower = true;
   }
 
-  console.log(curTime[4]);
-  console.log(transformedDate[4]);
+  // console.log(curTime[4]);
+  // console.log(transformedDate[4]);
   difference = `${
     monthLower && year > 0
       ? year - 1
@@ -83,7 +98,7 @@ export const timeDifference = (time) => {
       : dateDiff === 0 && hourLower && month < 0
       ? 12 - Math.abs(month - 1) //then it's again -1 cuz month is not there yet, it's few hours away
       : dateDiff === 0 && hourLower && month > 0
-      ? 12 - Math.abs(month - 1)
+      ? 12 - Math.abs(month - 1 === 0 ? -12 : month - 1)
       : !dateLower && month < 0
       ? 12 - Math.abs(month)
       : month
@@ -143,14 +158,24 @@ export const timeDifference = (time) => {
               ? -1
               : 0) //if past month has more days than this month then add +1 to the datediff so if  it was posted 31 last month this month its the 30th then its 30-31 = -1 -> 30(days in this month) - 1(math.abs -1 = 1) -> prije 29 dana nego prije 30
         )
+      : hourLower && dateDiff === 0 && month - 1 === 0
+      ? curTime[2] - 1
       : dateDiff
   } ${
     minuteLower && hour > 0
       ? hour - 1
       : minuteLower && hour < 0
       ? 24 - Math.abs(hour - 1)
+      : minute >= 0 && minute <= 1 && secondLower && hour < 0
+      ? 24 - Math.abs(hour - 1)
+      : dateDiff === 0 && month - 1 === 0 && minuteLower && hour < 0
+      ? hour - 1
+      : dateDiff === 0 && month - 1 === 0 && !minuteLower && hour < 0
+      ? hour
       : !minuteLower && hour < 0
       ? 24 - Math.abs(hour)
+      : minute >= 0 && minute <= 1 && secondLower && hour > 0
+      ? hour - 1
       : hour
   } ${
     secondLower && minute > 0
@@ -161,11 +186,11 @@ export const timeDifference = (time) => {
       ? 60 - Math.abs(minute)
       : minute
   } ${secondLower ? 60 - Math.abs(second) : second}`;
-  console.log(difference);
-  difference = difference.split(' ');
+  // console.log(difference);
+  difference = difference.split(" ");
 
   let check = false;
-  let returnVal = '';
+  let returnVal = "";
   difference.forEach((diff, i) => {
     if (+diff !== 0 && diff > 0 && !check) {
       check = true;
@@ -186,7 +211,7 @@ export const timeDifference = (time) => {
           }
         case 3:
           let xform = diff;
-          xform = xform.split('');
+          xform = xform.split("");
           xform.forEach((item, i) => {
             if (i === xform.length - 1) {
               if (item == 1 && diff != 11) {
@@ -212,7 +237,7 @@ export const timeDifference = (time) => {
               }
             }
           });
-          console.log(xform);
+          // console.log(xform);
           break;
         case 4:
           returnVal = `${diff} min`;
@@ -226,16 +251,16 @@ export const timeDifference = (time) => {
     //   alert(`${diff} sekundi`);
     // }
   });
-  console.log(transformedDate);
-  console.log(curTime);
+  // console.log(transformedDate);
+  // console.log(curTime);
   return returnVal;
 };
 
 const EditArticles = () => {
   const [select, setSelect] = useState([...subcategories.vijesti]);
-  const [curSelect, setCurSelect] = useState('BiH');
+  const [curSelect, setCurSelect] = useState("BiH");
   const [selectTwo, setSelectTwo] = useState([...subcategories.početna]);
-  const [curSelectTwo, setCurSelectTwo] = useState('Vijesti');
+  const [curSelectTwo, setCurSelectTwo] = useState("Vijesti");
   const [glavni, setGlavni] = useState(true);
   const [adding, setAdding] = useState(false);
   const [addingModus, setAddingModus] = useState(false);
@@ -243,106 +268,107 @@ const EditArticles = () => {
   const [showSubCat, setShowSubCat] = useState(false);
   const [loading, setLoading] = useState(false);
   const [switching, setSwitching] = useState(false);
+  const [editing, setEditing] = useState(false);
   const [articles, setArticles] = useState([
-    {
-      articleText: '',
-      category: '',
-      subCategory: '',
-      commentsAllowed: '',
-      date: '',
-      id: '',
-      imageText: '',
-      tags: [],
-      timeDiff: '',
-      title: 'asd',
-      subTitle: 'asdd1',
-      images: [
-        'https://firebasestorage.googleapis.com/v0/b/klix-74c29.appspot.com/o/images%2FBiznis%2FFinansije%2F-Mh9IGTA76VEvVt_QsSj%2FHearthstone%20Screenshot%2003-25-21%2021.19.39.png?alt=media&token=c654015b-96f1-44b0-8c04-a49849e623ee',
-      ],
-      shares: [''],
-      comments: [''],
-    },
-    {
-      articleText: '',
-      category: '',
-      subCategory: '',
-      commentsAllowed: '',
-      date: '',
-      id: '',
-      imageText: '',
-      tags: [],
-      timeDiff: '',
-      title: 'asd',
-      subTitle: 'asdd2',
-      images: [
-        'https://firebasestorage.googleapis.com/v0/b/klix-74c29.appspot.com/o/images%2FBiznis%2FFinansije%2F-Mh9IGTA76VEvVt_QsSj%2FHearthstone%20Screenshot%2003-25-21%2021.19.39.png?alt=media&token=c654015b-96f1-44b0-8c04-a49849e623ee',
-      ],
-      shares: [''],
-      comments: [''],
-    },
-    {
-      articleText: '',
-      category: '',
-      subCategory: '',
-      commentsAllowed: '',
-      date: '',
-      id: '',
-      imageText: '',
-      tags: [],
-      timeDiff: '',
-      title: 'asd',
-      subTitle: 'asdd3',
-      images: [
-        'https://firebasestorage.googleapis.com/v0/b/klix-74c29.appspot.com/o/images%2FBiznis%2FFinansije%2F-Mh9IGTA76VEvVt_QsSj%2FHearthstone%20Screenshot%2003-25-21%2021.19.39.png?alt=media&token=c654015b-96f1-44b0-8c04-a49849e623ee',
-      ],
-      shares: [''],
-      comments: [''],
-    },
+    // {
+    //   articleText: '',
+    //   category: '',
+    //   subCategory: '',
+    //   commentsAllowed: '',
+    //   date: '',
+    //   id: '',
+    //   imageText: '',
+    //   tags: [],
+    //   timeDiff: '',
+    //   title: 'asd',
+    //   subTitle: 'asdd1',
+    //   images: [
+    //     'https://firebasestorage.googleapis.com/v0/b/klix-74c29.appspot.com/o/images%2FBiznis%2FFinansije%2F-Mh9IGTA76VEvVt_QsSj%2FHearthstone%20Screenshot%2003-25-21%2021.19.39.png?alt=media&token=c654015b-96f1-44b0-8c04-a49849e623ee',
+    //   ],
+    //   shares: [''],
+    //   comments: [''],
+    // },
+    // {
+    //   articleText: '',
+    //   category: '',
+    //   subCategory: '',
+    //   commentsAllowed: '',
+    //   date: '',
+    //   id: '',
+    //   imageText: '',
+    //   tags: [],
+    //   timeDiff: '',
+    //   title: 'asd',
+    //   subTitle: 'asdd2',
+    //   images: [
+    //     'https://firebasestorage.googleapis.com/v0/b/klix-74c29.appspot.com/o/images%2FBiznis%2FFinansije%2F-Mh9IGTA76VEvVt_QsSj%2FHearthstone%20Screenshot%2003-25-21%2021.19.39.png?alt=media&token=c654015b-96f1-44b0-8c04-a49849e623ee',
+    //   ],
+    //   shares: [''],
+    //   comments: [''],
+    // },
+    // {
+    //   articleText: '',
+    //   category: '',
+    //   subCategory: '',
+    //   commentsAllowed: '',
+    //   date: '',
+    //   id: '',
+    //   imageText: '',
+    //   tags: [],
+    //   timeDiff: '',
+    //   title: 'asd',
+    //   subTitle: 'asdd3',
+    //   images: [
+    //     'https://firebasestorage.googleapis.com/v0/b/klix-74c29.appspot.com/o/images%2FBiznis%2FFinansije%2F-Mh9IGTA76VEvVt_QsSj%2FHearthstone%20Screenshot%2003-25-21%2021.19.39.png?alt=media&token=c654015b-96f1-44b0-8c04-a49849e623ee',
+    //   ],
+    //   shares: [''],
+    //   comments: [''],
+    // },
+    // {},
+    // {
+    //   articleText: '',
+    //   category: '',
+    //   subCategory: '',
+    //   commentsAllowed: '',
+    //   date: '',
+    //   id: '',
+    //   imageText: '',
+    //   tags: [],
+    //   timeDiff: '',
+    //   title: 'asd',
+    //   subTitle: 'asdd4',
+    //   images: [
+    //     'https://firebasestorage.googleapis.com/v0/b/klix-74c29.appspot.com/o/images%2FBiznis%2FFinansije%2F-Mh9IGTA76VEvVt_QsSj%2FHearthstone%20Screenshot%2003-25-21%2021.19.39.png?alt=media&token=c654015b-96f1-44b0-8c04-a49849e623ee',
+    //   ],
+    //   shares: [''],
+    //   comments: [''],
+    // },
+    // {
+    //   articleText: '',
+    //   category: '',
+    //   subCategory: '',
+    //   commentsAllowed: '',
+    //   date: '',
+    //   id: '',
+    //   imageText: '',
+    //   tags: [],
+    //   timeDiff: '',
+    //   title: 'asd',
+    //   subTitle: 'asdd5',
+    //   images: [
+    //     'https://firebasestorage.googleapis.com/v0/b/klix-74c29.appspot.com/o/images%2FBiznis%2FFinansije%2F-Mh9IGTA76VEvVt_QsSj%2FHearthstone%20Screenshot%2003-25-21%2021.19.39.png?alt=media&token=c654015b-96f1-44b0-8c04-a49849e623ee',
+    //   ],
+    //   shares: [''],
+    //   comments: [''],
+    // },
+    // {},
     {},
-    {
-      articleText: '',
-      category: '',
-      subCategory: '',
-      commentsAllowed: '',
-      date: '',
-      id: '',
-      imageText: '',
-      tags: [],
-      timeDiff: '',
-      title: 'asd',
-      subTitle: 'asdd4',
-      images: [
-        'https://firebasestorage.googleapis.com/v0/b/klix-74c29.appspot.com/o/images%2FBiznis%2FFinansije%2F-Mh9IGTA76VEvVt_QsSj%2FHearthstone%20Screenshot%2003-25-21%2021.19.39.png?alt=media&token=c654015b-96f1-44b0-8c04-a49849e623ee',
-      ],
-      shares: [''],
-      comments: [''],
-    },
-    {
-      articleText: '',
-      category: '',
-      subCategory: '',
-      commentsAllowed: '',
-      date: '',
-      id: '',
-      imageText: '',
-      tags: [],
-      timeDiff: '',
-      title: 'asd',
-      subTitle: 'asdd5',
-      images: [
-        'https://firebasestorage.googleapis.com/v0/b/klix-74c29.appspot.com/o/images%2FBiznis%2FFinansije%2F-Mh9IGTA76VEvVt_QsSj%2FHearthstone%20Screenshot%2003-25-21%2021.19.39.png?alt=media&token=c654015b-96f1-44b0-8c04-a49849e623ee',
-      ],
-      shares: [''],
-      comments: [''],
-    },
     {},
-    // {},
-    // {},
-    // {},
-    // {},
-    // {},
-    // {},
-    // {},
+    {},
+    {},
+    {},
+    {},
+    {},
   ]);
   const [clickedPos, setClickedPos] = useState(null);
   const [fetchPos, setFetchPos] = useState(null);
@@ -357,6 +383,7 @@ const EditArticles = () => {
   const modalRef = useRef();
   const addArticleBox = useRef();
   const switchArticleBox = useRef();
+  const editArticleBox = useRef();
   const history = useHistory();
 
   const [articleFetch, setArticleFetch] = useState([]);
@@ -371,15 +398,22 @@ const EditArticles = () => {
 
   useEffect(() => {
     console.log(switchSelect.current.value);
-    window.addEventListener('popstate', () => {
-      alert('popped');
-    });
+    // window.addEventListener('popstate', () => {
+    //   alert('popped');
+    // });
+    fetchArticles("init");
   }, []);
 
+  useEffect(() => {
+    if (articleFetch) {
+      console.log(articleFetch);
+    }
+  }, [articleFetch]);
+
   const handleSelectChange = (e, mode) => {
-    if (mode === 'dva') {
+    if (mode === "dva") {
       setCurSelectTwo(e.target.value);
-    } else if (mode === 'jedan') {
+    } else if (mode === "jedan") {
       setCurSelect(e.target.value);
     }
   };
@@ -389,78 +423,78 @@ const EditArticles = () => {
     const { value } = e.target;
     setShowSubCat(true);
     switch (value) {
-      case 'Početna':
-        if (mode === 'two') {
+      case "Početna":
+        if (mode === "two") {
           setSelectTwo([...subcategories.početna]);
           setCurSelectTwo([...subcategories.početna[0]]);
           break;
         }
-      case 'Vijesti':
-        if (mode === 'jedan') {
+      case "Vijesti":
+        if (mode === "jedan") {
           setSelect([...subcategories.vijesti]);
           setCurSelect(subcategories.vijesti[0]);
           break;
-        } else if (mode === 'two') {
+        } else if (mode === "two") {
           setSelectTwo([...subcategories.vijesti]);
           setCurSelectTwo(subcategories.vijesti[0]);
           break;
         }
-      case 'Biznis':
-        if (mode === 'jedan') {
+      case "Biznis":
+        if (mode === "jedan") {
           setSelect([...subcategories.biznis]);
           setCurSelect(subcategories.biznis[0]);
           break;
-        } else if (mode === 'two') {
+        } else if (mode === "two") {
           setSelectTwo([...subcategories.biznis]);
           setCurSelectTwo(subcategories.biznis[0]);
           break;
         }
-      case 'Sport':
-        if (mode === 'jedan') {
+      case "Sport":
+        if (mode === "jedan") {
           setSelect([...subcategories.sport]);
           setCurSelect(subcategories.sport[0]);
           break;
-        } else if (mode === 'two') {
+        } else if (mode === "two") {
           setSelectTwo([...subcategories.sport]);
           setCurSelectTwo(subcategories.sport[0]);
           break;
         }
-      case 'Magazin':
-        if (mode === 'jedan') {
+      case "Magazin":
+        if (mode === "jedan") {
           setSelect([...subcategories.magazin]);
           setCurSelect(subcategories.magazin[0]);
           break;
-        } else if (mode === 'two') {
+        } else if (mode === "two") {
           setSelectTwo([...subcategories.magazin]);
           setCurSelectTwo(subcategories.magazin[0]);
           break;
         }
-      case 'Lifestyle':
-        if (mode === 'jedan') {
+      case "Lifestyle":
+        if (mode === "jedan") {
           setSelect([...subcategories.lifestyle]);
           setCurSelect(subcategories.lifestyle[0]);
           break;
-        } else if (mode === 'two') {
+        } else if (mode === "two") {
           setSelectTwo([...subcategories.lifestyle]);
           setCurSelectTwo(subcategories.lifestyle[0]);
           break;
         }
-      case 'Scitech':
-        if (mode === 'jedan') {
+      case "Scitech":
+        if (mode === "jedan") {
           setSelect([...subcategories.scitech]);
           setCurSelect(subcategories.scitech[0]);
           break;
-        } else if (mode === 'two') {
+        } else if (mode === "two") {
           setSelectTwo([...subcategories.scitech]);
           setCurSelectTwo(subcategories.scitech[0]);
           break;
         }
-      case 'Auto':
-        if (mode === 'jedan') {
+      case "Auto":
+        if (mode === "jedan") {
           setSelect([...subcategories.auto]);
           setCurSelect(subcategories.auto[0]);
           break;
-        } else if (mode === 'two') {
+        } else if (mode === "two") {
           setSelectTwo([...subcategories.auto]);
           setCurSelectTwo(subcategories.auto[0]);
           break;
@@ -469,7 +503,7 @@ const EditArticles = () => {
   };
 
   const handleGlavni = (e) => {
-    if (e.target.value === 'Glavni sadržaj') {
+    if (e.target.value === "Glavni sadržaj") {
       setGlavni(true);
     } else {
       setGlavni(false);
@@ -478,32 +512,85 @@ const EditArticles = () => {
 
   const handleCloseOverlay = (e) => {
     const { id } = e.target;
-    if (id.includes('overlay') && !showModal) {
+    if (id.includes("overlay") && !showModal) {
       setAdding(false);
       setShowSubCat(false);
       setArticleFetch([]);
       setClickedPos(null);
+      if (editing) {
+        setEditing(false);
+      }
     }
   };
 
-  const fetchArticles = () => {
+  const fetchArticles = (mode) => {
     setLoading(true);
-    const mainVal = selectMainVal.current.value;
-    const dbRef = db.ref(`articles/${mainVal}/${curSelect}`);
-
-    dbRef.get().then((snapshot) => {
-      if (snapshot.exists) {
-        const data = snapshot.val();
-        let realData = [];
-        let incr = 0;
-        for (let key in data) {
-          realData.push(data[key]);
-          realData[incr].timeDiff = timeDifference(realData[incr].date);
-          incr++;
+    let dbRef = undefined;
+    if (mode === "init") {
+      dbRef = db.ref(`viewContent/Glavni sadržaj/Početna`);
+      dbRef.get().then((snapshot) => {
+        if (snapshot.exists) {
+          const data = snapshot.val();
+          console.log(data);
+          let realData = [];
+          const dataReady = [];
+          let incr = 0;
+          for (let key in data) {
+            realData.push(data[key]);
+            console.log(data[key]);
+            // if (realData[incr]) {
+            //   realData[incr].timeDiff = timeDifference(realData[incr].date);
+            //   incr++;
+            // }
+          }
+          console.log(realData[0]);
+          realData[0].forEach((art, i) => {
+            console.log(art[1]);
+            console.log(art[0]);
+            fetch(
+              `https://klix-74c29-default-rtdb.europe-west1.firebasedatabase.app/articles/${art[1]}/-${art[0]}.json`
+            )
+              .then((response) => response.json())
+              .then((data) => {
+                console.log(data);
+                dataReady.push(data);
+                if (dataReady[incr]) {
+                  dataReady[incr].timeDiff = timeDifference(
+                    dataReady[incr].date
+                  );
+                  incr++;
+                }
+                if (i === realData[0].length - 1) {
+                  if (dataReady.length < 7) {
+                    const diff = 7 - dataReady.length;
+                    for (let i = 0; i < diff; i++) {
+                      dataReady.push({});
+                    }
+                  }
+                  setArticles(dataReady);
+                }
+              });
+          });
+          // setArticles(realData);
         }
-        setArticleFetch(realData);
-      }
-    });
+      });
+    } else {
+      const mainVal = selectMainVal.current.value;
+      dbRef = db.ref(`articles/${mainVal}/${curSelect}`);
+      dbRef.get().then((snapshot) => {
+        if (snapshot.exists) {
+          const data = snapshot.val();
+          let realData = [];
+          let incr = 0;
+          for (let key in data) {
+            realData.push(data[key]);
+            realData[incr].timeDiff = timeDifference(realData[incr].date);
+            incr++;
+          }
+          setArticleFetch(realData);
+        }
+      });
+    }
   };
 
   const handleAddFetchedArticle = (e) => {
@@ -516,6 +603,10 @@ const EditArticles = () => {
         }
       }
     }
+  };
+
+  const handleEditFetchedArticle = (artItem) => {
+    console.log(artItem);
   };
 
   useEffect(() => {}, []);
@@ -533,7 +624,7 @@ const EditArticles = () => {
   };
 
   const handleConfirmation = (e) => {
-    if (e.target.textContent === 'Da') {
+    if (e.target.textContent === "Da") {
       // alert(clickedPos);
       // alert(fetchPos);
       setArticles((old) => {
@@ -547,7 +638,7 @@ const EditArticles = () => {
       setArticleFetch([]);
       setClickedPos(null);
       setFetchPos(null);
-    } else if (e.target.textContent === 'Ne') {
+    } else if (e.target.textContent === "Ne") {
       setShowModal(false);
       setFetchPos(null);
     }
@@ -555,27 +646,31 @@ const EditArticles = () => {
 
   const handleModeSwitch = (e, input) => {
     const { value } = e.target;
-    if (input === 'dodaj' && switchingModus) {
+    if (input === "dodaj" && switchingModus) {
       setSwitchingModus(false);
       setAddingModus(true);
       return;
-    } else if (input === 'zamjeni' && addingModus) {
+    } else if (input === "zamjeni" && addingModus) {
       setAddingModus(false);
       setSwitchingModus(true);
       return;
     }
-    if (input === 'dodaj' && !switchingModus && addingModus) {
+    if (input === "dodaj" && !switchingModus && addingModus) {
       setAddingModus(false);
       return;
-    } else if (input === 'zamjeni' && !addingModus && switchingModus) {
+    } else if (input === "zamjeni" && !addingModus && switchingModus) {
       setSwitchingModus(false);
       return;
     }
-    if (input === 'dodaj') {
+    if (input === "dodaj") {
       setAddingModus(true);
-    } else if (input === 'zamjeni') {
+    } else if (input === "zamjeni") {
       setSwitchingModus(true);
     }
+  };
+
+  const handleEdit = () => {
+    setEditing(true);
   };
 
   const dragStart = (e) => {
@@ -592,14 +687,14 @@ const EditArticles = () => {
               }
             }
           }
-          const xferObj = { dragPos: +dragNum, place: 'right' };
-          e.dataTransfer.setData('text', JSON.stringify(xferObj));
+          const xferObj = { dragPos: +dragNum, place: "right" };
+          e.dataTransfer.setData("text", JSON.stringify(xferObj));
         } else if (subConentCntLeft.current.contains(e.target)) {
           for (let i = 0; i < subConentCntLeft.current.children.length; i++) {
             if (subConentCntLeft.current.children[i].contains(e.target)) {
               dragNum = i;
-              const xferObj = { dragPos: +dragNum, place: 'left' };
-              e.dataTransfer.setData('text', JSON.stringify(xferObj));
+              const xferObj = { dragPos: +dragNum, place: "left" };
+              e.dataTransfer.setData("text", JSON.stringify(xferObj));
             }
           }
         }
@@ -609,7 +704,7 @@ const EditArticles = () => {
             if (mainContentCnt.current.children[i].contains(e.target)) {
               dragNum = i;
               const xferObj = { dragPos: +dragNum };
-              e.dataTransfer.setData('text', JSON.stringify(xferObj));
+              e.dataTransfer.setData("text", JSON.stringify(xferObj));
             }
           }
         }
@@ -636,7 +731,7 @@ const EditArticles = () => {
               } else if (i === 1) {
                 droppedPos = 5;
               }
-              let dragData = e.dataTransfer.getData('text');
+              let dragData = e.dataTransfer.getData("text");
               dragData = JSON.parse(dragData);
               setArticles((old) => {
                 let newArr = [...old];
@@ -654,10 +749,10 @@ const EditArticles = () => {
               droppedPos = i;
             }
           }
-          let dragData = e.dataTransfer.getData('text');
+          let dragData = e.dataTransfer.getData("text");
           dragData = JSON.parse(dragData);
           console.log(dragData);
-          if (dragData.place === 'right') {
+          if (dragData.place === "right") {
             setArticles((old) => {
               let newArr = [...old];
               let extra = [...old];
@@ -665,7 +760,7 @@ const EditArticles = () => {
               newArr[droppedPos] = { ...extra[dragData.dragPos] };
               return newArr;
             });
-          } else if (dragData.place === 'left') {
+          } else if (dragData.place === "left") {
             setArticles((old) => {
               let newArr = [...old];
               let extra = [...old];
@@ -680,7 +775,7 @@ const EditArticles = () => {
           for (let i = 0; i < mainContentCnt.current.children.length; i++) {
             if (mainContentCnt.current.children[i].contains(e.target)) {
               droppedPos = i;
-              let dragData = e.dataTransfer.getData('text');
+              let dragData = e.dataTransfer.getData("text");
               dragData = JSON.parse(dragData);
               setArticles((old) => {
                 let newArr = [...old];
@@ -705,10 +800,15 @@ const EditArticles = () => {
     // const dbRef = db.ref(`articles/auto/Testovi`);
     console.log(articles);
     const articleIds = {};
-    articles.forEach((art, i) => {
-      articleIds[i] = [];
-      articleIds[i][0] = art.id;
-      articleIds[i][1] = `${art.category}/${art.subCategory}`;
+    let incr = 0;
+
+    articles.forEach((art) => {
+      if (art.id) {
+        articleIds[incr] = [];
+        articleIds[incr][0] = art.id;
+        articleIds[incr][1] = `${art.category}/${art.subCategory}`;
+        incr++;
+      }
     });
     console.log(articleIds);
     dbRef.get().then((snapshot) => {
@@ -719,14 +819,14 @@ const EditArticles = () => {
         if (data) {
           const objKey = Object.keys(data);
           console.log(objKey);
-          alert('does exist');
+          alert("does exist");
           fetch(
             `https://klix-74c29-default-rtdb.europe-west1.firebasedatabase.app/viewContent/${val1}/${val2}/${objKey[0]}.json`,
             {
-              method: 'PATCH',
+              method: "PATCH",
               body: JSON.stringify(articleIds),
               headers: {
-                'Content-Type': 'application/json',
+                "Content-Type": "application/json",
               },
             }
           )
@@ -735,14 +835,14 @@ const EditArticles = () => {
               console.log(data);
             });
         } else {
-          alert('does not exist');
+          alert("does not exist");
           fetch(
             `https://klix-74c29-default-rtdb.europe-west1.firebasedatabase.app/viewContent/${val1}/${val2}.json`,
             {
-              method: 'POST',
+              method: "POST",
               body: JSON.stringify(articleIds),
               headers: {
-                'Content-Type': 'application/json',
+                "Content-Type": "application/json",
               },
             }
           )
@@ -795,11 +895,11 @@ const EditArticles = () => {
         <Overlay handleCloseOverlay={handleCloseOverlay}>
           <div id={s.allArticlesHeader}>
             <select
-              onChange={(e) => handleSelectMain(e, 'jedan')}
-              defaultValue={''}
+              onChange={(e) => handleSelectMain(e, "jedan")}
+              defaultValue={""}
               ref={selectMainVal}
             >
-              <option disabled={true} label={' -- Izaberi opciju -- '}></option>
+              <option disabled={true} label={" -- Izaberi opciju -- "}></option>
               <option>Vijesti</option>
               <option>Biznis</option>
               <option>Sport</option>
@@ -812,7 +912,7 @@ const EditArticles = () => {
               <>
                 <select
                   value={curSelect}
-                  onChange={(e) => handleSelectChange(e, 'jedan')}
+                  onChange={(e) => handleSelectChange(e, "jedan")}
                 >
                   {select.map((item) => (
                     <option key={uuid()}>{item}</option>
@@ -845,21 +945,107 @@ const EditArticles = () => {
                         <span>{articleItem.timeDiff}</span>
                         <div className={s.articleItemFetchBundle}>
                           <span>
-                            <i class="fas fa-comment"></i>{' '}
+                            <i class="fas fa-comment"></i>{" "}
                             {articleItem.comments.length === 1 &&
-                            articleItem.comments[0] === ''
+                            articleItem.comments[0] === ""
                               ? 0
                               : articleItem.comments.length}
                           </span>
                           <span>
-                            <i class="fas fa-share-alt"></i>{' '}
+                            <i class="fas fa-share-alt"></i>{" "}
                             {articleItem.shares.length === 1 &&
-                            articleItem.shares[0] === ''
+                            articleItem.shares[0] === ""
                               ? 0
                               : articleItem.shares.length}
                           </span>
                         </div>
                       </div>
+                    </div>
+                  );
+                })}
+            </div>
+          </div>
+          {showModal && (
+            <Modal ref={modalRef} handleClick={handleConfirmation} />
+          )}
+        </Overlay>
+      )}
+      {editing && (
+        <Overlay handleCloseOverlay={handleCloseOverlay}>
+          <div id={s.allArticlesHeader}>
+            <select
+              onChange={(e) => handleSelectMain(e, "jedan")}
+              defaultValue={""}
+              ref={selectMainVal}
+            >
+              <option disabled={true} label={" -- Izaberi opciju -- "}></option>
+              <option>Vijesti</option>
+              <option>Biznis</option>
+              <option>Sport</option>
+              <option>Magazin</option>
+              <option>Lifestyle</option>
+              <option>Scitech</option>
+              <option>Auto</option>
+            </select>
+            {showSubCat && (
+              <>
+                <select
+                  value={curSelect}
+                  onChange={(e) => handleSelectChange(e, "jedan")}
+                >
+                  {select.map((item) => (
+                    <option key={uuid()}>{item}</option>
+                  ))}
+                </select>
+                <button id={s.fetchBtn} onClick={fetchArticles}>
+                  Prikaži sadržaj
+                </button>
+              </>
+            )}
+
+            <div id={s.allArticlesItems} ref={articleFetchCnt}>
+              {articleFetch &&
+                articleFetch.map((articleItem) => {
+                  return (
+                    <div
+                      className={s.articleFetchItem}
+                      onClick={() => handleEditFetchedArticle(articleItem)}
+                      key={uuid()}
+                    >
+                      <Link
+                        to={{
+                          pathname: "/adminpanel",
+                          state: { articleData: articleItem },
+                        }}
+                      >
+                        <div className={s.articleFetchItemImgCnt}>
+                          {/* <img src={articleItem.url[0]} /> */}
+                          <img src={articleItem.images[0]} />
+                        </div>
+                        <div className={s.articleItemFetchTitles}>
+                          <h3>{articleItem.subTitle}</h3>
+                          <h3>{articleItem.title}</h3>
+                        </div>
+                        <div className={s.articleItemFetchFooter}>
+                          <span>{articleItem.timeDiff}</span>
+                          <div className={s.articleItemFetchBundle}>
+                            <span>
+                              <i class="fas fa-comment"></i>{" "}
+                              {articleItem.comments.length === 1 &&
+                              articleItem.comments[0] === ""
+                                ? 0
+                                : articleItem.comments.length}
+                            </span>
+                            <span>
+                              <i class="fas fa-share-alt"></i>{" "}
+                              {articleItem.shares.length === 1 &&
+                              articleItem.shares[0] === ""
+                                ? 0
+                                : articleItem.shares.length}
+                            </span>
+                          </div>
+                        </div>
+                      </Link>
                     </div>
                   );
                 })}
@@ -878,14 +1064,14 @@ const EditArticles = () => {
               <select
                 onChange={handleGlavni}
                 ref={switchSelect}
-                value={glavni ? 'Glavni sadržaj' : 'Sporedni sadržaj'}
+                value={glavni ? "Glavni sadržaj" : "Sporedni sadržaj"}
               >
                 <option>Glavni sadržaj</option>
                 <option>Sporedni sadržaj</option>
               </select>
               <select
-                onChange={(e) => handleSelectMain(e, 'two')}
-                defaultValue={'Početna'}
+                onChange={(e) => handleSelectMain(e, "two")}
+                defaultValue={"Početna"}
               >
                 <option>Početna</option>
                 <option>Vijesti</option>
@@ -898,9 +1084,9 @@ const EditArticles = () => {
               </select>
               {!glavni && (
                 <select
-                  onChange={(e) => handleSelectChange(e, 'dva')}
+                  onChange={(e) => handleSelectChange(e, "dva")}
                   value={curSelectTwo}
-                  defaultValue={'Vijesti'}
+                  defaultValue={"Vijesti"}
                 >
                   {selectTwo.map((item) => (
                     <option key={uuid()}>{item}</option>
@@ -914,7 +1100,7 @@ const EditArticles = () => {
                   name="dodajswitch"
                   value="Dodaj clanak"
                   onClick={(e) => {
-                    handleModeSwitch(e, 'dodaj');
+                    handleModeSwitch(e, "dodaj");
                   }}
                   checked={addingModus}
                   ref={addArticleBox}
@@ -926,12 +1112,22 @@ const EditArticles = () => {
                   name="dodajswitch"
                   value="Zamjeni clanak"
                   onClick={(e) => {
-                    handleModeSwitch(e, 'zamjeni');
+                    handleModeSwitch(e, "zamjeni");
                   }}
                   checked={switchingModus}
                   ref={switchArticleBox}
                 />
                 <label htmlFor="switching">Zamjeni poziciju</label>
+                <input
+                  type="checkbox"
+                  id="editing"
+                  name="dodajswitch"
+                  value="Edituj clanak"
+                  onClick={handleEdit}
+                  checked={editing}
+                  ref={editArticleBox}
+                />
+                <label htmlFor="editing">Edituj članak</label>
               </div>
               <div id={s.saveChanges}>
                 <button onClick={saveChanges}>Spasi izmjene</button>
@@ -963,23 +1159,23 @@ const EditArticles = () => {
                                   <span>{article.timeDiff}</span>
                                   <div className={s.subLeftBundleRight}>
                                     <span>
-                                      <i class="fas fa-comment"></i>{' '}
+                                      <i class="fas fa-comment"></i>{" "}
                                       {article.comments.length === 1 &&
-                                      article.comments[0] === ''
+                                      article.comments[0] === ""
                                         ? 0
                                         : article.comments.length}
                                     </span>
                                     <span>
-                                      <i class="fas fa-share-alt"></i>{' '}
+                                      <i class="fas fa-share-alt"></i>{" "}
                                       {article.shares.length === 1 &&
-                                      article.shares[0] === ''
+                                      article.shares[0] === ""
                                         ? 0
                                         : article.shares.length}
                                     </span>
                                   </div>
                                 </div>
                               </>
-                            )}{' '}
+                            )}{" "}
                             {clickedPos === i && (
                               <div className={s.addArticleLeft}>
                                 <i
@@ -1014,16 +1210,16 @@ const EditArticles = () => {
                                 <span>{article.timeDiff}</span>
                                 <div className={s.subLeftBundleRight}>
                                   <span>
-                                    <i class="fas fa-comment"></i>{' '}
+                                    <i class="fas fa-comment"></i>{" "}
                                     {article.comments.length === 1 &&
-                                    article.comments[0] === ''
+                                    article.comments[0] === ""
                                       ? 0
                                       : article.comments.length}
                                   </span>
                                   <span>
-                                    <i class="fas fa-share-alt"></i>{' '}
+                                    <i class="fas fa-share-alt"></i>{" "}
                                     {article.shares.length === 1 &&
-                                    article.shares[0] === ''
+                                    article.shares[0] === ""
                                       ? 0
                                       : article.shares.length}
                                   </span>
@@ -1050,7 +1246,7 @@ const EditArticles = () => {
                           </div>
                         );
                       } else if (i <= 3 && !addingModus) {
-                        return <div className={s.emptySub}></div>;
+                        return <div className={s.emptySub} key={uuid()}></div>;
                       }
                     }
                   })}
@@ -1076,16 +1272,16 @@ const EditArticles = () => {
                               <span>{article.timeDiff}</span>
                               <div className={s.subRightBundleRight}>
                                 <span>
-                                  <i class="fas fa-comment"></i>{' '}
+                                  <i class="fas fa-comment"></i>{" "}
                                   {article.comments.length === 1 &&
-                                  article.comments[0] === ''
+                                  article.comments[0] === ""
                                     ? 0
                                     : article.comments.length}
                                 </span>
                                 <span>
-                                  <i class="fas fa-share-alt"></i>{' '}
+                                  <i class="fas fa-share-alt"></i>{" "}
                                   {article.shares.length === 1 &&
-                                  article.shares[0] === ''
+                                  article.shares[0] === ""
                                     ? 0
                                     : article.shares.length}
                                 </span>
@@ -1139,20 +1335,20 @@ const EditArticles = () => {
                                   <div className={s.articleFooter}>
                                     <span>{article.timeDiff}</span>
                                     <span>
-                                      <i class="fas fa-comment"></i>{' '}
+                                      <i class="fas fa-comment"></i>{" "}
                                       {article.comments.length === 1 &&
-                                      article.comments[0] === ''
+                                      article.comments[0] === ""
                                         ? 0
                                         : article.comments.length}
-                                      <i class="fas fa-share-alt"></i>{' '}
+                                      <i class="fas fa-share-alt"></i>{" "}
                                       {article.shares.length === 1 &&
-                                      article.shares[0] === ''
+                                      article.shares[0] === ""
                                         ? 0
                                         : article.shares.length}
                                     </span>
                                   </div>
                                 </>
-                              )}{' '}
+                              )}{" "}
                               {clickedPos === i && (
                                 <div className={s.addArticle}>
                                   <i
@@ -1186,16 +1382,16 @@ const EditArticles = () => {
                                       className={s.articleItemBgFooterBundle}
                                     >
                                       <span>
-                                        <i class="fas fa-comment"></i>{' '}
+                                        <i class="fas fa-comment"></i>{" "}
                                         {article.comments.length === 1 &&
-                                        article.comments[0] === ''
+                                        article.comments[0] === ""
                                           ? 0
                                           : article.comments.length}
                                       </span>
                                       <span>
-                                        <i class="fas fa-share-alt"></i>{' '}
+                                        <i class="fas fa-share-alt"></i>{" "}
                                         {article.shares.length === 1 &&
-                                        article.shares[0] === ''
+                                        article.shares[0] === ""
                                           ? 0
                                           : article.shares.length}
                                       </span>
@@ -1223,7 +1419,7 @@ const EditArticles = () => {
                                 : `${s.addArticle} ${s.addArticleBg}`
                             }
                             onClick={(e) =>
-                              handleAddFetchedArticle(e, 'mainContent')
+                              handleAddFetchedArticle(e, "mainContent")
                             }
                             onMouseEnter={() => showAdding(i)}
                             key={uuid()}
@@ -1262,14 +1458,14 @@ const EditArticles = () => {
                               <div className={s.articleFooter}>
                                 <span>{article.timeDiff}</span>
                                 <span>
-                                  <i class="fas fa-comment"></i>{' '}
+                                  <i class="fas fa-comment"></i>{" "}
                                   {article.comments.length === 1 &&
-                                  article.comments[0] === ''
+                                  article.comments[0] === ""
                                     ? 0
                                     : article.comments.length}
-                                  <i class="fas fa-share-alt"></i>{' '}
+                                  <i class="fas fa-share-alt"></i>{" "}
                                   {article.shares.length === 1 &&
-                                  article.shares[0] === ''
+                                  article.shares[0] === ""
                                     ? 0
                                     : article.shares.length}
                                 </span>
@@ -1299,16 +1495,16 @@ const EditArticles = () => {
                                 <span>{article.timeDiff}</span>
                                 <div className={s.articleItemBgFooterBundle}>
                                   <span>
-                                    <i class="fas fa-comment"></i>{' '}
+                                    <i class="fas fa-comment"></i>{" "}
                                     {article.comments.length === 1 &&
-                                    article.comments[0] === ''
+                                    article.comments[0] === ""
                                       ? 0
                                       : article.comments.length}
                                   </span>
                                   <span>
-                                    <i class="fas fa-share-alt"></i>{' '}
+                                    <i class="fas fa-share-alt"></i>{" "}
                                     {article.shares.length === 1 &&
-                                    article.shares[0] === ''
+                                    article.shares[0] === ""
                                       ? 0
                                       : article.shares.length}
                                   </span>
@@ -1318,7 +1514,12 @@ const EditArticles = () => {
                           );
                         }
                       } else {
-                        return <div className={s.empty}></div>;
+                        return (
+                          <div
+                            className={i !== 1 ? s.empty : s.emptyBg}
+                            key={uuid()}
+                          ></div>
+                        );
                       }
                     }
                   })}

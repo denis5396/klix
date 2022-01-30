@@ -324,6 +324,10 @@
   margin-top: 1rem;
   height: fit-content;
 }
+.articleFetchItem a {
+  text-decoration: none;
+  color: inherit;
+}
 .articleFetchItemImgCnt {
   width: 100%;
 }
@@ -386,7 +390,16 @@
 #chooseModeCnt label:nth-of-type(1) {
   margin-right: 1rem;
 }
+#chooseModeCnt input:nth-of-type(3) {
+  margin-left: 1rem;
+  margin-right: 0.4rem;
+}
 .empty {
+  background-color: #fff;
+  border: 0.1rem solid #e5e7eb;
+}
+.emptyBg {
+  grid-column: span 2;
   background-color: #fff;
   border: 0.1rem solid #e5e7eb;
 }

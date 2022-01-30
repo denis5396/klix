@@ -1,15 +1,11 @@
-import React, { useContext, useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
-import LoginContext from '../../context';
-import s from './Nav.module.css';
+import React, { useContext, useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import LoginContext from "../../context";
+import s from "./Nav.module.css";
 
 const Nav = () => {
   const ctx = useContext(LoginContext);
-  const [avatarColor, setAvatarColor] = useState('');
   const isLogged = ctx.isLoggedIn;
-  useEffect(() => {
-    setAvatarColor(localStorage.getItem('avatarColor'));
-  }, []);
 
   return (
     <header id={s.navHeader}>
@@ -48,7 +44,7 @@ const Nav = () => {
         <i class="fas fa-search"></i>
         <Link
           to={
-            ctx.user.displayName ? `/profil/${ctx.user.displayName}` : '/login'
+            ctx.user.displayName ? `/profil/${ctx.user.displayName}` : "/login"
           }
         >
           {!ctx.isLoggedIn && <i class="far fa-user"></i>}
@@ -58,10 +54,10 @@ const Nav = () => {
               class="fas fa-user"
               style={{
                 backgroundColor: `#${ctx.user.avatarColor}`,
-                color: '#fff',
-                padding: '.7rem',
-                borderRadius: '.3rem',
-                fontSize: '1.3rem',
+                color: "#fff",
+                padding: ".7rem",
+                borderRadius: ".3rem",
+                fontSize: "1.3rem",
               }}
             ></i>
           )}

@@ -1,31 +1,33 @@
-import { Route, Switch } from 'react-router-dom';
-import './App.css';
-import Nav from './components/Nav/Nav';
-import Home from './pages/Home';
-import Login from './pages/Login';
-import Footer from './components/Footer/Footer';
-import Profile from './pages/Profile';
-import { useContext, useEffect, useRef } from 'react';
-import LoginContext from './context';
-import { auth } from './firebase';
-import AdminPanel from './pages/AdminPanel';
-import LoginForm from './components/Login/LoginForm';
-import UserInfo from './components/UserInfo/UserInfo';
-import Overlay from './components/Overlay/Overlay';
-import Article from './pages/Article';
-import EditArticlesPage from './pages/EditArticles';
+import { Route, Switch } from "react-router-dom";
+import "./App.css";
+import Nav from "./components/Nav/Nav";
+import Home from "./pages/Home";
+import Login from "./pages/Login";
+import Footer from "./components/Footer/Footer";
+import Profile from "./pages/Profile";
+import { useContext, useEffect, useRef } from "react";
+import LoginContext from "./context";
+import { auth } from "./firebase";
+import AdminPanel from "./pages/AdminPanel";
+import LoginForm from "./components/Login/LoginForm";
+import UserInfo from "./components/UserInfo/UserInfo";
+import Overlay from "./components/Overlay/Overlay";
+import Article from "./pages/Article";
+import EditArticlesPage from "./pages/EditArticles";
+import Comment from "./components/comment/Comment";
+import Comments from "./pages/Comments";
 
 function App() {
   const ctx = useContext(LoginContext);
 
   const clearStorage = () => {
-    const session = sessionStorage.getItem('ref');
+    const session = sessionStorage.getItem("ref");
     if (session == null) {
-      localStorage.removeItem('remove');
-      localStorage.removeItem('userObj');
+      localStorage.removeItem("remove");
+      localStorage.removeItem("userObj");
       ctx.logout();
     }
-    sessionStorage.setItem('ref', 1);
+    sessionStorage.setItem("ref", 1);
   };
   useEffect(() => {
     // window.addEventListener('load', clearStorage);
@@ -33,7 +35,10 @@ function App() {
       if (user) {
         // alert('userhere');
       } else if (!user) {
-        ctx.logout();
+        if (localStorage.getItem("token")) {
+        } else {
+          ctx.logout();
+        }
       }
     });
   }, []);
@@ -64,7 +69,10 @@ function App() {
         <Route path="/editarticles">
           <EditArticlesPage />
         </Route>
-        <Route path="/article">
+        <Route path="/:category/:subCategory/:title/:articleId/komentari">
+          <Comments />
+        </Route>
+        <Route path="/:category/:subCategory/:title/:articleId">
           <Article />
         </Route>
       </Switch>

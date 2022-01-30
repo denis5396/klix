@@ -1,0 +1,50 @@
+#commentReply {
+  background-color: #fff;
+  border: 0.1rem solid #e5e7e5;
+  margin: 0.75rem 0;
+}
+#commentReplyFooter {
+  border-top: 0.1rem solid #e5e7e5;
+  padding: 1rem 1rem 1rem 0;
+  font-size: 1.4rem;
+  display: flex;
+  justify-content: right;
+  align-items: center;
+  color: #545a64;
+}
+#commentReplyReplies {
+  background-color: #fff;
+  border: 0.1rem solid #e5e7e5;
+  margin: 0.75rem 0;
+  margin-left: 1.6rem;
+  position: relative;
+}
+#commentReplyReplies::before {
+  content: "";
+  position: absolute;
+  left: -1.6rem;
+  height: 150%;
+  width: 0.1rem;
+  top: 0;
+  bottom: 0;
+  background-color: #e5e7eb;
+  transform: translateY(-33%);
+}
+#commentReplyFooter span i {
+  font-size: 1rem;
+}
+#commentReply textarea,
+#commentReplyReplies textarea {
+  border: none;
+  resize: vertical;
+  min-height: 8rem;
+  width: 100%;
+  padding: 1rem;
+}
+#commentReply textarea:focus,
+#commentReplyReplies textarea:focus {
+  outline: none;
+}
+#commentReplyFooter span {
+  cursor: pointer;
+}

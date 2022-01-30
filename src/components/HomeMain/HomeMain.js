@@ -1,14 +1,17 @@
-import React, { useEffect, useState } from 'react';
-import s from './HomeMain.module.css';
-import { timeDifference } from '../AdminPanel/EditArticle/EditArticle';
-import { v1 as uuid } from 'uuid';
-import { auth, db } from '../../firebase';
+import React, { useEffect, useState } from "react";
+import s from "./HomeMain.module.css";
+import { timeDifference } from "../AdminPanel/EditArticle/EditArticle";
+import { articleColors } from "../AdminPanel/EditArticle/EditArticle";
+import { v1 as uuid } from "uuid";
+import { auth, db } from "../../firebase";
+import { Link } from "react-router-dom";
+import { getComLength } from "../comment/Comment";
 
 const HomeMain = () => {
   const [articlesMain, setArticlesMain] = useState([]);
 
   useEffect(() => {
-    const dbRef = db.ref('viewContent/Glavni sadržaj/Početna');
+    const dbRef = db.ref("viewContent/Glavni sadržaj/Početna");
     dbRef.get().then((snapshot) => {
       if (snapshot.exists()) {
         const data = snapshot.val();
@@ -16,9 +19,7 @@ const HomeMain = () => {
         const articlePaths = [];
         for (let key in data) {
           data[key].forEach((item) => {
-            if (item[1] !== 'undefined/undefined' && item[1] !== '/') {
-              articlePaths.push(`${item[1]}/-${item[0]}`);
-            }
+            articlePaths.push(`${item[1]}/-${item[0]}`);
           });
         }
         console.log(articlePaths);
@@ -31,7 +32,40 @@ const HomeMain = () => {
             .then((data) => {
               console.log(data);
               placeHolderArray.push(data);
-              placeHolderArray[i].timeDiff = timeDifference(data.date);
+              for (let key in articleColors) {
+                if (
+                  key === data.category.toLowerCase() &&
+                  placeHolderArray[i]
+                ) {
+                  placeHolderArray[i].subTitleClr = articleColors[key];
+                  const titleSplit = data.title.split(" ");
+                  let titleSplit2 = [];
+                  let titleSplit3;
+                  console.log(titleSplit);
+                  titleSplit.forEach((split) => {
+                    titleSplit2.push(split.toLowerCase());
+                  });
+                  titleSplit3 = titleSplit2.join("-");
+                  titleSplit3 = titleSplit3
+                    .split(",")
+                    .join("")
+                    .split(" ")
+                    .join("-");
+                  console.log(titleSplit2);
+                  placeHolderArray[
+                    i
+                  ].linkPath = `/${data.category}/${data.subCategory}/${titleSplit3}/${data.id}`;
+                }
+              }
+              if (placeHolderArray[i]) {
+                placeHolderArray[i].timeDiff = timeDifference(data.date);
+                // if (
+                //   placeHolderArray[i].comments.length === 1 &&
+                //   placeHolderArray[i].comments[0] === ''
+                // ) {
+                //   placeHolderArray[i].comments[0] = 'dasdsa';
+                // }
+              }
               if (i === articlePaths.length - 1) {
                 console.log(placeHolderArray);
                 setArticlesMain([...placeHolderArray]);
@@ -42,7 +76,9 @@ const HomeMain = () => {
     });
   }, []);
 
-  useEffect(() => {}, [articlesMain]);
+  useEffect(() => {
+    console.log(articlesMain);
+  }, [articlesMain]);
 
   return (
     <div id={s.homeMain}>
@@ -53,11 +89,29 @@ const HomeMain = () => {
               return (
                 <div className={s.mainBox} key={uuid()}>
                   <div className={s.mainBoxImg}>
-                    <img src={article.images[0]} alt="" />
+                    <Link
+                      to={{
+                        pathname: article.linkPath,
+                        state: { articleData: article },
+                      }}
+                    >
+                      <img src={article.images[0]} alt="" />
+                    </Link>
                   </div>
                   <div className={s.mainBoxHeader}>
-                    <h3>{article.subTitle}</h3>
-                    <h3>{article.title}</h3>
+                    <h3 style={{ color: article.subTitleClr }}>
+                      {article.subTitle}
+                    </h3>
+                    <h3>
+                      <Link
+                        to={{
+                          pathname: article.linkPath,
+                          state: { articleData: article },
+                        }}
+                      >
+                        {article.title}
+                      </Link>
+                    </h3>
                   </div>
                   <div className={s.mainBoxFooter}>
                     <span>{article.timeDiff}</span>
@@ -65,13 +119,13 @@ const HomeMain = () => {
                       <span>
                         <i class="fas fa-comments"></i>
                         {article.comments.length === 1 &&
-                        article.comments[0] === ''
+                        article.comments[0] === ""
                           ? 0
-                          : article.comments.length}
+                          : getComLength(article.comments)}
                       </span>
                       <span>
-                        <i class="fas fa-share-alt"></i>{' '}
-                        {article.shares.length === 1 && article.shares[0] === ''
+                        <i class="fas fa-share-alt"></i>{" "}
+                        {article.shares.length === 1 && article.shares[0] === ""
                           ? 0
                           : article.shares.length}
                       </span>
@@ -83,11 +137,27 @@ const HomeMain = () => {
               return (
                 <div className={s.mainBoxBig} key={uuid()}>
                   <div className={s.mainBoxImg}>
-                    <img src={article.images[0]} alt="" />
+                    <Link
+                      to={{
+                        pathname: article.linkPath,
+                        state: { articleData: article },
+                      }}
+                    >
+                      <img src={article.images[0]} alt="" />
+                    </Link>
                   </div>
                   <div className={s.mainBoxHeader}>
                     <h3>{article.subTitle}</h3>
-                    <h3>{article.title}</h3>
+                    <h3>
+                      <Link
+                        to={{
+                          pathname: article.linkPath,
+                          state: { articleData: article },
+                        }}
+                      >
+                        {article.title}
+                      </Link>
+                    </h3>
                   </div>
                   <div className={s.mainBoxFooter}>
                     <span>{article.timeDiff}</span>
@@ -95,13 +165,13 @@ const HomeMain = () => {
                       <span>
                         <i class="fas fa-comments"></i>
                         {article.comments.length === 1 &&
-                        article.comments[0] === ''
+                        article.comments[0] === ""
                           ? 0
-                          : article.comments.length}
+                          : getComLength(article.comments)}
                       </span>
                       <span>
-                        <i class="fas fa-share-alt"></i>{' '}
-                        {article.shares.length === 1 && article.shares[0] === ''
+                        <i class="fas fa-share-alt"></i>{" "}
+                        {article.shares.length === 1 && article.shares[0] === ""
                           ? 0
                           : article.shares.length}
                       </span>

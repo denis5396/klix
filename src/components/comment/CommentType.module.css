@@ -1,0 +1,36 @@
+.postCommentTextarea:focus {
+  outline: none;
+}
+.postCommentTextarea {
+  resize: vertical;
+  min-height: 10.5rem;
+  padding: 1rem;
+  border: none;
+}
+/* .postCommentTextarea::placeholder{
+  color: ;
+} */
+.postCommentBundle {
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 2px 5px -1px rgb(0 0 0 / 10%);
+}
+.postComment {
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+}
+.postCommentBundle button {
+  display: flex;
+  background-color: #fff;
+  /* border: 0.1rem solid #cdcfd1; */
+  justify-content: flex-end;
+  padding: 1rem;
+  border: none;
+  border-top: 0.1rem solid rgba(205, 207, 209, 0.7);
+}
+.postCommentBundle button span {
+  cursor: pointer;
+  color: rgb(75, 85, 99);
+}
+.postCommentBundle button span i {
+  color: #333;
+}

@@ -1,17 +1,16 @@
-import { createContext, useCallback, useState, useEffect } from 'react';
-import { auth, db } from '../firebase';
+import { createContext, useCallback, useState, useEffect, useRef } from "react";
+import { auth, db } from "../firebase";
 
-let logoutTimer;
 const LoginContext = createContext({
-  token: '',
+  token: "",
   isLoggedIn: false,
   user: {
-    uId: '',
-    displayName: '',
-    gender: '',
-    avatarColor: '',
+    uId: "",
+    displayName: "",
+    gender: "",
+    avatarColor: "",
     banned: false,
-    registered: '',
+    registered: "",
     comments: [],
   },
   overlay: false,
@@ -30,14 +29,14 @@ const calculateRemainingTime = (expirationTime) => {
 };
 
 const retrieveStoredToken = () => {
-  const storedToken = localStorage.getItem('token');
-  const storedExpirationDate = localStorage.getItem('expirationTime');
+  const storedToken = localStorage.getItem("token");
+  const storedExpirationDate = localStorage.getItem("expirationTime");
 
   const remainingTime = calculateRemainingTime(storedExpirationDate);
 
   if (remainingTime <= 60000) {
-    localStorage.removeItem('token');
-    localStorage.removeItem('expirationTime');
+    localStorage.removeItem("token");
+    localStorage.removeItem("expirationTime");
     return null;
   }
 
@@ -49,28 +48,32 @@ const retrieveStoredToken = () => {
 
 export const LoginContextProvider = (props) => {
   const tokenData = retrieveStoredToken();
+  // alert(tokenData.token);
   let initialToken;
   if (tokenData) {
     initialToken = tokenData.token;
   }
+
   const userObjInitial = {
-    uId: '',
-    displayName: '',
-    gender: 'Još niste odabrali',
-    avatarColor: 'c1c1c1',
-    banned: 'Ne',
-    registered: '',
+    uId: "",
+    displayName: "",
+    gender: "Još niste odabrali",
+    avatarColor: "c1c1c1",
+    banned: "Ne",
+    registered: "",
     comments: [],
   };
   const [userObj, setUserObj] = useState(
-    JSON.parse(localStorage.getItem('userObj')) || userObjInitial
+    JSON.parse(localStorage.getItem("userObj")) || userObjInitial
   );
   const [token, setToken] = useState(initialToken);
-
   const curUser = auth.currentUser;
-  const userIsLoggedIn = !!token && userObj.displayName;
+  const userIsLoggedIn =
+    (!!token && userObj.displayName) ||
+    (localStorage.getItem("rememberMe") && userObj.displayName);
 
   const [overlay, setOverlay] = useState(false);
+  const logoutTimer = useRef(null);
 
   const handleOverlay = () => {
     if (overlay) {
@@ -87,11 +90,15 @@ export const LoginContextProvider = (props) => {
   // });
 
   useEffect(() => {
+    if (!logoutTimer.current && tokenData) {
+      const timer = retrieveStoredToken();
+      logoutTimer.current = setTimeout(logoutHandler, timer.duration);
+    }
     // auth.onAuthStateChanged((user) => {
     //   if (user) {
     //     const dbRef = db.ref();
     //     dbRef
-    //       .child('users')
+    //       .child("users")
     //       .get()
     //       .then((snapshot) => {
     //         if (snapshot.exists) {
@@ -106,37 +113,48 @@ export const LoginContextProvider = (props) => {
     //       });
     //   }
     // });
+
+    // window.addEventListener("beforeunload", () => {
+    //   setToken(null);
+    //   localStorage.removeItem("token");
+    //   localStorage.removeItem("expirationTime");
+    //   localStorage.removeItem("userObj");
+    //   setUserObj(userObjInitial);
+    //   if (logoutTimer) {
+    //     clearTimeout(logoutTimer);
+    //   }
+    // });
     return () => {
-      logoutHandler();
+      // logoutHandler();
     };
   }, []);
 
   useEffect(() => {
     if (curUser) {
       // localStorage.setItem('userObj', JSON.stringify(userObj));
-      console.log('userhere');
+      console.log("userhere");
     }
   }, [curUser]);
 
   useEffect(() => {
     if (userObj && curUser) {
       console.log(userObj);
-      localStorage.setItem('userObj', JSON.stringify(userObj));
+      localStorage.setItem("userObj", JSON.stringify(userObj));
     }
   }, [userObj]);
 
   const signUp = (uid, displayName, date) => {
-    console.log('signupstart');
+    console.log("signupstart");
     const userObjCopy = { ...userObj, displayName, uId: uid };
     const dbRef = db.ref();
     console.log(dbRef);
     let check = false;
     dbRef
-      .child('users')
+      .child("users")
       .get()
       .then((snapshot) => {
         if (snapshot.exists) {
-          console.log('signupsuccess');
+          console.log("signupsuccess");
           console.log(snapshot.val());
           const data = snapshot.val();
           for (let key in data) {
@@ -153,13 +171,13 @@ export const LoginContextProvider = (props) => {
                   fetch(
                     `https://klix-74c29-default-rtdb.europe-west1.firebasedatabase.app/users.json?auth=${idToken}`,
                     {
-                      method: 'POST',
+                      method: "POST",
                       body: JSON.stringify({
                         ...userObjCopy,
                         registered: date,
                       }),
                       headers: {
-                        'Content-Type': 'application/json',
+                        "Content-Type": "application/json",
                       },
                     }
                   )
@@ -176,32 +194,35 @@ export const LoginContextProvider = (props) => {
 
   const logoutHandler = useCallback(() => {
     setToken(null);
-    localStorage.removeItem('token');
-    localStorage.removeItem('expirationTime');
-    localStorage.removeItem('userObj');
+    localStorage.removeItem("token");
+    localStorage.removeItem("expirationTime");
+    localStorage.removeItem("userObj");
+    localStorage.removeItem("rememberMe");
     setUserObj(userObjInitial);
-    if (logoutTimer) {
-      clearTimeout(logoutTimer);
+    if (logoutTimer.current) {
+      clearTimeout(logoutTimer.current);
     }
     auth.signOut();
   }, []);
 
   const loginHandler = (token, expirationTime) => {
-    console.log('signin');
+    console.log("signin");
     setToken(token);
     console.log(token);
-    localStorage.setItem('token', token);
-    localStorage.setItem('expirationTime', expirationTime);
+    localStorage.setItem("token", token);
+    localStorage.setItem("expirationTime", expirationTime);
+    // sessionStorage.setItem("randomkey", "randomtxt");
+    // document.cookie = "cookiename=cookieval";
 
     const remainingTime = calculateRemainingTime(expirationTime);
 
-    logoutTimer = setTimeout(logoutHandler, remainingTime);
+    logoutTimer.current = setTimeout(logoutHandler, remainingTime);
   };
 
   useEffect(() => {
     if (tokenData) {
       console.log(tokenData.duration);
-      logoutTimer = setTimeout(logoutHandler, tokenData.duration);
+      logoutTimer.current = setTimeout(logoutHandler, tokenData.duration);
     }
   }, [tokenData, logoutHandler]);
 

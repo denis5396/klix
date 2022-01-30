@@ -1,70 +1,77 @@
-import React, { useContext, useEffect, useRef, useState } from 'react';
-import parse from 'html-react-parser';
-import { v1 as uuid } from 'uuid';
-import s from './AddArticle.module.css';
-import Overlay from '../Overlay/Overlay';
-import Modal from '../Modal/Modal';
-import LoginContext from '../../context';
-import { auth, db, storage } from '../../firebase';
-import ProgressBar from '../ProgressBar/ProgressBar';
+import React, { useContext, useEffect, useRef, useState } from "react";
+import parse from "html-react-parser";
+import { v1 as uuid } from "uuid";
+import s from "./AddArticle.module.css";
+import Overlay from "../Overlay/Overlay";
+import Modal from "../Modal/Modal";
+import LoginContext from "../../context";
+import { auth, db, storage } from "../../firebase";
+import ProgressBar from "../ProgressBar/ProgressBar";
+import {
+  useHistory,
+  useLocation,
+} from "react-router-dom/cjs/react-router-dom.min";
+import { timeDifference } from "./EditArticle/EditArticle";
 
 export const subcategories = {
   početna: [
-    'Vijesti',
-    'Biznis',
-    'Sport',
-    'Magazin',
-    'Lifestyle',
-    'Auto',
-    'Scitech',
+    "Vijesti",
+    "Biznis",
+    "Sport",
+    "Magazin",
+    "Lifestyle",
+    "Auto",
+    "Scitech",
   ],
   vijesti: [
-    'BiH',
-    'Regija',
-    'Svijet',
-    'Dijaspora',
-    'Crna hronika',
-    'Humanitarne akcije',
+    "BiH",
+    "Regija",
+    "Svijet",
+    "Dijaspora",
+    "Crna hronika",
+    "Humanitarne akcije",
   ],
   biznis: [
-    'Privreda',
-    'Finansije',
-    'Investicije',
-    'Smart Cash',
-    'Berza',
-    'Startupi',
-    'Posao',
+    "Privreda",
+    "Finansije",
+    "Investicije",
+    "Smart Cash",
+    "Berza",
+    "Startupi",
+    "Posao",
   ],
   sport: [
-    'Nogomet',
-    'Košarka',
-    'Tenis',
-    'Rukomet',
-    'Formula 1',
-    'Skijanje',
-    'Atletika',
-    'Borilački sportovi',
-    'Plivanje',
+    "Nogomet",
+    "Košarka",
+    "Tenis",
+    "Rukomet",
+    "Formula 1",
+    "Skijanje",
+    "Atletika",
+    "Borilački sportovi",
+    "Plivanje",
   ],
-  magazin: ['Kultura', 'Muzika', 'Film/TV', 'Showbiz', 'Zanimljivosti'],
+  magazin: ["Kultura", "Muzika", "Film/TV", "Showbiz", "Zanimljivosti"],
   lifestyle: [
-    'Moda i ljepota',
-    'Zdravlje',
-    'Veze i seks',
-    'Gastro',
-    'Kuća i ured',
-    'Putovanja',
-    'Bebe',
-    'Fitness',
-    'Ljubimci',
+    "Moda i ljepota",
+    "Zdravlje",
+    "Veze i seks",
+    "Gastro",
+    "Kuća i ured",
+    "Putovanja",
+    "Bebe",
+    "Fitness",
+    "Ljubimci",
   ],
-  scitech: ['Nauka', 'Tehnologija'],
-  auto: ['Testovi', 'Noviteti', 'Koncepti', 'Tuning'],
+  scitech: ["Nauka", "Tehnologija"],
+  auto: ["Testovi", "Noviteti", "Koncepti", "Tuning"],
 };
 
 const AddArticle = () => {
   const ctx = useContext(LoginContext);
   const [paste, setPaste] = useState(false);
+  const location = useLocation();
+  const history = useHistory();
   const [embed, setEmbed] = useState(false);
   const [selStart, setSelStart] = useState({
     enter: false,
@@ -79,7 +86,17 @@ const AddArticle = () => {
   const [articleAdded, setArticleAdded] = useState(false);
   const [sending, setSending] = useState(false);
   const [subcategoriesMap, setSubcategoriesMap] = useState([]);
-  const [saveSubcat, setSaveSubcat] = useState('BiH');
+  const [saveSubcat, setSaveSubcat] = useState("BiH");
+  const [showSecondList, setShowSecondList] = useState(false);
+  const [currentList, setCurrentList] = useState("ul");
+  const [lists, setLists] = useState([]);
+
+  //dragging
+  const [dragIndex, setDragIndex] = useState(0);
+  const [replacedIdx, setReplacedIdx] = useState(0);
+  const [clone, setClone] = useState(null);
+  const [storeRef, setStoreRef] = useState(null);
+  const [drag, setDrag] = useState(false);
 
   const didMountRef = useRef(false);
   const postaviSlikeText = useRef();
@@ -102,13 +119,96 @@ const AddArticle = () => {
 
   useEffect(() => {}, []);
 
+  useEffect(() => {
+    if (location.state) {
+      alert("locationhere");
+      console.log(location);
+      const { articleData } = location.state;
+      const strDate = timeDifference(articleData.date);
+      console.log(strDate);
+      titles.current.children[0].value = articleData.title;
+      titles.current.children[1].value = articleData.subTitle;
+      textareaRef.current.value = articleData.articleText;
+      setTags([...articleData.tags]);
+      if (articleData.commentsAllowed === "Da") {
+        commentsRadio.current.children[0].children[1].checked = true;
+      } else {
+        commentsRadio.current.children[1].children[1].checked = true;
+      }
+      categorySelect.current.value = articleData.category;
+      subcategorySelect.current.value = articleData.subCategory;
+      if (typeof articleData.imageText === "string") {
+        captionText.current.value = articleData.imageText;
+      } else {
+        let txtString = "";
+        articleData.imageText.forEach((imgTxt, i) => {
+          if (i !== articleData.imageText.length - 1) {
+            txtString = txtString.concat(`${imgTxt[1]} || `);
+          } else {
+            txtString = txtString.concat(`${imgTxt[1]}`);
+          }
+        });
+        captionText.current.value = txtString;
+      }
+      const locationImgArray = [];
+      let blobToFileArray = [];
+      articleData.imageText.forEach((img, i) => {
+        locationImgArray.push({
+          url: img[0],
+          checked: "false",
+          name: img[2] ? img[2] : `random${i}`,
+        });
+      });
+      for (let i = 0; i < locationImgArray.length; i++) {
+        // fetch(locationImgArray[i].url)
+        //   .then((response) => response.blob())
+        //   .then((blob) => {
+        //     const file = new File([blob], locationImgArray[i].name, {
+        //       type: blob.type,
+        //     });
+        //     blobToFileArray[i] = file;
+        //     // blobToFileArray.push(file);
+        //     if (i === locationImgArray.length - 1) {
+        //       setImageArray([...blobToFileArray]);
+        //       console.log(blobToFileArray);
+        //     }
+        //   });
+        (async function (cntr) {
+          const response = await fetch(locationImgArray[cntr].url);
+          const blob = await response.blob();
+          const file = new File([blob], locationImgArray[cntr].name, {
+            type: blob.type,
+          });
+          blobToFileArray[cntr] = file;
+          if (cntr === locationImgArray.length - 1) {
+            setImageArray(blobToFileArray);
+          }
+        })(i);
+      }
+      locationImgArray.forEach((imgPre, i) => {
+        // (async function () {
+        //   const response = await fetch(imgPre.url);
+        //   const blob = await response.blob();
+        //   const file = new File([blob], imgPre.name, { type: blob.type });
+        //   blobToFileArray.push(file);
+        //   if (i === locationImgArray.length - 1) {
+        //     setImageArray(blobToFileArray);
+        //   }
+        // })();
+      });
+      setImagePreview([...locationImgArray]);
+    }
+  }, [location]);
+
   const handleHoverEnter = () => {
-    postaviSlikeBorder.current.style.borderColor = '#3f87e5';
+    postaviSlikeBorder.current.style.borderColor = "#3f87e5";
   };
 
   const handleHoverLeave = () => {
-    postaviSlikeBorder.current.style.borderColor = '#d8dee4';
+    postaviSlikeBorder.current.style.borderColor = "#d8dee4";
   };
+
+  //inserting a diff tag into a tag
 
   const handleInsert = (mode) => {
     const selectionStart = textareaRef.current.selectionStart;
@@ -116,18 +216,18 @@ const AddArticle = () => {
     const { value } = textareaRef.current;
     let start = 0;
     switch (mode) {
-      case 'bold':
+      case "bold":
         for (let i = 0; i < value.length; i++) {
           if (
-            value[i] === '<' &&
-            value[i + 1] === 'b' &&
-            value[i + 2] === '>'
+            value[i] === "<" &&
+            value[i + 1] === "b" &&
+            value[i + 2] === ">"
           ) {
             start = i;
           } else if (
-            value[i] === '<' &&
-            value[i + 1] === '/' &&
-            value[i + 2] === 'b' &&
+            value[i] === "<" &&
+            value[i + 1] === "/" &&
+            value[i + 2] === "b" &&
             selectionStart >= start + 1 &&
             selectionStart <= i + 3
           ) {
@@ -135,19 +235,98 @@ const AddArticle = () => {
           }
         }
         break;
-      case 'embed':
+      case "list":
         for (let i = 0; i < value.length; i++) {
           if (
-            value[i] === '<' &&
-            value[i + 1] === 'e' &&
-            value[i + 2] === 'm' &&
-            value[i + 3] === 'b'
+            value[i] === "<" &&
+            value[i + 1] === "l" &&
+            value[i + 2] === "i" &&
+            value[i + 3] === "s" &&
+            value[i + 4] === "t" &&
+            value[i + 5] === ">"
           ) {
             start = i;
           } else if (
-            value[i] === '<' &&
-            value[i + 1] === '/' &&
-            value[i + 2] === 'e' &&
+            value[i] === "<" &&
+            value[i + 1] === "/" &&
+            value[i + 2] === "l" &&
+            value[i + 3] === "i" &&
+            value[i + 4] === "s" &&
+            value[i + 5] === "t" &&
+            value[i + 6] === ">" &&
+            selectionStart >= start + 6 &&
+            selectionStart <= i
+          ) {
+            let found = 0;
+            for (let j = start + 6; j < i; j++) {
+              if (
+                value[j] === "<" &&
+                value[j + 1] === "b" &&
+                value[j + 2] === ">"
+              ) {
+                found = j + 1;
+              } else if (
+                value[j] === "<" &&
+                value[j + 1] === "/" &&
+                value[j + 2] === "b" &&
+                value[j + 3] === ">" &&
+                selectionStart >= found &&
+                selectionStart <= j + 3
+              ) {
+                return "dontAllow";
+              }
+              if (
+                value[j] === "<" &&
+                value[j + 1] === "l" &&
+                value[j + 2] === "i" &&
+                value[j + 3] === "n" &&
+                value[j + 4] === "k" &&
+                value[j + 5] === ">"
+              ) {
+                found = j + 1;
+              } else if (
+                value[j] === "<" &&
+                value[j + 1] === "/" &&
+                value[j + 2] === "l" &&
+                value[j + 3] === "i" &&
+                value[j + 4] === "n" &&
+                value[j + 5] === "k" &&
+                value[j + 6] === ">" &&
+                selectionStart >= found &&
+                selectionStart <= j + 6
+              ) {
+                return "dontAllow";
+              }
+            }
+            return "betweenTags";
+          } else if (
+            value[i] === "<" &&
+            value[i + 1] === "/" &&
+            value[i + 2] === "l" &&
+            value[i + 3] === "i" &&
+            value[i + 4] === "s" &&
+            value[i + 5] === "t" &&
+            value[i + 6] === ">" &&
+            selectionStart >= start + 1 &&
+            selectionStart <= i + 6
+          ) {
+            return true;
+          }
+        }
+        break;
+      case "embed":
+        for (let i = 0; i < value.length; i++) {
+          if (
+            value[i] === "<" &&
+            value[i + 1] === "e" &&
+            value[i + 2] === "m" &&
+            value[i + 3] === "b"
+          ) {
+            start = i;
+          } else if (
+            value[i] === "<" &&
+            value[i + 1] === "/" &&
+            value[i + 2] === "e" &&
             selectionStart >= start + 1 &&
             selectionStart <= i + 7
           ) {
@@ -155,19 +334,19 @@ const AddArticle = () => {
           }
         }
         break;
-      case 'link':
+      case "link":
         for (let i = 0; i < value.length; i++) {
           if (
-            value[i] === '<' &&
-            value[i + 1] === 'l' &&
-            value[i + 2] === 'i' &&
-            value[i + 3] === 'n'
+            value[i] === "<" &&
+            value[i + 1] === "l" &&
+            value[i + 2] === "i" &&
+            value[i + 3] === "n"
           ) {
             start = i;
           } else if (
-            value[i] === '<' &&
-            value[i + 1] === '/' &&
-            value[i + 2] === 'l' &&
+            value[i] === "<" &&
+            value[i + 1] === "/" &&
+            value[i + 2] === "l" &&
             selectionStart >= start + 1 &&
             selectionStart <= i + 6
           ) {
@@ -185,31 +364,31 @@ const AddArticle = () => {
     let start = 0;
     //either selStart starts between the tags OR selEnd no other case
     switch (mode) {
-      case 'bold':
+      case "bold":
         for (let i = 0; i < value.length; i++) {
           if (
-            value[i] === '<' &&
-            value[i + 1] === 'b' &&
-            value[i + 2] === '>'
+            value[i] === "<" &&
+            value[i + 1] === "b" &&
+            value[i + 2] === ">"
           ) {
             start = i;
           } else if (
-            (value[i] === '<' &&
-              value[i + 1] === '/' &&
-              value[i + 2] === 'b' &&
-              value[i + 3] === '>' &&
-              selectionStart >= start + 1 &&
+            (value[i] === "<" &&
+              value[i + 1] === "/" &&
+              value[i + 2] === "b" &&
+              value[i + 3] === ">" &&
+              selectionStart >= start &&
               selectionStart <= i + 3) ||
-            (value[i] === '<' &&
-              value[i + 1] === '/' &&
-              value[i + 2] === 'b' &&
-              value[i + 3] === '>' &&
+            (value[i] === "<" &&
+              value[i + 1] === "/" &&
+              value[i + 2] === "b" &&
+              value[i + 3] === ">" &&
               selectionEnd >= start + 1 &&
               selectionEnd <= i + 4) ||
-            (value[i] === '<' &&
-              value[i + 1] === '/' &&
-              value[i + 2] === 'b' &&
-              value[i + 3] === '>' &&
+            (value[i] === "<" &&
+              value[i + 1] === "/" &&
+              value[i + 2] === "b" &&
+              value[i + 3] === ">" &&
               selectionStart < start &&
               selectionEnd > i + 4)
           ) {
@@ -217,35 +396,162 @@ const AddArticle = () => {
           }
         }
         break;
-      case 'embed':
+      case "list":
         for (let i = 0; i < value.length; i++) {
           if (
-            value[i] === '<' &&
-            value[i + 1] === 'e' &&
-            value[i + 2] === 'm' &&
-            value[i + 3] === 'b'
+            value[i] === "<" &&
+            value[i + 1] === "l" &&
+            value[i + 2] === "i" &&
+            value[i + 3] === "s" &&
+            value[i + 4] === "t" &&
+            value[i + 5] === ">"
           ) {
             start = i;
           } else if (
-            (value[i] === '<' &&
-              value[i + 1] === '/' &&
-              value[i + 2] === 'e' &&
-              value[i + 3] === 'm' &&
-              value[i + 4] === 'b' &&
+            value[i] === "<" &&
+            value[i + 1] === "/" &&
+            value[i + 2] === "l" &&
+            value[i + 3] === "i" &&
+            value[i + 4] === "s" &&
+            value[i + 5] === "t" &&
+            value[i + 6] === ">" &&
+            selectionStart >= start + 6 &&
+            selectionEnd <= i
+          ) {
+            let selectFound = 0;
+            for (let j = start + 7; j < i; j++) {
+              if (
+                value[j] === "<" &&
+                value[j + 1] === "b" &&
+                value[j + 2] === ">"
+              ) {
+                selectFound = j;
+              } else if (
+                (value[j] === "<" &&
+                  value[j + 1] === "/" &&
+                  value[j + 2] === "b" &&
+                  value[j + 3] === ">" &&
+                  selectionStart >= selectFound &&
+                  selectionStart <= j + 3) ||
+                (value[j] === "<" &&
+                  value[j + 1] === "/" &&
+                  value[j + 2] === "b" &&
+                  value[j + 3] === ">" &&
+                  selectionEnd >= selectFound + 1 &&
+                  selectionEnd <= j + 4) ||
+                (value[j] === "<" &&
+                  value[j + 1] === "/" &&
+                  value[j + 2] === "b" &&
+                  value[j + 3] === ">" &&
+                  selectionStart < selectFound &&
+                  selectionEnd > j + 4)
+              ) {
+                return "notAllowed";
+              }
+              if (
+                value[j] === "<" &&
+                value[j + 1] === "l" &&
+                value[j + 2] === "i" &&
+                value[j + 3] === "n" &&
+                value[j + 4] === "k" &&
+                value[j + 5] === ">"
+              ) {
+                selectFound = j;
+              } else if (
+                (value[j] === "<" &&
+                  value[j + 1] === "/" &&
+                  value[j + 2] === "l" &&
+                  value[j + 3] === "i" &&
+                  value[j + 4] === "n" &&
+                  value[j + 5] === "k" &&
+                  value[j + 6] === ">" &&
+                  selectionStart >= selectFound &&
+                  selectionStart <= j + 6) ||
+                (value[j] === "<" &&
+                  value[j + 1] === "/" &&
+                  value[j + 2] === "l" &&
+                  value[j + 3] === "i" &&
+                  value[j + 4] === "n" &&
+                  value[j + 5] === "k" &&
+                  value[j + 6] === ">" &&
+                  selectionEnd >= selectFound + 1 &&
+                  selectionEnd <= j + 7) ||
+                (value[j] === "<" &&
+                  value[j + 1] === "/" &&
+                  value[j + 2] === "l" &&
+                  value[j + 3] === "i" &&
+                  value[j + 4] === "n" &&
+                  value[j + 5] === "k" &&
+                  value[j + 6] === ">" &&
+                  selectionStart < selectFound &&
+                  selectionEnd > j + 7)
+              ) {
+                return "notAllowed";
+              }
+            }
+            return "betweenTagsSelect";
+          } else if (
+            (value[i] === "<" &&
+              value[i + 1] === "/" &&
+              value[i + 2] === "l" &&
+              value[i + 3] === "i" &&
+              value[i + 4] === "s" &&
+              value[i + 5] === "t" &&
+              value[i + 6] === ">" &&
+              selectionStart >= start &&
+              selectionStart <= i + 6) ||
+            (value[i] === "<" &&
+              value[i + 1] === "/" &&
+              value[i + 2] === "l" &&
+              value[i + 3] === "i" &&
+              value[i + 4] === "s" &&
+              value[i + 5] === "t" &&
+              value[i + 6] === ">" &&
+              selectionEnd >= start + 1 &&
+              selectionEnd <= i + 7) ||
+            (value[i] === "<" &&
+              value[i + 1] === "/" &&
+              value[i + 2] === "l" &&
+              value[i + 3] === "i" &&
+              value[i + 4] === "s" &&
+              value[i + 5] === "t" &&
+              value[i + 6] === ">" &&
+              selectionStart < start &&
+              selectionEnd > i + 7)
+          ) {
+            return true;
+          }
+        }
+        break;
+      case "embed":
+        for (let i = 0; i < value.length; i++) {
+          if (
+            value[i] === "<" &&
+            value[i + 1] === "e" &&
+            value[i + 2] === "m" &&
+            value[i + 3] === "b"
+          ) {
+            start = i;
+          } else if (
+            (value[i] === "<" &&
+              value[i + 1] === "/" &&
+              value[i + 2] === "e" &&
+              value[i + 3] === "m" &&
+              value[i + 4] === "b" &&
               selectionStart >= start + 1 &&
               selectionStart <= i + 7) ||
-            (value[i] === '<' &&
-              value[i + 1] === '/' &&
-              value[i + 2] === 'e' &&
-              value[i + 3] === 'm' &&
-              value[i + 4] === 'b' &&
+            (value[i] === "<" &&
+              value[i + 1] === "/" &&
+              value[i + 2] === "e" &&
+              value[i + 3] === "m" &&
+              value[i + 4] === "b" &&
               selectionEnd >= start + 1 &&
               selectionEnd <= i + 8) ||
-            (value[i] === '<' &&
-              value[i + 1] === '/' &&
-              value[i + 2] === 'e' &&
-              value[i + 3] === 'm' &&
-              value[i + 4] === 'b' &&
+            (value[i] === "<" &&
+              value[i + 1] === "/" &&
+              value[i + 2] === "e" &&
+              value[i + 3] === "m" &&
+              value[i + 4] === "b" &&
               selectionStart < start &&
               selectionEnd > i + 8)
           ) {
@@ -253,39 +559,39 @@ const AddArticle = () => {
           }
         }
         break;
-      case 'link':
+      case "link":
         for (let i = 0; i < value.length; i++) {
           if (
-            value[i] === '<' &&
-            value[i + 1] === 'l' &&
-            value[i + 2] === 'i' &&
-            value[i + 3] === 'n' &&
-            value[i + 4] === 'k'
+            value[i] === "<" &&
+            value[i + 1] === "l" &&
+            value[i + 2] === "i" &&
+            value[i + 3] === "n" &&
+            value[i + 4] === "k"
           ) {
             start = i;
           } else if (
-            (value[i] === '<' &&
-              value[i + 1] === '/' &&
-              value[i + 2] === 'l' &&
-              value[i + 3] === 'i' &&
-              value[i + 4] === 'n' &&
-              value[i + 6] === '>' &&
+            (value[i] === "<" &&
+              value[i + 1] === "/" &&
+              value[i + 2] === "l" &&
+              value[i + 3] === "i" &&
+              value[i + 4] === "n" &&
+              value[i + 6] === ">" &&
               selectionStart >= start + 1 &&
               selectionStart <= i + 6) ||
-            (value[i] === '<' &&
-              value[i + 1] === '/' &&
-              value[i + 2] === 'l' &&
-              value[i + 3] === 'i' &&
-              value[i + 4] === 'n' &&
-              value[i + 6] === '>' &&
+            (value[i] === "<" &&
+              value[i + 1] === "/" &&
+              value[i + 2] === "l" &&
+              value[i + 3] === "i" &&
+              value[i + 4] === "n" &&
+              value[i + 6] === ">" &&
               selectionEnd >= start + 1 &&
               selectionEnd <= i + 7) ||
-            (value[i] === '<' &&
-              value[i + 1] === '/' &&
-              value[i + 2] === 'l' &&
-              value[i + 3] === 'i' &&
-              value[i + 4] === 'n' &&
-              value[i + 6] === '>' &&
+            (value[i] === "<" &&
+              value[i + 1] === "/" &&
+              value[i + 2] === "l" &&
+              value[i + 3] === "i" &&
+              value[i + 4] === "n" &&
+              value[i + 6] === ">" &&
               selectionStart < start &&
               selectionEnd > i + 7)
           ) {
@@ -303,7 +609,7 @@ const AddArticle = () => {
     // alert(typeof str);
     // const result = str.bold();
     // textareaRef.current.value = result;
-    e.preventDefault();
+    e.preventDefault(); //fixes glitchy movement behaviour in the textarea when u click on any insert tag btn
     console.log(textareaRef.current.selectionStart);
     console.log(textareaRef.current.selectionEnd);
     console.log(textareaRef.current.focus);
@@ -311,17 +617,21 @@ const AddArticle = () => {
       document.activeElement === textareaRef.current &&
       textareaRef.current.selectionStart === textareaRef.current.selectionEnd
     ) {
-      const check1 = handleInsert('bold');
-      const check2 = handleInsert('embed');
-      const check3 = handleInsert('link');
-      if (!check1 && !check2 && !check3) {
+      const check1 = handleInsert("bold");
+      const check2 = handleInsert("embed");
+      const check3 = handleInsert("link");
+      const check4 = handleInsert("list");
+      if (
+        (!check1 && !check2 && !check3 && !check4) ||
+        check4 === "betweenTags"
+      ) {
         const selStart = textareaRef.current.selectionStart;
         let firstPart = textareaRef.current.value.slice(
           0,
           textareaRef.current.selectionStart
         );
         console.log(firstPart);
-        firstPart = firstPart.concat('<b></b>');
+        firstPart = firstPart.concat("<b></b>");
         const secondPart = textareaRef.current.value.slice(
           textareaRef.current.selectionStart
         );
@@ -333,10 +643,14 @@ const AddArticle = () => {
       document.activeElement === textareaRef.current &&
       textareaRef.current.selectionStart !== textareaRef.current.selectionEnd
     ) {
-      const check1 = handleSelect('bold');
-      const check2 = handleSelect('embed');
-      const check3 = handleSelect('link');
-      if (!check1 && !check2 && !check3) {
+      const check1 = handleSelect("bold");
+      const check2 = handleSelect("embed");
+      const check3 = handleSelect("link");
+      const check4 = handleSelect("list");
+      if (
+        (!check1 && !check2 && !check3 && !check4) ||
+        check4 === "betweenTagsSelect"
+      ) {
         const selectionStart = textareaRef.current.selectionStart;
         const selectionEnd = textareaRef.current.selectionEnd;
         let textareaText = textareaRef.current.value;
@@ -348,28 +662,120 @@ const AddArticle = () => {
           textareaText.slice(selectionEnd);
         textareaRef.current.value = textareaText;
         textareaRef.current.selectionEnd = selectionEnd + 3;
-      } else if (check1 || check2 || check3) {
+      } else if (check1 || check2 || check3 || check4) {
         textareaRef.current.selectionEnd = textareaRef.current.selectionStart;
       }
     }
   };
 
-  const handleEmbed = () => {
+  useEffect(() => {
+    if (lists && lists.length > 0) {
+      console.log(lists);
+    }
+  }, [lists]);
+
+  const handleList = (e) => {
+    e.preventDefault();
     if (
       document.activeElement === textareaRef.current &&
       textareaRef.current.selectionStart === textareaRef.current.selectionEnd
     ) {
-      const check = handleInsert('bold');
-      const check1 = handleInsert('embed');
-      const check2 = handleInsert('link');
-      if (!check && !check1 && !check2) {
+      const check1 = handleInsert("bold");
+      const check2 = handleInsert("embed");
+      const check3 = handleInsert("link");
+      const check4 = handleInsert("list");
+      if (!check1 && !check2 && !check3 && !check4) {
         const selStart = textareaRef.current.selectionStart;
         let firstPart = textareaRef.current.value.slice(
           0,
           textareaRef.current.selectionStart
         );
         console.log(firstPart);
-        firstPart = firstPart.concat('<embed></embed>');
+        firstPart = firstPart.concat("<list></list>");
+        const secondPart = textareaRef.current.value.slice(
+          textareaRef.current.selectionStart
+        );
+        firstPart = firstPart.concat(secondPart);
+        textareaRef.current.value = firstPart;
+        textareaRef.current.selectionEnd = selStart + 6;
+        let curClickedList = "";
+        if (e.target.tagName === "I") {
+          if (e.target.className.includes("ul")) {
+            curClickedList = "ul";
+          } else {
+            curClickedList = "ol";
+          }
+        } else if (e.target.id.includes("listOl")) {
+          if (e.target.children[0].className.includes("ul")) {
+            curClickedList = "ul";
+          } else {
+            curClickedList = "ol";
+          }
+        } else if (e.target.tagName === "LI") {
+          if (e.target.children[0].className.includes("ul")) {
+            curClickedList = "ul";
+          } else {
+            curClickedList = "ol";
+          }
+        }
+        setLists((old) => {
+          console.log(e.target);
+          // if (e.target.tagName === "I") {
+          //   alert(e.target.className);
+          // } else if (e.target.id.includes("listOl")) {
+          //   alert(e.target.children[0].className);
+          // }
+          let oldArr = [...old];
+          // alert(currentList);
+          // alert(typeof currentList);
+          oldArr.push(curClickedList);
+          return oldArr;
+        });
+      }
+    } else if (
+      document.activeElement === textareaRef.current &&
+      textareaRef.current.selectionStart !== textareaRef.current.selectionEnd
+    ) {
+      const check1 = handleSelect("bold");
+      const check2 = handleSelect("embed");
+      const check3 = handleSelect("link");
+      const check4 = handleSelect("list");
+      if (!check1 && !check2 && !check3 && !check4) {
+        const selectionStart = textareaRef.current.selectionStart;
+        const selectionEnd = textareaRef.current.selectionEnd;
+        let textareaText = textareaRef.current.value;
+        let selectedText = textareaText.substring(selectionStart, selectionEnd);
+        selectedText = `<list>${selectedText}</list>`;
+        textareaText =
+          textareaText.slice(0, selectionStart) +
+          selectedText +
+          textareaText.slice(selectionEnd);
+        textareaRef.current.value = textareaText;
+        textareaRef.current.selectionEnd = selectionEnd + 6;
+      } else if (check1 || check2 || check3 || check4) {
+        textareaRef.current.selectionEnd = textareaRef.current.selectionStart;
+      }
+    }
+  };
+
+  const handleEmbed = (e) => {
+    e.preventDefault();
+    if (
+      document.activeElement === textareaRef.current &&
+      textareaRef.current.selectionStart === textareaRef.current.selectionEnd
+    ) {
+      const check = handleInsert("bold");
+      const check1 = handleInsert("embed");
+      const check2 = handleInsert("link");
+      const check3 = handleInsert("list");
+      if (!check && !check1 && !check2 && !check3) {
+        const selStart = textareaRef.current.selectionStart;
+        let firstPart = textareaRef.current.value.slice(
+          0,
+          textareaRef.current.selectionStart
+        );
+        console.log(firstPart);
+        firstPart = firstPart.concat("<embed></embed>");
         const secondPart = textareaRef.current.value.slice(
           textareaRef.current.selectionStart
         );
@@ -379,7 +785,7 @@ const AddArticle = () => {
         setTimeout(() => {
           textareaRef.current.focus();
         }, 1);
-      } else if (check || check1 || check2) {
+      } else if (check || check1 || check2 || check3) {
         // alert(`check1${check1}`);
         // alert(`check2${check2}`);
         setTimeout(() => {
@@ -394,10 +800,11 @@ const AddArticle = () => {
     ) {
       const selectionStart = textareaRef.current.selectionStart;
       const selectionEnd = textareaRef.current.selectionEnd;
-      const check1 = handleSelect('bold');
-      const check2 = handleSelect('embed');
-      const check3 = handleSelect('link');
-      if (!check1 && !check2 && !check3) {
+      const check1 = handleSelect("bold");
+      const check2 = handleSelect("embed");
+      const check3 = handleSelect("link");
+      const check4 = handleSelect("list");
+      if (!check1 && !check2 && !check3 && !check4) {
         let textareaText = textareaRef.current.value;
         let selectedText = textareaText.substring(selectionStart, selectionEnd);
         selectedText = `<embed>${selectedText}</embed>`;
@@ -411,7 +818,7 @@ const AddArticle = () => {
         setTimeout(() => {
           textareaRef.current.focus();
         }, 1);
-      } else if (check1 || check2 || check3) {
+      } else if (check1 || check2 || check3 || check4) {
         setTimeout(() => {
           textareaRef.current.focus();
           textareaRef.current.selectionEnd = selectionStart;
@@ -420,22 +827,27 @@ const AddArticle = () => {
     }
   };
 
-  const handleLink = () => {
+  const handleLink = (e) => {
+    e.preventDefault();
     if (
       document.activeElement === textareaRef.current &&
       textareaRef.current.selectionStart === textareaRef.current.selectionEnd
     ) {
-      const check1 = handleInsert('bold');
-      const check2 = handleInsert('embed');
-      const check3 = handleInsert('link');
-      if (!check1 && !check2 && !check3) {
+      const check1 = handleInsert("bold");
+      const check2 = handleInsert("embed");
+      const check3 = handleInsert("link");
+      const check4 = handleInsert("list");
+      if (
+        (!check1 && !check2 && !check3 && !check4) ||
+        check4 === "betweenTags"
+      ) {
         const selStart = textareaRef.current.selectionStart;
         let firstPart = textareaRef.current.value.slice(
           0,
           textareaRef.current.selectionStart
         );
         console.log(firstPart);
-        firstPart = firstPart.concat('<link></link>');
+        firstPart = firstPart.concat("<link></link>");
         const secondPart = textareaRef.current.value.slice(
           textareaRef.current.selectionStart
         );
@@ -445,7 +857,7 @@ const AddArticle = () => {
         setTimeout(() => {
           textareaRef.current.focus();
         }, 1);
-      } else if (check1 || check2 || check3) {
+      } else if (check1 || check2 || check3 || check4) {
         setTimeout(() => {
           textareaRef.current.focus();
           textareaRef.current.selectionEnd = textareaRef.current.selectionStart;
@@ -455,10 +867,14 @@ const AddArticle = () => {
       document.activeElement === textareaRef.current &&
       textareaRef.current.selectionStart !== textareaRef.current.selectionEnd
     ) {
-      const check1 = handleSelect('bold');
-      const check2 = handleSelect('embed');
-      const check3 = handleSelect('link');
-      if (!check1 && !check2 && !check3) {
+      const check1 = handleSelect("bold");
+      const check2 = handleSelect("embed");
+      const check3 = handleSelect("link");
+      const check4 = handleSelect("list");
+      if (
+        (!check1 && !check2 && !check3 && !check4) ||
+        check4 === "betweenTagsSelect"
+      ) {
         const selectionStart = textareaRef.current.selectionStart;
         const selectionEnd = textareaRef.current.selectionEnd;
         let textareaText = textareaRef.current.value;
@@ -473,7 +889,7 @@ const AddArticle = () => {
         setTimeout(() => {
           textareaRef.current.focus();
         }, 1);
-      } else if (check1 || check2 || check3) {
+      } else if (check1 || check2 || check3 || check4) {
         setTimeout(() => {
           textareaRef.current.focus();
           textareaRef.current.selectionEnd = textareaRef.current.selectionStart;
@@ -488,6 +904,118 @@ const AddArticle = () => {
     const { value } = textareaRef.current;
     const slStart = textareaRef.current.selectionStart;
     const slEnd = textareaRef.current.selectionEnd;
+    let enterPosFind = null;
+    let enterPos = 0;
+    if (e.keyCode === 13) {
+      for (let i = 0; i < value.length; i++) {
+        if (
+          value[i] === "<" &&
+          value[i + 1] === "b" &&
+          value[i + 2] === ">" &&
+          enterPosFind === null
+        ) {
+          enterPosFind = i;
+        } else if (
+          value[i] === "<" &&
+          value[i + 1] === "/" &&
+          value[i + 2] === "b" &&
+          value[i + 3] === ">"
+        ) {
+          if (slStart <= i + 3 && slStart > enterPosFind) {
+            textareaRef.current.readOnly = true;
+            setTimeout(() => {
+              textareaRef.current.readOnly = false;
+            }, 100);
+            enterPosFind = 0;
+            return;
+          }
+        }
+        if (
+          value[i] === "<" &&
+          value[i + 1] === "l" &&
+          value[i + 2] === "i" &&
+          value[i + 3] === "s" &&
+          value[i + 4] === "t" &&
+          value[i + 5] === ">"
+        ) {
+          enterPosFind = i;
+        } else if (
+          value[i] === "<" &&
+          value[i + 1] === "/" &&
+          value[i + 2] === "l" &&
+          value[i + 3] === "i" &&
+          value[i + 4] === "s" &&
+          value[i + 5] === "t" &&
+          value[i + 6] === ">"
+        ) {
+          if (slStart <= i + 6 && slStart > enterPosFind) {
+            textareaRef.current.readOnly = true;
+            setTimeout(() => {
+              textareaRef.current.readOnly = false;
+            }, 100);
+            enterPosFind = 0;
+            return;
+          }
+        }
+        if (
+          value[i] === "<" &&
+          value[i + 1] === "e" &&
+          value[i + 2] === "m" &&
+          value[i + 3] === "b" &&
+          value[i + 4] === "e" &&
+          value[i + 5] === "d" &&
+          value[i + 6] === ">"
+        ) {
+          enterPosFind = i;
+        } else if (
+          value[i] === "<" &&
+          value[i + 1] === "/" &&
+          value[i + 2] === "e" &&
+          value[i + 3] === "m" &&
+          value[i + 4] === "b" &&
+          value[i + 5] === "e" &&
+          value[i + 6] === "d" &&
+          value[i + 7] === ">"
+        ) {
+          if (slStart <= i + 7 && slStart > enterPosFind) {
+            textareaRef.current.readOnly = true;
+            setTimeout(() => {
+              textareaRef.current.readOnly = false;
+            }, 100);
+            enterPosFind = 0;
+            return;
+          }
+        }
+        if (
+          value[i] === "<" &&
+          value[i + 1] === "l" &&
+          value[i + 2] === "i" &&
+          value[i + 3] === "n" &&
+          value[i + 4] === "k" &&
+          value[i + 5] === ">" &&
+          enterPosFind === null //handle link/b tags inside list
+        ) {
+          enterPosFind = i;
+        } else if (
+          value[i] === "<" &&
+          value[i + 1] === "/" &&
+          value[i + 2] === "l" &&
+          value[i + 3] === "i" &&
+          value[i + 4] === "n" &&
+          value[i + 5] === "k" &&
+          value[i + 6] === ">"
+        ) {
+          if (slStart <= i + 6 && slStart > enterPosFind) {
+            textareaRef.current.readOnly = true;
+            setTimeout(() => {
+              textareaRef.current.readOnly = false;
+            }, 100);
+            enterPosFind = 0;
+            return;
+          }
+        }
+      }
+    }
     if (
       e.keyCode !== 46 &&
       e.keyCode !== 37 &&
@@ -499,15 +1027,15 @@ const AddArticle = () => {
     ) {
       for (let i = 0; i < value.length; i++) {
         if (
-          (value[i] === '<' &&
-            value[i + 1] === 'b' &&
-            value[i + 2] === '>' &&
+          (value[i] === "<" &&
+            value[i + 1] === "b" &&
+            value[i + 2] === ">" &&
             slStart < [i + 3] &&
             slStart >= [i + 1]) ||
-          (value[i] === '<' &&
-            value[i + 1] === '/' &&
-            value[i + 2] === 'b' &&
-            value[i + 3] === '>' &&
+          (value[i] === "<" &&
+            value[i + 1] === "/" &&
+            value[i + 2] === "b" &&
+            value[i + 3] === ">" &&
             slStart < [i + 4] &&
             slStart >= [i + 1])
         ) {
@@ -516,23 +1044,46 @@ const AddArticle = () => {
             textareaRef.current.readOnly = false;
           }, 100);
         } else if (
-          (value[i] === '<' &&
-            value[i + 1] === 'e' &&
-            value[i + 2] === 'm' &&
-            value[i + 3] === 'b' &&
-            value[i + 4] === 'e' &&
-            value[i + 5] === 'd' &&
-            value[i + 6] === '>' &&
+          (value[i] === "<" &&
+            value[i + 1] === "l" &&
+            value[i + 2] === "i" &&
+            value[i + 3] === "s" &&
+            value[i + 4] === "t" &&
+            value[i + 5] === ">" &&
+            slStart < [i + 6] &&
+            slStart >= [i + 1]) ||
+          (value[i] === "<" &&
+            value[i + 1] === "/" &&
+            value[i + 2] === "l" &&
+            value[i + 3] === "i" &&
+            value[i + 4] === "s" &&
+            value[i + 5] === "t" &&
+            value[i + 6] === ">" &&
+            slStart < [i + 7] &&
+            slStart >= [i + 1])
+        ) {
+          textareaRef.current.readOnly = true;
+          setTimeout(() => {
+            textareaRef.current.readOnly = false;
+          }, 100);
+        } else if (
+          (value[i] === "<" &&
+            value[i + 1] === "e" &&
+            value[i + 2] === "m" &&
+            value[i + 3] === "b" &&
+            value[i + 4] === "e" &&
+            value[i + 5] === "d" &&
+            value[i + 6] === ">" &&
             slStart < [i + 7] &&
             slStart >= [i + 1]) ||
-          (value[i] === '<' &&
-            value[i + 1] === '/' &&
-            value[i + 2] === 'e' &&
-            value[i + 3] === 'm' &&
-            value[i + 4] === 'b' &&
-            value[i + 5] === 'e' &&
-            value[i + 6] === 'd' &&
-            value[i + 7] === '>' &&
+          (value[i] === "<" &&
+            value[i + 1] === "/" &&
+            value[i + 2] === "e" &&
+            value[i + 3] === "m" &&
+            value[i + 4] === "b" &&
+            value[i + 5] === "e" &&
+            value[i + 6] === "d" &&
+            value[i + 7] === ">" &&
             slStart < [i + 8] &&
             slStart >= [i + 1])
         ) {
@@ -541,21 +1092,21 @@ const AddArticle = () => {
             textareaRef.current.readOnly = false;
           }, 100);
         } else if (
-          (value[i] === '<' &&
-            value[i + 1] === 'l' &&
-            value[i + 2] === 'i' &&
-            value[i + 3] === 'n' &&
-            value[i + 4] === 'k' &&
-            value[i + 5] === '>' &&
+          (value[i] === "<" &&
+            value[i + 1] === "l" &&
+            value[i + 2] === "i" &&
+            value[i + 3] === "n" &&
+            value[i + 4] === "k" &&
+            value[i + 5] === ">" &&
             slStart < [i + 6] &&
             slStart >= [i + 1]) ||
-          (value[i] === '<' &&
-            value[i + 1] === '/' &&
-            value[i + 2] === 'l' &&
-            value[i + 3] === 'i' &&
-            value[i + 4] === 'n' &&
-            value[i + 5] === 'k' &&
-            value[i + 6] === '>' &&
+          (value[i] === "<" &&
+            value[i + 1] === "/" &&
+            value[i + 2] === "l" &&
+            value[i + 3] === "i" &&
+            value[i + 4] === "n" &&
+            value[i + 5] === "k" &&
+            value[i + 6] === ">" &&
             slStart < [i + 7] &&
             slStart >= [i + 1])
         ) {
@@ -568,20 +1119,21 @@ const AddArticle = () => {
     } else if (e.keyCode === 46) {
       let startStart = 0;
       let startEnd = 0;
+      let listCount = 0;
       let num = undefined;
       let endStart = 0;
       let endEnd = 0;
       for (let i = 0; i < value.length; i++) {
         if (
-          (value[i] === '<' &&
-            value[i + 1] === 'b' &&
-            value[i + 2] === '>' &&
+          (value[i] === "<" &&
+            value[i + 1] === "b" &&
+            value[i + 2] === ">" &&
             slStart === i &&
             slEnd === i) ||
-          (value[i] === '<' &&
-            value[i + 1] === '/' &&
-            value[i + 2] === 'b' &&
-            value[i + 3] === '>' &&
+          (value[i] === "<" &&
+            value[i + 1] === "/" &&
+            value[i + 2] === "b" &&
+            value[i + 3] === ">" &&
             slStart === i &&
             slEnd === i)
         ) {
@@ -591,23 +1143,23 @@ const AddArticle = () => {
           }, 100);
           break;
         } else if (
-          (value[i] === '<' &&
-            value[i + 1] === 'e' &&
-            value[i + 2] === 'm' &&
-            value[i + 3] === 'b' &&
-            value[i + 4] === 'e' &&
-            value[i + 5] === 'd' &&
-            value[i + 6] === '>' &&
+          (value[i] === "<" &&
+            value[i + 1] === "e" &&
+            value[i + 2] === "m" &&
+            value[i + 3] === "b" &&
+            value[i + 4] === "e" &&
+            value[i + 5] === "d" &&
+            value[i + 6] === ">" &&
             slStart === i &&
             slEnd === i) ||
-          (value[i] === '<' &&
-            value[i + 1] === '/' &&
-            value[i + 2] === 'e' &&
-            value[i + 3] === 'm' &&
-            value[i + 4] === 'b' &&
-            value[i + 5] === 'e' &&
-            value[i + 6] === 'd' &&
-            value[i + 7] === '>' &&
+          (value[i] === "<" &&
+            value[i + 1] === "/" &&
+            value[i + 2] === "e" &&
+            value[i + 3] === "m" &&
+            value[i + 4] === "b" &&
+            value[i + 5] === "e" &&
+            value[i + 6] === "d" &&
+            value[i + 7] === ">" &&
             slStart === i &&
             slEnd === i)
         ) {
@@ -617,21 +1169,21 @@ const AddArticle = () => {
           }, 100);
           break;
         } else if (
-          (value[i] === '<' &&
-            value[i + 1] === 'l' &&
-            value[i + 2] === 'i' &&
-            value[i + 3] === 'n' &&
-            value[i + 4] === 'k' &&
-            value[i + 5] === '>' &&
+          (value[i] === "<" &&
+            value[i + 1] === "l" &&
+            value[i + 2] === "i" &&
+            value[i + 3] === "n" &&
+            value[i + 4] === "k" &&
+            value[i + 5] === ">" &&
             slStart === i &&
             slEnd === i) ||
-          (value[i] === '<' &&
-            value[i + 1] === '/' &&
-            value[i + 2] === 'l' &&
-            value[i + 3] === 'i' &&
-            value[i + 4] === 'n' &&
-            value[i + 5] === 'k' &&
-            value[i + 6] === '>' &&
+          (value[i] === "<" &&
+            value[i + 1] === "/" &&
+            value[i + 2] === "l" &&
+            value[i + 3] === "i" &&
+            value[i + 4] === "n" &&
+            value[i + 5] === "k" &&
+            value[i + 6] === ">" &&
             slStart === i &&
             slEnd === i)
         ) {
@@ -641,23 +1193,47 @@ const AddArticle = () => {
           }, 100);
           break;
         } else if (
-          value[i] === '<' &&
-          value[i + 1] === 'b' &&
-          value[i + 2] === '>' &&
+          (value[i] === "<" &&
+            value[i + 1] === "l" &&
+            value[i + 2] === "i" &&
+            value[i + 3] === "s" &&
+            value[i + 4] === "t" &&
+            value[i + 5] === ">" &&
+            slStart === i &&
+            slEnd === i) ||
+          (value[i] === "<" &&
+            value[i + 1] === "/" &&
+            value[i + 2] === "l" &&
+            value[i + 3] === "i" &&
+            value[i + 4] === "s" &&
+            value[i + 5] === "t" &&
+            value[i + 6] === ">" &&
+            slStart === i &&
+            slEnd === i)
+        ) {
+          textareaRef.current.readOnly = true;
+          setTimeout(() => {
+            textareaRef.current.readOnly = false;
+          }, 100);
+          break;
+        } else if (
+          value[i] === "<" &&
+          value[i + 1] === "b" &&
+          value[i + 2] === ">" &&
           slStart < [i + 3] &&
           slStart >= [i]
         ) {
           startStart = i;
           startEnd = i + 3;
-          const copyTxt1 = textareaRef.current.value.split('');
-          const copyTxt2 = textareaRef.current.value.split('');
-          const copyTxt3 = textareaRef.current.value.split('');
+          const copyTxt1 = textareaRef.current.value.split("");
+          const copyTxt2 = textareaRef.current.value.split("");
+          const copyTxt3 = textareaRef.current.value.split("");
           for (let j = i; j < value.length; j++) {
             if (
-              value[j] === '<' &&
-              value[j + 1] === '/' &&
-              value[j + 2] === 'b' &&
-              value[j + 3] === '>'
+              value[j] === "<" &&
+              value[j + 1] === "/" &&
+              value[j + 2] === "b" &&
+              value[j + 3] === ">"
             ) {
               const slice = copyTxt1.splice(0, startStart);
               const slice2 = copyTxt2.slice(startEnd, j);
@@ -665,8 +1241,8 @@ const AddArticle = () => {
               console.log(slice);
               console.log(slice2);
               console.log(slice3);
-              let newStr = [slice.join(''), slice2.join(''), slice3.join('')];
-              newStr = newStr.join('');
+              let newStr = [slice.join(""), slice2.join(""), slice3.join("")];
+              newStr = newStr.join("");
               // console.log(newStr);
               textareaRef.current.value = newStr;
 
@@ -679,23 +1255,23 @@ const AddArticle = () => {
             textareaRef.current.readOnly = false;
           }, 100);
         } else if (
-          value[i] === '<' &&
-          value[i + 1] === '/' &&
-          value[i + 2] === 'b' &&
-          value[i + 3] === '>' &&
+          value[i] === "<" &&
+          value[i + 1] === "/" &&
+          value[i + 2] === "b" &&
+          value[i + 3] === ">" &&
           slStart < [i + 4] &&
           slStart >= [i + 1]
         ) {
           startStart = i;
           startEnd = i + 3;
-          const copyTxt1 = textareaRef.current.value.split('');
-          const copyTxt2 = textareaRef.current.value.split('');
-          const copyTxt3 = textareaRef.current.value.split('');
+          const copyTxt1 = textareaRef.current.value.split("");
+          const copyTxt2 = textareaRef.current.value.split("");
+          const copyTxt3 = textareaRef.current.value.split("");
           for (let j = i; j >= 0; j--) {
             if (
-              value[j] === '<' &&
-              value[j + 1] === 'b' &&
-              value[j + 2] === '>'
+              value[j] === "<" &&
+              value[j + 1] === "b" &&
+              value[j + 2] === ">"
             ) {
               const slice = copyTxt1.splice(0, j);
               const slice2 = copyTxt2.slice(j + 3, startStart);
@@ -703,8 +1279,8 @@ const AddArticle = () => {
               console.log(slice);
               console.log(slice2);
               console.log(slice3);
-              let newStr = [slice.join(''), slice2.join(''), slice3.join('')];
-              newStr = newStr.join('');
+              let newStr = [slice.join(""), slice2.join(""), slice3.join("")];
+              newStr = newStr.join("");
               // console.log(newStr);
               textareaRef.current.value = newStr;
 
@@ -716,13 +1292,13 @@ const AddArticle = () => {
             textareaRef.current.readOnly = false;
           }, 100);
         } else if (
-          value[i] === '<' &&
-          value[i + 1] === 'e' &&
-          value[i + 2] === 'm' &&
-          value[i + 3] === 'b' &&
-          value[i + 4] === 'e' &&
-          value[i + 5] === 'd' &&
-          value[i + 6] === '>' &&
+          value[i] === "<" &&
+          value[i + 1] === "e" &&
+          value[i + 2] === "m" &&
+          value[i + 3] === "b" &&
+          value[i + 4] === "e" &&
+          value[i + 5] === "d" &&
+          value[i + 6] === ">" &&
           slStart < [i + 7] &&
           slStart >= [i]
           // (value[i] === '<' &&
@@ -738,19 +1314,19 @@ const AddArticle = () => {
         ) {
           startStart = i;
           startEnd = i + 7;
-          const copyTxt1 = textareaRef.current.value.split('');
-          const copyTxt2 = textareaRef.current.value.split('');
-          const copyTxt3 = textareaRef.current.value.split('');
+          const copyTxt1 = textareaRef.current.value.split("");
+          const copyTxt2 = textareaRef.current.value.split("");
+          const copyTxt3 = textareaRef.current.value.split("");
           for (let j = i; j < value.length; j++) {
             if (
-              value[j] === '<' &&
-              value[j + 1] === '/' &&
-              value[j + 2] === 'e' &&
-              value[j + 3] === 'm' &&
-              value[j + 4] === 'b' &&
-              value[j + 5] === 'e' &&
-              value[j + 6] === 'd' &&
-              value[j + 7] === '>'
+              value[j] === "<" &&
+              value[j + 1] === "/" &&
+              value[j + 2] === "e" &&
+              value[j + 3] === "m" &&
+              value[j + 4] === "b" &&
+              value[j + 5] === "e" &&
+              value[j + 6] === "d" &&
+              value[j + 7] === ">"
             ) {
               const slice = copyTxt1.splice(0, startStart);
               const slice2 = copyTxt2.slice(startEnd, j);
@@ -758,8 +1334,8 @@ const AddArticle = () => {
               // console.log(slice);
               // console.log(slice2);
               // console.log(slice3);
-              let newStr = [slice.join(''), slice2.join(''), slice3.join('')];
-              newStr = newStr.join('');
+              let newStr = [slice.join(""), slice2.join(""), slice3.join("")];
+              newStr = newStr.join("");
               // console.log(newStr);
               textareaRef.current.value = newStr;
               break;
@@ -770,31 +1346,31 @@ const AddArticle = () => {
             textareaRef.current.readOnly = false;
           }, 100);
         } else if (
-          value[i] === '<' &&
-          value[i + 1] === '/' &&
-          value[i + 2] === 'e' &&
-          value[i + 3] === 'm' &&
-          value[i + 4] === 'b' &&
-          value[i + 5] === 'e' &&
-          value[i + 6] === 'd' &&
-          value[i + 7] === '>' &&
+          value[i] === "<" &&
+          value[i + 1] === "/" &&
+          value[i + 2] === "e" &&
+          value[i + 3] === "m" &&
+          value[i + 4] === "b" &&
+          value[i + 5] === "e" &&
+          value[i + 6] === "d" &&
+          value[i + 7] === ">" &&
           slStart < [i + 8] &&
           slStart >= [i + 1]
         ) {
           startStart = i;
           startEnd = i + 3;
-          const copyTxt1 = textareaRef.current.value.split('');
-          const copyTxt2 = textareaRef.current.value.split('');
-          const copyTxt3 = textareaRef.current.value.split('');
+          const copyTxt1 = textareaRef.current.value.split("");
+          const copyTxt2 = textareaRef.current.value.split("");
+          const copyTxt3 = textareaRef.current.value.split("");
           for (let j = i; j >= 0; j--) {
             if (
-              value[j] === '<' &&
-              value[j + 1] === 'e' &&
-              value[j + 2] === 'm' &&
-              value[j + 3] === 'b' &&
-              value[j + 4] === 'e' &&
-              value[j + 5] === 'd' &&
-              value[j + 6] === '>'
+              value[j] === "<" &&
+              value[j + 1] === "e" &&
+              value[j + 2] === "m" &&
+              value[j + 3] === "b" &&
+              value[j + 4] === "e" &&
+              value[j + 5] === "d" &&
+              value[j + 6] === ">"
             ) {
               const slice = copyTxt1.splice(0, j);
               const slice2 = copyTxt2.slice(j + 7, startStart);
@@ -802,8 +1378,8 @@ const AddArticle = () => {
               console.log(slice);
               console.log(slice2);
               console.log(slice3);
-              let newStr = [slice.join(''), slice2.join(''), slice3.join('')];
-              newStr = newStr.join('');
+              let newStr = [slice.join(""), slice2.join(""), slice3.join("")];
+              newStr = newStr.join("");
               // console.log(newStr);
               textareaRef.current.value = newStr;
 
@@ -815,12 +1391,12 @@ const AddArticle = () => {
             textareaRef.current.readOnly = false;
           }, 100);
         } else if (
-          value[i] === '<' &&
-          value[i + 1] === 'l' &&
-          value[i + 2] === 'i' &&
-          value[i + 3] === 'n' &&
-          value[i + 4] === 'k' &&
-          value[i + 5] === '>' &&
+          value[i] === "<" &&
+          value[i + 1] === "l" &&
+          value[i + 2] === "i" &&
+          value[i + 3] === "n" &&
+          value[i + 4] === "k" &&
+          value[i + 5] === ">" &&
           slStart < [i + 6] &&
           slStart >= [i]
           // (value[i] === '<' &&
@@ -835,18 +1411,18 @@ const AddArticle = () => {
         ) {
           startStart = i;
           startEnd = i + 6;
-          const copyTxt1 = textareaRef.current.value.split('');
-          const copyTxt2 = textareaRef.current.value.split('');
-          const copyTxt3 = textareaRef.current.value.split('');
+          const copyTxt1 = textareaRef.current.value.split("");
+          const copyTxt2 = textareaRef.current.value.split("");
+          const copyTxt3 = textareaRef.current.value.split("");
           for (let j = i; j < value.length; j++) {
             if (
-              value[j] === '<' &&
-              value[j + 1] === '/' &&
-              value[j + 2] === 'l' &&
-              value[j + 3] === 'i' &&
-              value[j + 4] === 'n' &&
-              value[j + 5] === 'k' &&
-              value[j + 6] === '>'
+              value[j] === "<" &&
+              value[j + 1] === "/" &&
+              value[j + 2] === "l" &&
+              value[j + 3] === "i" &&
+              value[j + 4] === "n" &&
+              value[j + 5] === "k" &&
+              value[j + 6] === ">"
             ) {
               const slice = copyTxt1.splice(0, startStart);
               const slice2 = copyTxt2.slice(startEnd, j);
@@ -854,8 +1430,8 @@ const AddArticle = () => {
               // console.log(slice);
               // console.log(slice2);
               // console.log(slice3);
-              let newStr = [slice.join(''), slice2.join(''), slice3.join('')];
-              newStr = newStr.join('');
+              let newStr = [slice.join(""), slice2.join(""), slice3.join("")];
+              newStr = newStr.join("");
               // console.log(newStr);
               textareaRef.current.value = newStr;
               break;
@@ -866,29 +1442,29 @@ const AddArticle = () => {
             textareaRef.current.readOnly = false;
           }, 100);
         } else if (
-          value[i] === '<' &&
-          value[i + 1] === '/' &&
-          value[i + 2] === 'l' &&
-          value[i + 3] === 'i' &&
-          value[i + 4] === 'n' &&
-          value[i + 5] === 'k' &&
-          value[i + 6] === '>' &&
+          value[i] === "<" &&
+          value[i + 1] === "/" &&
+          value[i + 2] === "l" &&
+          value[i + 3] === "i" &&
+          value[i + 4] === "n" &&
+          value[i + 5] === "k" &&
+          value[i + 6] === ">" &&
           slStart < [i + 7] &&
           slStart >= [i + 1]
         ) {
           startStart = i;
           startEnd = i + 3;
-          const copyTxt1 = textareaRef.current.value.split('');
-          const copyTxt2 = textareaRef.current.value.split('');
-          const copyTxt3 = textareaRef.current.value.split('');
+          const copyTxt1 = textareaRef.current.value.split("");
+          const copyTxt2 = textareaRef.current.value.split("");
+          const copyTxt3 = textareaRef.current.value.split("");
           for (let j = i; j >= 0; j--) {
             if (
-              value[j] === '<' &&
-              value[j + 1] === 'l' &&
-              value[j + 2] === 'i' &&
-              value[j + 3] === 'n' &&
-              value[j + 4] === 'k' &&
-              value[j + 5] === '>'
+              value[j] === "<" &&
+              value[j + 1] === "l" &&
+              value[j + 2] === "i" &&
+              value[j + 3] === "n" &&
+              value[j + 4] === "k" &&
+              value[j + 5] === ">"
             ) {
               const slice = copyTxt1.splice(0, j);
               const slice2 = copyTxt2.slice(j + 6, startStart);
@@ -896,9 +1472,137 @@ const AddArticle = () => {
               console.log(slice);
               console.log(slice2);
               console.log(slice3);
-              let newStr = [slice.join(''), slice2.join(''), slice3.join('')];
-              newStr = newStr.join('');
+              let newStr = [slice.join(""), slice2.join(""), slice3.join("")];
+              newStr = newStr.join("");
               // console.log(newStr);
+              textareaRef.current.value = newStr;
+
+              break;
+            }
+          }
+          textareaRef.current.readOnly = true;
+          setTimeout(() => {
+            textareaRef.current.readOnly = false;
+          }, 100);
+        } else if (
+          value[i] === "<" &&
+          value[i + 1] === "l" &&
+          value[i + 2] === "i" &&
+          value[i + 3] === "s" &&
+          value[i + 4] === "t" &&
+          value[i + 5] === ">" &&
+          slStart < [i + 6] &&
+          slStart >= [i]
+        ) {
+          startStart = i;
+          startEnd = i + 6;
+          const copyTxt1 = textareaRef.current.value.split("");
+          const copyTxt2 = textareaRef.current.value.split("");
+          const copyTxt3 = textareaRef.current.value.split("");
+          for (let k = 0; k < i; k++) {
+            if (
+              value[k] === "<" &&
+              value[k + 1] === "l" &&
+              value[k + 2] === "i" &&
+              value[k + 3] === "s" &&
+              value[k + 4] === "t" &&
+              value[k + 5] === ">"
+            ) {
+              listCount++;
+            }
+          }
+          for (let j = i; j < value.length; j++) {
+            if (
+              value[j] === "<" &&
+              value[j + 1] === "/" &&
+              value[j + 2] === "l" &&
+              value[j + 3] === "i" &&
+              value[j + 4] === "s" &&
+              value[j + 5] === "t" &&
+              value[j + 6] === ">"
+            ) {
+              const slice = copyTxt1.splice(0, startStart);
+              const slice2 = copyTxt2.slice(startEnd, j);
+              const slice3 = copyTxt3.splice(j + 7);
+              // console.log(slice);
+              // console.log(slice2);
+              // console.log(slice3);
+              let newStr = [slice.join(""), slice2.join(""), slice3.join("")];
+              newStr = newStr.join("");
+              alert(listCount);
+              setTimeout(() => {
+                setLists((old) => {
+                  let oldArr = [...old];
+                  oldArr.splice(listCount, 1);
+                  return oldArr;
+                });
+                listCount = 0;
+              }, 10);
+              // console.log(newStr);
+              textareaRef.current.value = newStr;
+              break;
+            }
+          }
+          textareaRef.current.readOnly = true;
+          setTimeout(() => {
+            textareaRef.current.readOnly = false;
+          }, 100);
+        } else if (
+          value[i] === "<" &&
+          value[i + 1] === "/" &&
+          value[i + 2] === "l" &&
+          value[i + 3] === "i" &&
+          value[i + 4] === "s" &&
+          value[i + 5] === "t" &&
+          value[i + 6] === ">" &&
+          slStart < [i + 7] &&
+          slStart >= [i + 1]
+        ) {
+          startStart = i;
+          startEnd = i + 3;
+          const copyTxt1 = textareaRef.current.value.split("");
+          const copyTxt2 = textareaRef.current.value.split("");
+          const copyTxt3 = textareaRef.current.value.split("");
+          for (let k = 0; k < i; k++) {
+            if (
+              value[k] === "<" &&
+              value[k + 1] === "/" &&
+              value[k + 2] === "l" &&
+              value[k + 3] === "i" &&
+              value[k + 4] === "s" &&
+              value[k + 5] === "t" &&
+              value[k + 6] === ">"
+            ) {
+              listCount++;
+            }
+          }
+          for (let j = i; j >= 0; j--) {
+            if (
+              value[j] === "<" &&
+              value[j + 1] === "l" &&
+              value[j + 2] === "i" &&
+              value[j + 3] === "s" &&
+              value[j + 4] === "t" &&
+              value[j + 5] === ">"
+            ) {
+              const slice = copyTxt1.splice(0, j);
+              const slice2 = copyTxt2.slice(j + 6, startStart);
+              const slice3 = copyTxt3.splice(startStart + 7);
+              console.log(slice);
+              console.log(slice2);
+              console.log(slice3);
+              let newStr = [slice.join(""), slice2.join(""), slice3.join("")];
+              newStr = newStr.join("");
+              // console.log(newStr);
+              alert(listCount);
+              setTimeout(() => {
+                setLists((old) => {
+                  let oldArr = [...old];
+                  oldArr.splice(listCount, 1);
+                  return oldArr;
+                });
+                listCount = 0;
+              }, 10);
               textareaRef.current.value = newStr;
 
               break;
@@ -914,15 +1618,15 @@ const AddArticle = () => {
     if (e.keyCode === 8) {
       for (let i = 0; i < value.length; i++) {
         if (
-          (value[i] === '<' &&
-            value[i + 1] === 'b' &&
-            value[i + 2] === '>' &&
+          (value[i] === "<" &&
+            value[i + 1] === "b" &&
+            value[i + 2] === ">" &&
             slStart === i + 3 &&
             slEnd === i + 3) ||
-          (value[i] === '<' &&
-            value[i + 1] === '/' &&
-            value[i + 2] === 'b' &&
-            value[i + 3] === '>' &&
+          (value[i] === "<" &&
+            value[i + 1] === "/" &&
+            value[i + 2] === "b" &&
+            value[i + 3] === ">" &&
             slStart === i + 4 &&
             slEnd === i + 4)
         ) {
@@ -932,23 +1636,23 @@ const AddArticle = () => {
           }, 100);
           break;
         } else if (
-          (value[i] === '<' &&
-            value[i + 1] === 'e' &&
-            value[i + 2] === 'm' &&
-            value[i + 3] === 'b' &&
-            value[i + 4] === 'e' &&
-            value[i + 5] === 'd' &&
-            value[i + 6] === '>' &&
+          (value[i] === "<" &&
+            value[i + 1] === "e" &&
+            value[i + 2] === "m" &&
+            value[i + 3] === "b" &&
+            value[i + 4] === "e" &&
+            value[i + 5] === "d" &&
+            value[i + 6] === ">" &&
             slStart === i + 7 &&
             slEnd === i + 7) ||
-          (value[i] === '<' &&
-            value[i + 1] === '/' &&
-            value[i + 2] === 'e' &&
-            value[i + 3] === 'm' &&
-            value[i + 4] === 'b' &&
-            value[i + 5] === 'e' &&
-            value[i + 6] === 'd' &&
-            value[i + 7] === '>' &&
+          (value[i] === "<" &&
+            value[i + 1] === "/" &&
+            value[i + 2] === "e" &&
+            value[i + 3] === "m" &&
+            value[i + 4] === "b" &&
+            value[i + 5] === "e" &&
+            value[i + 6] === "d" &&
+            value[i + 7] === ">" &&
             slStart === i + 8 &&
             slEnd === i + 8)
         ) {
@@ -958,21 +1662,45 @@ const AddArticle = () => {
           }, 100);
           break;
         } else if (
-          (value[i] === '<' &&
-            value[i + 1] === 'l' &&
-            value[i + 2] === 'i' &&
-            value[i + 3] === 'n' &&
-            value[i + 4] === 'k' &&
-            value[i + 5] === '>' &&
+          (value[i] === "<" &&
+            value[i + 1] === "l" &&
+            value[i + 2] === "i" &&
+            value[i + 3] === "n" &&
+            value[i + 4] === "k" &&
+            value[i + 5] === ">" &&
             slStart === i + 6 &&
             slEnd === i + 6) ||
-          (value[i] === '<' &&
-            value[i + 1] === '/' &&
-            value[i + 2] === 'l' &&
-            value[i + 3] === 'i' &&
-            value[i + 4] === 'n' &&
-            value[i + 5] === 'k' &&
-            value[i + 6] === '>' &&
+          (value[i] === "<" &&
+            value[i + 1] === "/" &&
+            value[i + 2] === "l" &&
+            value[i + 3] === "i" &&
+            value[i + 4] === "n" &&
+            value[i + 5] === "k" &&
+            value[i + 6] === ">" &&
+            slStart === i + 7 &&
+            slEnd === i + 7)
+        ) {
+          textareaRef.current.readOnly = true;
+          setTimeout(() => {
+            textareaRef.current.readOnly = false;
+          }, 100);
+          break;
+        } else if (
+          (value[i] === "<" &&
+            value[i + 1] === "l" &&
+            value[i + 2] === "i" &&
+            value[i + 3] === "s" &&
+            value[i + 4] === "t" &&
+            value[i + 5] === ">" &&
+            slStart === i + 6 &&
+            slEnd === i + 6) ||
+          (value[i] === "<" &&
+            value[i + 1] === "/" &&
+            value[i + 2] === "l" &&
+            value[i + 3] === "i" &&
+            value[i + 4] === "s" &&
+            value[i + 5] === "t" &&
+            value[i + 6] === ">" &&
             slStart === i + 7 &&
             slEnd === i + 7)
         ) {
@@ -990,9 +1718,9 @@ const AddArticle = () => {
     ) {
       for (let i = 0; i < value.length; i++) {
         if (
-          value[i] === '<' &&
-          value[i + 1] === 'b' &&
-          value[i + 2] === '>' &&
+          value[i] === "<" &&
+          value[i + 1] === "b" &&
+          value[i + 2] === ">" &&
           slStart > i &&
           slStart <= i + 2
         ) {
@@ -1003,9 +1731,9 @@ const AddArticle = () => {
             textareaRef.current.selectionStart = slStart;
           }, 100);
         } else if (
-          value[i] === '<' &&
-          value[i + 1] === 'b' &&
-          value[i + 2] === '>' &&
+          value[i] === "<" &&
+          value[i + 1] === "b" &&
+          value[i + 2] === ">" &&
           slEnd > i &&
           slEnd <= i + 3
         ) {
@@ -1016,9 +1744,9 @@ const AddArticle = () => {
             textareaRef.current.selectionStart = slStart;
           }, 100);
         } else if (
-          value[i] === '<' &&
-          value[i + 1] === 'b' &&
-          value[i + 2] === '>' &&
+          value[i] === "<" &&
+          value[i + 1] === "b" &&
+          value[i + 2] === ">" &&
           slStart <= i &&
           slEnd >= i + 3
         ) {
@@ -1029,10 +1757,10 @@ const AddArticle = () => {
             textareaRef.current.selectionStart = slStart;
           }, 100);
         } else if (
-          value[i] === '<' &&
-          value[i + 1] === '/' &&
-          value[i + 2] === 'b' &&
-          value[i + 3] === '>' &&
+          value[i] === "<" &&
+          value[i + 1] === "/" &&
+          value[i + 2] === "b" &&
+          value[i + 3] === ">" &&
           slStart >= i &&
           slStart <= i + 3
         ) {
@@ -1043,10 +1771,10 @@ const AddArticle = () => {
             textareaRef.current.selectionStart = slStart;
           }, 100);
         } else if (
-          value[i] === '<' &&
-          value[i + 1] === '/' &&
-          value[i + 2] === 'b' &&
-          value[i + 3] === '>' &&
+          value[i] === "<" &&
+          value[i + 1] === "/" &&
+          value[i + 2] === "b" &&
+          value[i + 3] === ">" &&
           slEnd > i &&
           slEnd <= i + 4
         ) {
@@ -1057,10 +1785,10 @@ const AddArticle = () => {
             textareaRef.current.selectionStart = slStart;
           }, 100);
         } else if (
-          value[i] === '<' &&
-          value[i + 1] === '/' &&
-          value[i + 2] === 'b' &&
-          value[i + 3] === '>' &&
+          value[i] === "<" &&
+          value[i + 1] === "/" &&
+          value[i + 2] === "b" &&
+          value[i + 3] === ">" &&
           slStart <= i &&
           slEnd >= i + 4
         ) {
@@ -1071,13 +1799,13 @@ const AddArticle = () => {
             textareaRef.current.selectionStart = slStart;
           }, 100);
         } else if (
-          value[i] === '<' &&
-          value[i + 1] === 'e' &&
-          value[i + 2] === 'm' &&
-          value[i + 3] === 'b' &&
-          value[i + 4] === 'e' &&
-          value[i + 5] === 'd' &&
-          value[i + 6] === '>' &&
+          value[i] === "<" &&
+          value[i + 1] === "e" &&
+          value[i + 2] === "m" &&
+          value[i + 3] === "b" &&
+          value[i + 4] === "e" &&
+          value[i + 5] === "d" &&
+          value[i + 6] === ">" &&
           slStart > i &&
           slStart <= i + 6
         ) {
@@ -1088,13 +1816,13 @@ const AddArticle = () => {
             textareaRef.current.selectionStart = slStart;
           }, 100);
         } else if (
-          value[i] === '<' &&
-          value[i + 1] === 'e' &&
-          value[i + 2] === 'm' &&
-          value[i + 3] === 'b' &&
-          value[i + 4] === 'e' &&
-          value[i + 5] === 'd' &&
-          value[i + 6] === '>' &&
+          value[i] === "<" &&
+          value[i + 1] === "e" &&
+          value[i + 2] === "m" &&
+          value[i + 3] === "b" &&
+          value[i + 4] === "e" &&
+          value[i + 5] === "d" &&
+          value[i + 6] === ">" &&
           slEnd > i &&
           slEnd <= i + 7
         ) {
@@ -1105,13 +1833,13 @@ const AddArticle = () => {
             textareaRef.current.selectionStart = slStart;
           }, 100);
         } else if (
-          value[i] === '<' &&
-          value[i + 1] === 'e' &&
-          value[i + 2] === 'm' &&
-          value[i + 3] === 'b' &&
-          value[i + 4] === 'e' &&
-          value[i + 5] === 'd' &&
-          value[i + 6] === '>' &&
+          value[i] === "<" &&
+          value[i + 1] === "e" &&
+          value[i + 2] === "m" &&
+          value[i + 3] === "b" &&
+          value[i + 4] === "e" &&
+          value[i + 5] === "d" &&
+          value[i + 6] === ">" &&
           slStart <= i &&
           slEnd >= i + 7
         ) {
@@ -1122,14 +1850,14 @@ const AddArticle = () => {
             textareaRef.current.selectionStart = slStart;
           }, 100);
         } else if (
-          value[i] === '<' &&
-          value[i + 1] === '/' &&
-          value[i + 2] === 'e' &&
-          value[i + 3] === 'm' &&
-          value[i + 4] === 'b' &&
-          value[i + 5] === 'e' &&
-          value[i + 6] === 'd' &&
-          value[i + 7] === '>' &&
+          value[i] === "<" &&
+          value[i + 1] === "/" &&
+          value[i + 2] === "e" &&
+          value[i + 3] === "m" &&
+          value[i + 4] === "b" &&
+          value[i + 5] === "e" &&
+          value[i + 6] === "d" &&
+          value[i + 7] === ">" &&
           slStart >= i &&
           slStart <= i + 7
         ) {
@@ -1140,14 +1868,14 @@ const AddArticle = () => {
             textareaRef.current.selectionStart = slStart;
           }, 100);
         } else if (
-          value[i] === '<' &&
-          value[i + 1] === '/' &&
-          value[i + 2] === 'e' &&
-          value[i + 3] === 'm' &&
-          value[i + 4] === 'b' &&
-          value[i + 5] === 'e' &&
-          value[i + 6] === 'd' &&
-          value[i + 7] === '>' &&
+          value[i] === "<" &&
+          value[i + 1] === "/" &&
+          value[i + 2] === "e" &&
+          value[i + 3] === "m" &&
+          value[i + 4] === "b" &&
+          value[i + 5] === "e" &&
+          value[i + 6] === "d" &&
+          value[i + 7] === ">" &&
           slEnd > i &&
           slEnd <= i + 8
         ) {
@@ -1158,14 +1886,14 @@ const AddArticle = () => {
             textareaRef.current.selectionStart = slStart;
           }, 100);
         } else if (
-          value[i] === '<' &&
-          value[i + 1] === '/' &&
-          value[i + 2] === 'e' &&
-          value[i + 3] === 'm' &&
-          value[i + 4] === 'b' &&
-          value[i + 5] === 'e' &&
-          value[i + 6] === 'd' &&
-          value[i + 7] === '>' &&
+          value[i] === "<" &&
+          value[i + 1] === "/" &&
+          value[i + 2] === "e" &&
+          value[i + 3] === "m" &&
+          value[i + 4] === "b" &&
+          value[i + 5] === "e" &&
+          value[i + 6] === "d" &&
+          value[i + 7] === ">" &&
           slStart <= i &&
           slEnd >= i + 8
         ) {
@@ -1176,12 +1904,12 @@ const AddArticle = () => {
             textareaRef.current.selectionStart = slStart;
           }, 100);
         } else if (
-          value[i] === '<' &&
-          value[i + 1] === 'l' &&
-          value[i + 2] === 'i' &&
-          value[i + 3] === 'n' &&
-          value[i + 4] === 'k' &&
-          value[i + 5] === '>' &&
+          value[i] === "<" &&
+          value[i + 1] === "l" &&
+          value[i + 2] === "i" &&
+          value[i + 3] === "n" &&
+          value[i + 4] === "k" &&
+          value[i + 5] === ">" &&
           slStart > i &&
           slStart <= i + 5
         ) {
@@ -1192,12 +1920,12 @@ const AddArticle = () => {
             textareaRef.current.selectionStart = slStart;
           }, 100);
         } else if (
-          value[i] === '<' &&
-          value[i + 1] === 'l' &&
-          value[i + 2] === 'i' &&
-          value[i + 3] === 'n' &&
-          value[i + 4] === 'k' &&
-          value[i + 5] === '>' &&
+          value[i] === "<" &&
+          value[i + 1] === "l" &&
+          value[i + 2] === "i" &&
+          value[i + 3] === "n" &&
+          value[i + 4] === "k" &&
+          value[i + 5] === ">" &&
           slEnd > i &&
           slEnd <= i + 6
         ) {
@@ -1208,12 +1936,12 @@ const AddArticle = () => {
             textareaRef.current.selectionStart = slStart;
           }, 100);
         } else if (
-          value[i] === '<' &&
-          value[i + 1] === 'l' &&
-          value[i + 2] === 'i' &&
-          value[i + 3] === 'n' &&
-          value[i + 4] === 'k' &&
-          value[i + 5] === '>' &&
+          value[i] === "<" &&
+          value[i + 1] === "l" &&
+          value[i + 2] === "i" &&
+          value[i + 3] === "n" &&
+          value[i + 4] === "k" &&
+          value[i + 5] === ">" &&
           slStart <= i &&
           slEnd >= i + 6
         ) {
@@ -1224,13 +1952,13 @@ const AddArticle = () => {
             textareaRef.current.selectionStart = slStart;
           }, 100);
         } else if (
-          value[i] === '<' &&
-          value[i + 1] === '/' &&
-          value[i + 2] === 'l' &&
-          value[i + 3] === 'i' &&
-          value[i + 4] === 'n' &&
-          value[i + 5] === 'k' &&
-          value[i + 6] === '>' &&
+          value[i] === "<" &&
+          value[i + 1] === "/" &&
+          value[i + 2] === "l" &&
+          value[i + 3] === "i" &&
+          value[i + 4] === "n" &&
+          value[i + 5] === "k" &&
+          value[i + 6] === ">" &&
           slStart >= i &&
           slStart <= i + 6
         ) {
@@ -1241,13 +1969,13 @@ const AddArticle = () => {
             textareaRef.current.selectionStart = slStart;
           }, 100);
         } else if (
-          value[i] === '<' &&
-          value[i + 1] === '/' &&
-          value[i + 2] === 'l' &&
-          value[i + 3] === 'i' &&
-          value[i + 4] === 'n' &&
-          value[i + 5] === 'k' &&
-          value[i + 6] === '>' &&
+          value[i] === "<" &&
+          value[i + 1] === "/" &&
+          value[i + 2] === "l" &&
+          value[i + 3] === "i" &&
+          value[i + 4] === "n" &&
+          value[i + 5] === "k" &&
+          value[i + 6] === ">" &&
           slEnd > i &&
           slEnd <= i + 7
         ) {
@@ -1258,13 +1986,112 @@ const AddArticle = () => {
             textareaRef.current.selectionStart = slStart;
           }, 100);
         } else if (
-          value[i] === '<' &&
-          value[i + 1] === '/' &&
-          value[i + 2] === 'l' &&
-          value[i + 3] === 'i' &&
-          value[i + 4] === 'n' &&
-          value[i + 5] === 'k' &&
-          value[i + 6] === '>' &&
+          value[i] === "<" &&
+          value[i + 1] === "/" &&
+          value[i + 2] === "l" &&
+          value[i + 3] === "i" &&
+          value[i + 4] === "n" &&
+          value[i + 5] === "k" &&
+          value[i + 6] === ">" &&
+          slStart <= i &&
+          slEnd >= i + 7
+        ) {
+          textareaRef.current.readOnly = true;
+          setTimeout(() => {
+            textareaRef.current.readOnly = false;
+            textareaRef.current.selectionEnd = slStart;
+            textareaRef.current.selectionStart = slStart;
+          }, 100);
+        } else if (
+          value[i] === "<" &&
+          value[i + 1] === "l" &&
+          value[i + 2] === "i" &&
+          value[i + 3] === "s" &&
+          value[i + 4] === "t" &&
+          value[i + 5] === ">" &&
+          slStart > i &&
+          slStart <= i + 5
+        ) {
+          textareaRef.current.readOnly = true;
+          setTimeout(() => {
+            textareaRef.current.readOnly = false;
+            textareaRef.current.selectionEnd = slStart;
+            textareaRef.current.selectionStart = slStart;
+          }, 100);
+        } else if (
+          value[i] === "<" &&
+          value[i + 1] === "l" &&
+          value[i + 2] === "i" &&
+          value[i + 3] === "s" &&
+          value[i + 4] === "t" &&
+          value[i + 5] === ">" &&
+          slEnd > i &&
+          slEnd <= i + 6
+        ) {
+          textareaRef.current.readOnly = true;
+          setTimeout(() => {
+            textareaRef.current.readOnly = false;
+            textareaRef.current.selectionEnd = slStart;
+            textareaRef.current.selectionStart = slStart;
+          }, 100);
+        } else if (
+          value[i] === "<" &&
+          value[i + 1] === "l" &&
+          value[i + 2] === "i" &&
+          value[i + 3] === "s" &&
+          value[i + 4] === "t" &&
+          value[i + 5] === ">" &&
+          slStart <= i &&
+          slEnd >= i + 6
+        ) {
+          textareaRef.current.readOnly = true;
+          setTimeout(() => {
+            textareaRef.current.readOnly = false;
+            textareaRef.current.selectionEnd = slStart;
+            textareaRef.current.selectionStart = slStart;
+          }, 100);
+        } else if (
+          value[i] === "<" &&
+          value[i + 1] === "/" &&
+          value[i + 2] === "l" &&
+          value[i + 3] === "i" &&
+          value[i + 4] === "s" &&
+          value[i + 5] === "t" &&
+          value[i + 6] === ">" &&
+          slStart >= i &&
+          slStart <= i + 6
+        ) {
+          textareaRef.current.readOnly = true;
+          setTimeout(() => {
+            textareaRef.current.readOnly = false;
+            textareaRef.current.selectionEnd = slStart;
+            textareaRef.current.selectionStart = slStart;
+          }, 100);
+        } else if (
+          value[i] === "<" &&
+          value[i + 1] === "/" &&
+          value[i + 2] === "l" &&
+          value[i + 3] === "i" &&
+          value[i + 4] === "s" &&
+          value[i + 5] === "t" &&
+          value[i + 6] === ">" &&
+          slEnd > i &&
+          slEnd <= i + 7
+        ) {
+          textareaRef.current.readOnly = true;
+          setTimeout(() => {
+            textareaRef.current.readOnly = false;
+            textareaRef.current.selectionEnd = slStart;
+            textareaRef.current.selectionStart = slStart;
+          }, 100);
+        } else if (
+          value[i] === "<" &&
+          value[i + 1] === "/" &&
+          value[i + 2] === "l" &&
+          value[i + 3] === "i" &&
+          value[i + 4] === "s" &&
+          value[i + 5] === "t" &&
+          value[i + 6] === ">" &&
           slStart <= i &&
           slEnd >= i + 7
         ) {
@@ -1292,7 +2119,7 @@ const AddArticle = () => {
   };
 
   const handleChange = (e) => {
-    const strArr = e.target.value.split('');
+    const strArr = e.target.value.split("");
     const selStartx = textareaRef.current.selectionStart;
     const copyArr = [...strArr];
     console.log(textareaRef.current.value[textareaRef.current.selectionStart]);
@@ -1303,16 +2130,16 @@ const AddArticle = () => {
       // }
       for (let i = 0; i < strArr.length; i++) {
         if (
-          strArr[i] === '\n' &&
-          strArr[i + 1] !== '\n' &&
-          strArr[i - 1] !== '\n'
+          strArr[i] === "\n" &&
+          strArr[i + 1] !== "\n" &&
+          strArr[i - 1] !== "\n"
         ) {
-          copyArr.splice(i, 0, '\n');
+          copyArr.splice(i, 0, "\n");
         }
       }
     }
     console.log(copyArr);
-    textareaRef.current.value = copyArr.join('');
+    textareaRef.current.value = copyArr.join("");
     console.log(textareaRef.current.value[textareaRef.current.selectionStart]);
     // if (selStart.num < textareaRef.current.value.length && selStart.enter) {
     //   textareaRef.current.selectionEnd = selStart.num;
@@ -1348,7 +2175,7 @@ const AddArticle = () => {
       let previewArray = [];
       console.log(fileList);
       fileList.forEach((file, i) => {
-        if (!file.type.includes('image')) {
+        if (!file.type.includes("image")) {
           fileList.splice(i, 1);
         }
       });
@@ -1377,7 +2204,7 @@ const AddArticle = () => {
       copyArr.forEach((copy) => {
         previewArray.push({
           url: URL.createObjectURL(copy),
-          checked: 'false',
+          checked: "false",
           name: copy.name,
         });
       });
@@ -1385,9 +2212,16 @@ const AddArticle = () => {
       console.log(copyArr);
       setImagePreview([...previewArray]);
       setImageArray(copyArr);
-      e.target.value = '';
+      e.target.value = "";
     }
   };
+
+  useEffect(() => {
+    console.log(imagePreview);
+  }, [imagePreview]);
+  useEffect(() => {
+    console.log(imageArray);
+  }, [imageArray]);
 
   const handleDeleteMode = () => {
     let check = false;
@@ -1412,7 +2246,7 @@ const AddArticle = () => {
           let oldCopy = [...old];
           old.forEach((oldArr, ind) => {
             if (ind === i) {
-              oldCopy[i].checked = 'true';
+              oldCopy[i].checked = "true";
             }
           });
           return oldCopy;
@@ -1425,7 +2259,7 @@ const AddArticle = () => {
           let oldCopy = [...old];
           old.forEach((oldArr, ind) => {
             if (ind === i) {
-              oldCopy[i].checked = 'false';
+              oldCopy[i].checked = "false";
             }
           });
           return oldCopy;
@@ -1439,9 +2273,9 @@ const AddArticle = () => {
     setImagePreview((old) => {
       let oldCopy = [];
       old.forEach((oldObj, i) => {
-        if (oldObj.checked !== 'true') {
+        if (oldObj.checked !== "true") {
           oldCopy.push(oldObj);
-        } else if (oldObj.checked === 'true') {
+        } else if (oldObj.checked === "true") {
           saveName.push(oldObj.name);
         }
       });
@@ -1485,10 +2319,10 @@ const AddArticle = () => {
     if (e.keyCode === 13) {
       let { value } = e.target;
       if (value) {
-        value = value.split('');
+        value = value.split("");
         value[0] = value[0].toUpperCase();
-        value = value.join('');
-        e.target.value = '';
+        value = value.join("");
+        e.target.value = "";
         setTags((old) => {
           const oldCopy = [...old];
           oldCopy.push(value);
@@ -1513,14 +2347,14 @@ const AddArticle = () => {
 
   const checkTextBeforeSubmit = (e) => {
     if (e.keyCode === 13) {
-      alert('d');
+      alert("d");
     }
     // textareaRef.current.readOnly = true
   };
 
   const checkIfContainsPromo = (string) => {
     const str = string.toLowerCase();
-    if (str.includes(' promo') || str.includes('promo ') || str === 'promo') {
+    if (str.includes(" promo") || str.includes("promo ") || str === "promo") {
       return true;
     }
   };
@@ -1537,13 +2371,13 @@ const AddArticle = () => {
 
     const checkIfPromo = checkIfContainsPromo(subTitle);
 
-    if (catSel === 'Promo') {
+    if (catSel === "Promo") {
     }
     const commentChoice =
       commentsRadio.current.children[0].children[1].checked &&
       !commentsRadio.current.children[0].children[1].disabled
-        ? 'Da'
-        : 'Ne';
+        ? "Da"
+        : "Ne";
     console.log(imageArray);
     // alert(commentChoice);
 
@@ -1556,13 +2390,17 @@ const AddArticle = () => {
           category: catSel,
           subCategory: subcatSel,
           images: imageArray,
-          imageText: captionTxt,
+          imageText: imageCaptionTextAttach(),
           tags: tags,
           commentsAllowed: commentChoice,
-          shares: [''],
+          shares: [""],
         };
+        let captTxt = [];
         if (commentChoice) {
-          articleFinished.comments = [''];
+          articleFinished.comments = [""];
+        }
+        if (lists.length > 0) {
+          articleFinished.listOrder = [...lists];
         }
         setSending(true);
         let length = !checkIfPromo ? 1 : 2;
@@ -1573,13 +2411,15 @@ const AddArticle = () => {
               for (let k = 0; k < length; k++) {
                 fetch(
                   `https://klix-74c29-default-rtdb.europe-west1.firebasedatabase.app/articles/${
-                    k === 1 ? 'Promo' : catSel
-                  }/${k === 1 ? catSel : subcatSel}.json?auth=${idToken}`,
+                    k === 1 ? "Promo" : catSel
+                  }/${k === 1 ? catSel : subcatSel}${
+                    location.state ? "-" + location.state.articleData.id : ""
+                  }.json?auth=${idToken}`,
                   {
-                    method: 'POST',
+                    method: `${!location.state ? "POST" : "PATCH"}`,
                     body: JSON.stringify(articleFinished),
                     headers: {
-                      'Content-Type': 'application/json',
+                      "Content-Type": "application/json",
                     },
                   }
                 )
@@ -1588,7 +2428,11 @@ const AddArticle = () => {
                     console.log(data);
                     let id = data.name;
                     const imgUrls = [];
-                    id = id.slice(1);
+                    if (!location.state) {
+                      id = id.slice(1);
+                    } else {
+                      id = location.state.articleData.id;
+                    }
                     // id.split('');
                     // console.log(id);
                     // id.join('');
@@ -1602,7 +2446,7 @@ const AddArticle = () => {
                         imageArray.forEach((img, i) => {
                           progressArray.push({
                             imageName: img.name,
-                            percent: '',
+                            percent: "",
                           });
                           console.log(k);
                           console.log(
@@ -1610,13 +2454,13 @@ const AddArticle = () => {
                           );
                           const uploadTask = storage
                             .ref(
-                              `images/${k === 1 ? 'Promo' : catSel}/${
+                              `images/${k === 1 ? "Promo" : catSel}/${
                                 k === 1 ? catSel : subcatSel
                               }/-${id}/${img.name}`
                             )
                             .put(img);
                           uploadTask.on(
-                            'state_changed',
+                            "state_changed",
                             (snapshot) => {
                               console.log(snapshot);
                               console.log(
@@ -1670,7 +2514,7 @@ const AddArticle = () => {
                                         progressRef.current.children[
                                           i
                                         ].children[2].children[0].style.display =
-                                          'inline-block';
+                                          "inline-block";
                                       }, 200);
                                     }
                                     // progressRef.current.children[i].children[1]
@@ -1692,7 +2536,7 @@ const AddArticle = () => {
                             () => {
                               storage
                                 .ref(
-                                  `images/${k === 1 ? 'Promo' : catSel}/${
+                                  `images/${k === 1 ? "Promo" : catSel}/${
                                     k === 1 ? catSel : subcatSel
                                   }/-${id}`
                                 )
@@ -1701,8 +2545,22 @@ const AddArticle = () => {
                                 .then((url) => {
                                   console.log(url);
                                   imgUrls.push(url);
-                                  if (i === imageArray.length - 1) {
+                                  // let imgNames = [];
+                                  // imgNames.push([img.name, url]);
+                                  articleFinished.imageText.forEach(
+                                    (imgTxt, indx) => {
+                                      if (imgTxt.name === img.name) {
+                                        captTxt[indx] = [
+                                          url,
+                                          imgTxt.captionText,
+                                          img.name,
+                                        ];
+                                      }
+                                    }
+                                  );
+                                  if (imgUrls.length === imageArray.length) {
                                     articleFinished.images = [...imgUrls];
+                                    articleFinished.imageText = [...captTxt];
                                     const date = new Date();
                                     const time = `${date.getFullYear()}-${
                                       date.getMonth() + 1
@@ -1710,16 +2568,16 @@ const AddArticle = () => {
                                     articleFinished.date = time;
                                     console.log(articleFinished);
                                     articleFinished.id = id;
-
+                                    captTxt = [];
                                     const dbRef = db.ref(
-                                      `articles/${k === 1 ? 'Promo' : catSel}/${
+                                      `articles/${k === 1 ? "Promo" : catSel}/${
                                         k === 1 ? catSel : subcatSel
                                       }/-${id}`
                                     );
                                     dbRef
                                       .update(articleFinished)
                                       .then((res) => {
-                                        dbRef.once('value').then((snapshot) => {
+                                        dbRef.once("value").then((snapshot) => {
                                           setArticleAdded(true);
                                         });
                                       });
@@ -1741,13 +2599,13 @@ const AddArticle = () => {
   };
 
   const emptyFields = () => {
-    console.log('starting');
-    titles.current.children[0].value = '';
-    titles.current.children[1].value = '';
-    textareaRef.current.value = '';
-    captionText.current.value = '';
-    categorySelect.current.value = 'Vijesti';
-    tagContainer.current.previousSibling.value = '';
+    console.log("starting");
+    titles.current.children[0].value = "";
+    titles.current.children[1].value = "";
+    textareaRef.current.value = "";
+    captionText.current.value = "";
+    categorySelect.current.value = "Vijesti";
+    tagContainer.current.previousSibling.value = "";
     commentsRadio.current.children[0].children[1].disabled = false;
     commentsRadio.current.children[1].children[1].disabled = false;
     commentsRadio.current.children[0].children[1].checked = true;
@@ -1780,6 +2638,10 @@ const AddArticle = () => {
         articleAdded)
     ) {
       setSending(false);
+      if (location.state) {
+        window.history.replaceState(null, "");
+        history.replace("/editarticles");
+      }
       // emptyFields();
     }
   };
@@ -1805,25 +2667,25 @@ const AddArticle = () => {
   const handleCategoryChange = (e) => {
     const { value } = e.target;
     switch (value) {
-      case 'Vijesti':
+      case "Vijesti":
         setSubcategoriesMap([...subcategories.vijesti]);
         break;
-      case 'Biznis':
+      case "Biznis":
         setSubcategoriesMap([...subcategories.biznis]);
         break;
-      case 'Sport':
+      case "Sport":
         setSubcategoriesMap([...subcategories.sport]);
         break;
-      case 'Magazin':
+      case "Magazin":
         setSubcategoriesMap([...subcategories.magazin]);
         break;
-      case 'Lifestyle':
+      case "Lifestyle":
         setSubcategoriesMap([...subcategories.lifestyle]);
         break;
-      case 'Scitech':
+      case "Scitech":
         setSubcategoriesMap([...subcategories.scitech]);
         break;
-      case 'Auto':
+      case "Auto":
         setSubcategoriesMap([...subcategories.auto]);
         break;
     }
@@ -1831,6 +2693,69 @@ const AddArticle = () => {
 
   const saveSubcategory = (e) => {
     setSaveSubcat(e.target.value);
+  };
+
+  const dragStart = (e, ind) => {
+    e.dataTransfer.setData("text", ind);
+    console.log(e.target.src);
+  };
+
+  const drop = (e, dropInd) => {
+    e.preventDefault();
+    let data = e.dataTransfer.getData("text");
+    let drgIdx = 0;
+    let replacedIdx = 0;
+    if (+data === dropInd) {
+      return;
+    }
+    setDragIndex(+data);
+    drgIdx = +data;
+    replacedIdx = dropInd;
+    setReplacedIdx(dropInd);
+    console.log(imagePreview);
+    setImagePreview((old) => {
+      let oldArr = [...old];
+      oldArr[drgIdx] = { ...old[replacedIdx] };
+      oldArr[replacedIdx] = { ...old[drgIdx] };
+      console.log(oldArr);
+      return oldArr;
+    });
+  };
+
+  const allowDrop = (e) => {
+    e.preventDefault();
+  };
+
+  const imageCaptionTextAttach = () => {
+    let strValue = captionText.current.value;
+    strValue = strValue.split(" || ");
+    const finalValue = [];
+    if (imagePreview.length !== strValue.length) {
+      return;
+    }
+    imagePreview.forEach((img, i) => {
+      finalValue.push({ name: img.name, captionText: strValue[i] });
+    });
+    console.log(finalValue);
+    return finalValue;
+  };
+
+  const showSecondListFn = () => {
+    setShowSecondList(true);
+  };
+
+  const hideSecondList = () => {
+    setShowSecondList(false);
+  };
+
+  const handleUlSwitch = () => {
+    setCurrentList((old) => {
+      if (old === "ul") {
+        return "ol";
+      } else {
+        return "ul";
+      }
+    });
   };
 
   return (
@@ -1856,6 +2781,7 @@ const AddArticle = () => {
             progress={progress}
             ref={progressRef}
             articleAdded={articleAdded}
+            location={location.state ? location.state : null}
           />
         </Overlay>
       )}
@@ -1881,6 +2807,27 @@ const AddArticle = () => {
                   <ul>
                     <li title="bold" onMouseDown={handleBold}>
                       B
+                    </li>
+                    <li
+                      title="list"
+                      onMouseDown={handleList}
+                      onMouseEnter={showSecondListFn}
+                      onMouseLeave={hideSecondList}
+                    >
+                      {currentList === "ul" ? (
+                        <i class="fas fa-list-ul"></i>
+                      ) : (
+                        <i class="fas fa-list-ol"></i>
+                      )}
+                      {showSecondList && (
+                        <div id={s.listOl} onMouseDown={handleUlSwitch}>
+                          {currentList === "ul" ? (
+                            <i class="fas fa-list-ol"></i>
+                          ) : (
+                            <i class="fas fa-list-ul"></i>
+                          )}
+                        </div>
+                      )}
                     </li>
                     <li title="embed" onMouseDown={handleEmbed}>
                       &lt;&gt;
@@ -1930,17 +2877,22 @@ const AddArticle = () => {
                       <span ref={postaviSlikeText}>Postavi slike</span>
                     </label>
                     <div id={s.imageContainer} ref={imgCnt}>
-                      {imagePreview.length > 0 &&
+                      {imagePreview &&
+                        imagePreview.length > 0 &&
                         imagePreview.map((img, i) => (
                           <div
                             key={uuid()}
                             className={s.imageWrapper}
                             onClick={handleDeleteImg}
+                            draggable={true}
+                            onDragStart={(e) => dragStart(e, i)}
+                            onDrop={(e) => drop(e, i)}
+                            onDragOver={allowDrop}
                           >
                             <img className={s.previewImage} src={img.url} />
                             <div
                               className={
-                                img.checked === 'true' ? s.deletable : null
+                                img.checked === "true" ? s.deletable : null
                               }
                             />
                           </div>
@@ -1951,7 +2903,7 @@ const AddArticle = () => {
                 <div className={s.imageCaptionContainer}>
                   <div id={s.imageCaptionText}>Natpis</div>
                   <div id={s.imageCaption}>
-                    <input ref={captionText} type="text" />
+                    <textarea ref={captionText} type="text" />
                   </div>
                 </div>
               </div>
@@ -1962,8 +2914,8 @@ const AddArticle = () => {
               <h3>Autor</h3>
               <div id={s.authorCnt}>
                 <div id={s.authorInfo}>
-                  <i class="fas fa-user"></i>{' '}
-                  <span style={{ textTransform: 'capitalize' }}>
+                  <i class="fas fa-user"></i>{" "}
+                  <span style={{ textTransform: "capitalize" }}>
                     {ctx.user.displayName}
                   </span>
                 </div>

@@ -6,6 +6,9 @@
   text-decoration: none;
   color: inherit;
 }
+#logo h1 {
+  transform: translateY(-10%);
+}
 
 #navHeader {
   display: flex;

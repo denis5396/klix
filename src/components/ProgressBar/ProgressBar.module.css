@@ -1,6 +1,7 @@
 #progressParent {
   width: 50vw;
-  height: fit-content;
+  max-height: 80vh;
+  overflow-y: scroll;
   background-color: #fff;
   margin: 50vh auto;
   transform: translateY(-50%);

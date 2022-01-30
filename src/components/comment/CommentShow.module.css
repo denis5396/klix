@@ -1,0 +1,15 @@
+.showCommentReplies {
+  margin: 0.6rem 0;
+  background-color: #fff;
+  border: 0.1rem solid #e5e7e5;
+  border-radius: 0.6rem;
+  color: #111827;
+  font-size: 1.28rem;
+  padding: 0.8rem 0;
+  font-weight: 600;
+  cursor: pointer;
+  margin-left: 1.6rem;
+}
+.showCommentMore {
+  margin-left: 0rem;
+}

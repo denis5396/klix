@@ -1,13 +1,13 @@
-import React, { useContext, useEffect, useRef, useState } from 'react';
-import { Link, useHistory } from 'react-router-dom';
-import { auth } from '../../firebase';
-import LoginContext from '../../context';
-import firebase from '../../firebase';
-import s from './LoginForm.module.css';
+import React, { useContext, useEffect, useRef, useState } from "react";
+import { Link, useHistory } from "react-router-dom";
+import { auth } from "../../firebase";
+import LoginContext from "../../context";
+import firebase from "../../firebase";
+import s from "./LoginForm.module.css";
 const gooProvider = new firebase.auth.GoogleAuthProvider();
 const fbProvider = new firebase.auth.FacebookAuthProvider();
-gooProvider.addScope('https://www.googleapis.com/auth/contacts.readonly');
-fbProvider.addScope('user_birthday');
+gooProvider.addScope("https://www.googleapis.com/auth/contacts.readonly");
+fbProvider.addScope("user_birthday");
 
 const LoginForm = () => {
   const ctx = useContext(LoginContext);
@@ -17,24 +17,24 @@ const LoginForm = () => {
   const passwordRef = useRef();
   const rememberMe = useRef();
   const user = auth.currentUser;
-  const newPassword = 'jedandvatri';
-  const newEmail = 'denis5396@gmail.com';
+  const newPassword = "jedandvatri";
+  const newEmail = "denis5396@gmail.com";
 
-  const API_KEY = 'AIzaSyDDpLMfCuKs4jQJwf_5xsNQ5VuSBPZtIDk';
+  const API_KEY = "AIzaSyDDpLMfCuKs4jQJwf_5xsNQ5VuSBPZtIDk";
 
   const submitForm = (e) => {
     e.preventDefault();
     let url = `https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${API_KEY}`;
     let expirationTime;
     fetch(url, {
-      method: 'POST',
+      method: "POST",
       body: JSON.stringify({
         email: emailRef.current.value,
         password: passwordRef.current.value,
         returnSecureToken: true,
       }),
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
     })
       .then((response) => {
@@ -61,7 +61,7 @@ const LoginForm = () => {
               ctx.signUp(user.uid);
               ctx.login(data.idToken, expirationTime.toISOString());
               console.log(data);
-              history.push('/');
+              history.push("/");
             }
           });
         }
@@ -96,17 +96,21 @@ const LoginForm = () => {
   }, [user]);
 
   const login = (provider) => {
-    provider = provider === 'fb' ? fbProvider : gooProvider;
+    provider = provider === "fb" ? fbProvider : gooProvider;
     // auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).then(
     if (!rememberMe.current.checked) {
       firebase.auth().setPersistence(firebase.auth.Auth.Persistence.SESSION);
+    } else if (rememberMe.current.checked) {
+      firebase.auth().setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+      localStorage.setItem("rememberMe", true);
+      // ctx.setRememberMe(true);
     }
     auth.signInWithPopup(provider).then((result) => {
       let credential = result.credential;
       console.log(credential);
-      let providerName = credential.signInMethod.includes('google')
-        ? 'gooUser'
-        : 'fbUser';
+      let providerName = credential.signInMethod.includes("google")
+        ? "gooUser"
+        : "fbUser";
       auth.onAuthStateChanged((user) => {
         if (user) {
           console.log(user);
@@ -116,13 +120,15 @@ const LoginForm = () => {
           let date = new Date()
             .toJSON()
             .slice(0, 10)
-            .split('-')
+            .split("-")
             .reverse()
-            .join('.');
+            .join(".");
           ctx.signUp(user.uid, providerName, date);
           const expirationTime = new Date(new Date().getTime() + 3600 * 1000);
-          ctx.login(user.refreshToken, expirationTime.toISOString());
-          history.push('/');
+          if (!localStorage.getItem("rememberMe")) {
+            ctx.login(user.refreshToken, expirationTime.toISOString());
+          }
+          history.push("/");
         }
       });
 
@@ -158,11 +164,11 @@ const LoginForm = () => {
       <form id={s.loginForm} onSubmit={submitForm}>
         <h3></h3>
         <div id={s.fbgoo}>
-          <div id={s.fb} onClick={() => login('fb')}>
+          <div id={s.fb} onClick={() => login("fb")}>
             <i class="fab fa-facebook"></i>
           </div>
-          <div id={s.goo} onClick={() => login('goo')}>
-            <img src={require('../../assets/img/gooicon.png').default} />
+          <div id={s.goo} onClick={() => login("goo")}>
+            <img src={require("../../assets/img/gooicon.png").default} />
           </div>
         </div>
         <div id={s.nastavite}>
