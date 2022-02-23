@@ -1,4 +1,4 @@
-#commentPageContainer {
+#commentLinkContainer {
   width: 128rem;
   background-color: #fff;
   margin: 6.5rem auto;
@@ -14,6 +14,16 @@
   display: flex;
   justify-content: space-between;
 }
+
+#commentPageContainerHeader h3 {
+  font-size: 1.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+#commentPageContainerHeader h1 {
+  font-size: 3.5rem;
+  font-weight: 600;
+}
 #headerBundle h1 {
   display: inline;
   transition: color 0.1s ease-in;
@@ -22,22 +32,9 @@
   text-decoration: none;
   color: inherit;
 }
-#headerBundle h1:hover {
-  cursor: pointer;
-  width: fit-content;
+#headerBundle h1 a:hover {
   color: rgba(75, 85, 99, 1);
 }
-#commentPageContainerHeader h3 {
-  font-size: 1.7rem;
-  font-weight: 600;
-  text-transform: uppercase;
-}
-
-#commentPageContainerHeader h1 {
-  font-size: 3.5rem;
-  font-weight: 600;
-}
-
 #headerShares {
   display: flex;
   justify-content: center;
@@ -46,34 +43,28 @@
   font-size: 1.7rem;
   color: #6b7280;
 }
-
 #headerShares i {
   margin-right: 0.5rem;
   font-size: 1.5rem;
   margin-top: 0.4rem;
 }
-
 #commentPageContainerBody {
   display: grid;
   grid-template-columns: 17% 56% 27%;
   height: 100%;
   margin-top: 2rem;
 }
-
 #commentSidebarLeft {
   grid-column: 1/2;
   display: flex;
   flex-direction: column;
 }
-
 #bundleDiv {
   height: fit-content;
 }
-
 #postedData {
   display: flex;
 }
-
 #postedDataTwo {
   text-align: left;
   margin-left: 1.2rem;
@@ -81,43 +72,29 @@
   flex-direction: column;
   justify-content: space-between;
 }
-
 #postedDataTwo h3 {
   font-weight: 600;
-  font-size: 1.4rem;
+  font-size: 1.3rem;
   color: #333;
 }
-
 #postedDataTwo p {
   font-size: 1.3rem;
   color: rgba(107, 114, 128, 1);
 }
-
 #commentsShare {
   padding: 2rem 0;
   display: flex;
   justify-content: space-around;
   padding-right: 1.5rem;
 }
-
-.postCommentTextarea {
-  min-height: 12.9rem;
-  width: 100%;
-  resize: vertical;
-  padding: 1rem;
-  border: 0.1rem solid #cdcfd1;
-}
-
 #commentsShare h2 {
   font-size: 2.7rem;
   font-weight: 600;
 }
-
 #commentsShare p {
   color: rgba(107, 114, 128, 1);
   font-size: 1.5rem;
 }
-
 #shareArticle {
   margin: auto;
   display: flex;
@@ -125,49 +102,39 @@
   align-items: center;
   border: 0.1rem solid #cdcfd1;
   padding: 1rem 2rem;
-  width: -moz-fit-content;
   width: fit-content;
   margin-right: auto;
 }
-
 #shareArticle ul {
   display: flex;
   justify-content: center;
   align-items: center;
 }
-
 #shareArticle ul li {
   margin-right: 2rem;
   cursor: pointer;
 }
-
-#shareArticle ul li:last-of-type {
-  margin-right: 0px;
-}
-
 #shareArticle ul li i {
   font-size: 2rem;
   color: #9ca3af;
 }
-#shareArticle ul li:hover i {
-  color: #6b7280;
+#shareArticle ul li:last-of-type {
+  margin-right: 0rem;
 }
 #commentBodyContent {
   background-color: #f3f4f6;
   padding: 1.2rem 1.8rem;
+  height: fit-content;
 }
-
-#commentBodyHeaderInfo {
+#commentBodyContentHeader {
   display: flex;
   justify-content: space-between;
   margin-bottom: 1.5rem;
 }
-
-#commentBodyHeaderInfo h3 {
+#commentBodyContentHeader h3 {
   font-size: 1.7rem;
   font-weight: 500;
 }
-
 #povratakNaClanak {
   font-size: 1.4rem;
   color: rgba(107, 114, 128, 1);
@@ -177,94 +144,18 @@
   justify-content: center;
   align-items: center;
 }
+#povratakNaClanak:hover {
+  color: rgba(75, 85, 99, 1);
+}
 #povratakNaClanak a {
   text-decoration: none;
   color: inherit;
 }
-
-#povratakNaClanak:hover {
-  color: rgba(75, 85, 99, 1);
-}
-
 #povratakNaClanak i {
   margin-right: 0.5rem;
   font-size: 1.7rem;
   transform: translateY(10%);
 }
-
-#prijavaKorisnika {
-  width: 100%;
-  background-color: #fff;
-  padding: 1rem 2rem;
-  margin-top: 1.5rem;
-  font-size: 1.4rem;
-  font-weight: 600;
-  cursor: pointer;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
-  border-radius: 0.5rem;
-}
-#commentBodyHeaderTypeSignIn a {
-  text-decoration: none;
-  color: inherit;
-}
-#prijavaKorisnika:hover {
-  background-color: #f9fafb;
-}
-
-#commentBodyHeaderAlert {
-  /* display: flex;
-  text-align: left; */
-  text-align: left;
-  margin: 1.5rem 0;
-  line-height: 1.5;
-}
-
-#commentBodyHeaderAlert span {
-  font-size: 1.28rem;
-  color: rgba(107, 114, 128, 1);
-}
-#commentBodyHeaderAlert span:first-of-type {
-  font-weight: bolder;
-  font-size: 1.4rem;
-}
-#commentBodyHeaderAlert a {
-  color: rgba(107, 114, 128, 1);
-  font-size: 1.3rem;
-  cursor: pointer;
-  margin-top: 0.1rem;
-  font-weight: 600;
-  text-decoration: none;
-}
-
-#commentBodyHeaderAlert a:hover {
-  text-decoration: underline;
-}
-
-.postCommentTextarea:focus {
-  outline: none;
-}
-.postCommentBundle {
-  display: flex;
-  flex-direction: column;
-  box-shadow: 0 2px 5px -1px rgb(0 0 0 / 10%);
-}
-.postCommentBundle button {
-  display: flex;
-  background-color: #fff;
-  border: 0.1rem solid #cdcfd1;
-  border-top: none;
-  justify-content: flex-end;
-  padding: 1rem;
-}
-.postCommentBundle button span {
-  cursor: pointer;
-  color: rgb(75, 85, 99);
-}
-.postCommentBundle button span i {
-  color: #333;
-}
-
-#commentBody {
-  display: flex;
-  flex-direction: column;
+#shareArticle ul li:hover i {
+  color: #6b7280;
 }

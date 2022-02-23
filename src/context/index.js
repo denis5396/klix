@@ -11,7 +11,6 @@ const LoginContext = createContext({
     avatarColor: "",
     banned: false,
     registered: "",
-    comments: [],
   },
   overlay: false,
   signUp: (uId, displayName, time) => {},
@@ -25,6 +24,7 @@ const calculateRemainingTime = (expirationTime) => {
   const currentTime = new Date().getTime();
   const adjExpirationTime = new Date(expirationTime).getTime();
   const remainingDuration = adjExpirationTime - currentTime;
+  // return 5000;
   return remainingDuration;
 };
 
@@ -35,6 +35,8 @@ const retrieveStoredToken = () => {
   const remainingTime = calculateRemainingTime(storedExpirationDate);
 
   if (remainingTime <= 60000) {
+    //60kms = 1minute
+    // 3595000 -> more than 5s
     localStorage.removeItem("token");
     localStorage.removeItem("expirationTime");
     return null;
@@ -61,7 +63,6 @@ export const LoginContextProvider = (props) => {
     avatarColor: "c1c1c1",
     banned: "Ne",
     registered: "",
-    comments: [],
   };
   const [userObj, setUserObj] = useState(
     JSON.parse(localStorage.getItem("userObj")) || userObjInitial
@@ -146,32 +147,25 @@ export const LoginContextProvider = (props) => {
   const signUp = (uid, displayName, date) => {
     console.log("signupstart");
     const userObjCopy = { ...userObj, displayName, uId: uid };
-    const dbRef = db.ref();
-    console.log(dbRef);
-    let check = false;
+    const dbRef = db.ref(`/users/${uid}/userData`);
     dbRef
-      .child("users")
       .get()
       .then((snapshot) => {
         if (snapshot.exists) {
           console.log("signupsuccess");
           console.log(snapshot.val());
           const data = snapshot.val();
-          for (let key in data) {
-            if (data[key].uId === uid) {
-              check = true;
-              setUserObj({ ...data[key], registered: data[key].registered });
-            }
-          }
-          if (!check) {
+          if (data) {
+            setUserObj({ ...data }); //for email password always, cuz u can only sign up with fb or google first and then u always go into else. and then when u add a password then user will exist and u just take the data from the db and set it to userobj
+          } else {
             setUserObj({ ...userObjCopy, registered: date });
             auth.onAuthStateChanged((user) => {
               if (user) {
                 user.getIdToken(true).then((idToken) => {
                   fetch(
-                    `https://klix-74c29-default-rtdb.europe-west1.firebasedatabase.app/users.json?auth=${idToken}`,
+                    `https://klix-74c29-default-rtdb.europe-west1.firebasedatabase.app/users/${uid}/userData.json?auth=${idToken}`,
                     {
-                      method: "POST",
+                      method: "PUT",
                       body: JSON.stringify({
                         ...userObjCopy,
                         registered: date,

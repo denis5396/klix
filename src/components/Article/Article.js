@@ -13,6 +13,8 @@ import CommentType from "../comment/CommentType";
 import { timeDifference } from "../AdminPanel/EditArticle/EditArticle";
 import { getComLength } from "../comment/Comment";
 import LoginContext from "../../context";
+import { useHistory } from "react-router-dom";
+import { db } from "../../firebase";
 
 const catSubCat = {
   Vijesti: [
@@ -59,9 +61,43 @@ const catSubCat = {
   Auto: ["Testovi", "Noviteti", "Koncepti", "Tuning"],
 };
 
+export const scrollFnSticky = (ref) => {
+  // console.log(document.getElementsByTagName("nav")[0].style);
+  const navStyles = window.getComputedStyle(
+    document.getElementsByTagName("header")[0]
+  );
+  const navHeight = +navStyles.getPropertyValue("height").split("px")[0];
+  // console.log(navHeight);
+  if (ref.current) {
+    const sideBarParent = window.getComputedStyle(ref.current.parentElement);
+
+    const sideBarParentMagin = +sideBarParent
+      .getPropertyValue("margin-top")
+      .split("px")[0];
+    // console.log(
+    //   ref.current &&
+    //     ref.current.parentElement.getBoundingClientRect().top -
+    //       navHeight -
+    //       sideBarParentMagin
+    // );
+    if (
+      ref.current &&
+      ref.current.parentElement.getBoundingClientRect().top -
+        navHeight -
+        sideBarParentMagin <=
+        0
+    ) {
+      // ref.current.style.height = "inherit";
+      ref.current.children[0].style.position = "sticky";
+      ref.current.children[0].style.top = `${navHeight + sideBarParentMagin}px`;
+    }
+  }
+};
+
 const ArticleComp = () => {
   const ctx = useContext(LoginContext);
   const location = useLocation();
+  const history = useHistory();
   const [articleData, setArticleData] = useState(null);
   const [text, setText] = useState([]);
   const [linkData, setLinkData] = useState({});
@@ -75,430 +111,548 @@ const ArticleComp = () => {
   const [zoomPos, setZoomPos] = useState("");
   const [counter, setCounter] = useState(0);
 
+  const [relatedArticles, setRelatedArticles] = useState([]);
+  const [promoArticles, setPromoArticles] = useState([]);
+
   const imageSliderRef = useRef();
   const sliderFooterBar = useRef();
   const timer = useRef(null);
   const stickLeftSideBar = useRef();
   const fullComLength = useRef(0);
 
-  const scrollFnSticky = () => {
-    // console.log(document.getElementsByTagName("nav")[0].style);
-    const navStyles = window.getComputedStyle(
-      document.getElementsByTagName("header")[0]
-    );
-    const navHeight = +navStyles.getPropertyValue("height").split("px")[0];
-    // console.log(navHeight);
-    if (stickLeftSideBar.current) {
-      const sideBarParent = window.getComputedStyle(
-        stickLeftSideBar.current.parentElement
-      );
-
-      const sideBarParentMagin = +sideBarParent
-        .getPropertyValue("margin-top")
-        .split("px")[0];
-      // console.log(
-      //   stickLeftSideBar.current &&
-      //     stickLeftSideBar.current.parentElement.getBoundingClientRect().top -
-      //       navHeight -
-      //       sideBarParentMagin
-      // );
-      if (
-        stickLeftSideBar.current &&
-        stickLeftSideBar.current.parentElement.getBoundingClientRect().top -
-          navHeight -
-          sideBarParentMagin <=
-          0
-      ) {
-        // stickLeftSideBar.current.style.height = "inherit";
-        stickLeftSideBar.current.children[0].style.position = "sticky";
-        stickLeftSideBar.current.children[0].style.top = `${
-          navHeight + sideBarParentMagin
-        }px`;
-      }
-    }
-  };
-
   useEffect(() => {
     window.scrollTo(0, 0);
-    window.addEventListener("scroll", scrollFnSticky);
+    function handlerFn() {
+      scrollFnSticky(stickLeftSideBar);
+    }
+    // if (window.twttr) {
+    //   alert("d");
+    // }
+    if (window.twttr) {
+      window.twttr.widgets.load();
+    }
+    console.log(window);
+    // window.instgrm.Embeds.process();
+    if (window.instgrm) {
+      console.log(window.instgrm);
+      // setTimeout(() => {
+      window.instgrm.Embeds.process();
+      // }, 2000);
+    }
+    window.addEventListener("scroll", handlerFn);
     return () => {
-      window.removeEventListener("scroll", scrollFnSticky);
+      window.removeEventListener("scroll", handlerFn);
     };
   }, []);
+
   useEffect(() => {
-    console.log(location.state);
-    console.log(location.pathname);
-    setArticleData({ ...location.state.articleData });
-    let replyLength = 0;
-
-    for (let i = 0; i < location.state.articleData.comments.length; i++) {
-      if (location.state.articleData.comments[i].replies) {
-        replyLength += location.state.articleData.comments[i].replies.length;
+    if (location.state) {
+      console.log(location.state);
+      console.log(location.pathname);
+      setArticleData({ ...location.state.articleData });
+      if (location.state.articleData.tags) {
+        findRelatedTags(
+          location.state.articleData.tags,
+          location.state.articleData.category,
+          `-${location.state.articleData.id}`
+        );
       }
-    }
-    fullComLength.current =
-      replyLength + location.state.articleData.comments.length;
-    const txt = location.state.articleData.articleText;
-    const paragraphs = [];
-    let temp = "";
-    const finalParagraphs = [];
-    let pos = 0;
-    for (let i = 0; i < txt.length; i++) {
-      if (txt[i] === "\n" && txt[i + 1] === "\n") {
-        paragraphs.push({ text: txt.slice(pos, i) });
-        pos = i;
-      }
-      if (i === txt.length - 1) {
-        paragraphs.push({ text: txt.slice(pos) });
-      }
-    }
-    console.log(paragraphs);
-
-    const inbetweenArray = [];
-    let check = null;
-    let checkBool = false;
-    let ind = 0;
-    let testArr = [];
-    let linkStart = 0;
-    paragraphs.forEach((paragraph) => {
-      console.log(paragraph);
-      for (let i = 0; i < paragraph.text.length; i++) {
-        if (
-          paragraph.text[i] === "<" &&
-          paragraph.text[i + 1] === "b" &&
-          paragraph.text[i + 2] === ">" &&
-          !paragraph.text.includes("<list>") &&
-          !paragraph.text.includes("</list>")
-        ) {
-          check = i;
-          checkBool = true;
-          if (temp) {
-            // inbetweenArray[ind].push({ text: temp });
-            testArr.push({ text: temp });
-            temp = "";
-          }
-        } else if (
-          paragraph.text[i] === "<" &&
-          paragraph.text[i + 1] === "/" &&
-          paragraph.text[i + 2] === "b" &&
-          paragraph.text[i + 3] === ">" &&
-          !paragraph.text.includes("<list>") &&
-          !paragraph.text.includes("</list>")
-        ) {
-          // inbetweenArray[ind].push({
-          //   bold: paragraph.text.slice(check + 3, i),
-          // });
-          testArr.push({
-            bold: paragraph.text.slice(check + 3, i),
-          });
-          i = i + 4;
-          check = null;
-          checkBool = false;
-        } else if (paragraph.text[i] !== "\n" && !checkBool) {
-          temp = temp.concat(paragraph.text[i]);
-        }
-        if (i === paragraph.text.length - 1 || i >= paragraph.text.length) {
-          console.log(ind);
-          let listChecker = false;
-          if (temp !== "") {
-            for (let j = 0; j < temp.length; j++) {
-              if (
-                temp[j] === "<" &&
-                temp[j + 1] === "l" &&
-                temp[j + 2] === "i" &&
-                temp[j + 3] === "s" &&
-                temp[j + 4] === "t" &&
-                temp[j + 5] === ">"
-              ) {
-                listChecker = j + 6;
-              } else if (
-                temp[j] === "<" &&
-                temp[j + 1] === "/" &&
-                temp[j + 2] === "l" &&
-                temp[j + 3] === "i" &&
-                temp[j + 4] === "s" &&
-                temp[j + 5] === "t" &&
-                temp[j + 6] === ">"
-              ) {
-                let configListArr = temp.slice(listChecker, j);
-                testArr.push({ list: configListArr });
-              }
-            }
-            if (!listChecker) {
-              testArr.push({ text: temp });
-            }
-          }
-          // inbetweenArray[ind].push({ texts: temp });
-          inbetweenArray.push([...testArr]);
-          ind++;
-          finalParagraphs.push({ text: temp });
-          temp = "";
-          testArr = [];
-        }
-      }
-    });
-    console.log(paragraphs);
-    console.log(finalParagraphs);
-    console.log(inbetweenArray);
-    let start = undefined;
-    const linkEmbedArr = [];
-    const linksArr = [];
-    let tempArr = [];
-    let tempLink = "";
-    let linkThere = false;
-    let linkPos = 0;
-    let linkPosEnd = 0;
-    let embedLink = "";
-    let embedThere = false;
-    let embedPos = 0;
-    let embedPosEnd = 0;
-    let incr = 0;
-    let listSkipLink = false;
-    inbetweenArray.forEach((items, ind) => {
-      console.log(items);
-      items.forEach((item) => {
-        console.log(ind);
-        for (let key in item) {
-          if (key === "list") {
-            listSkipLink = true;
-          }
-          for (let i = 0; i < item[key].length; i++) {
-            if (
-              item[key][i] === "<" &&
-              item[key][i + 1] === "l" &&
-              item[key][i + 2] === "i" &&
-              item[key][i + 3] === "n" &&
-              item[key][i + 4] === "k" &&
-              item[key][i + 5] === ">" &&
-              !listSkipLink
-            ) {
-              if (tempLink) {
-                //text inbetween links
-                for (let j = i + 6; j < item[key].length; j++) {
-                  if (
-                    item[key][j] === "<" &&
-                    item[key][j + 1] === "/" &&
-                    item[key][j + 2] === "l" &&
-                    item[key][j + 3] === "i" &&
-                    item[key][j + 4] === "n" &&
-                    item[key][j + 5] === "k" &&
-                    item[key][j + 6] === ">"
-                  ) {
-                    if (item[key].slice(i, j + 7).includes(" externallink")) {
-                      //push text inbetween links but if next link is externallink dont make new line link like usually but just add it together with the text
-                      tempArr.push({ text: item[key].slice(linkPosEnd, i) });
-                      linkPosEnd = 0;
-                    }
-                  }
-                }
-                // linkEmbedArr[incr] = [item[key].slice(linkPosEnd, i)];
-                // linkPosEnd = 0;
-                // incr++;
-              } else if (!tempLink && !embedThere && i - 4 > 0) {
-                //text before link
-                for (let j = i + 6; j < item[key].length; j++) {
-                  if (
-                    item[key][j] === "<" &&
-                    item[key][j + 1] === "/" &&
-                    item[key][j + 2] === "l" &&
-                    item[key][j + 3] === "i" &&
-                    item[key][j + 4] === "n" &&
-                    item[key][j + 5] === "k" &&
-                    item[key][j + 6] === ">"
-                  ) {
-                    if (item[key].slice(i, j + 7).includes(" externallink")) {
-                      //push text before link but if next link is externallink dont push new line since next link is part of the text
-                      tempArr.push({ text: item[key].slice(0, i) });
-                    } else {
-                      linkEmbedArr[incr] = [item[key].slice(0, i)]; //in case it's image or internal link
-                      incr++;
-                    }
-                  }
-                }
-                // linkEmbedArr[incr] = [item[key].slice(0, i)];
-                // incr++;
-              }
-              linkThere = true;
-              linkPos = i;
-            } else if (
-              item[key][i] === "<" &&
-              item[key][i + 1] === "/" &&
-              item[key][i + 2] === "l" &&
-              item[key][i + 3] === "i" &&
-              item[key][i + 4] === "n" &&
-              item[key][i + 5] === "k" &&
-              item[key][i + 6] === ">" &&
-              !listSkipLink
-            ) {
-              tempLink = item[key].slice(linkPos, i + 7);
-              linkPosEnd = i + 7;
-              linksArr.push(tempLink);
-              if (tempLink.includes(" externallink")) {
-                tempArr.push({ externalLink: tempLink });
+      // get promos, recursion
+      const dbRef = db.ref(
+        `articles/Promo/${location.state.articleData.category}`
+      );
+      dbRef
+        .orderByKey()
+        .limitToLast(9)
+        .once("value", (snap) => {
+          console.log(snap.val());
+          const data = snap.val();
+          const indeces = [];
+          const fn = (arr, num, length) => {
+            console.log(arr);
+            console.log(num);
+            console.log(length);
+            if (arr.length < 3) {
+              if (arr.some((val) => val === num)) {
+                fn(arr, Math.floor(Math.random() * length), length);
               } else {
-                //if not extlink make new line for image or innerlink to article
-                linkEmbedArr[incr] = [{ link: tempLink }];
-                incr++;
+                arr.push(num);
+                fn(arr, Math.floor(Math.random() * length), length);
               }
             }
-            if (
-              item[key][i] === "<" &&
-              item[key][i + 1] === "e" &&
-              item[key][i + 2] === "m" &&
-              item[key][i + 3] === "b" &&
-              item[key][i + 4] === "e" &&
-              item[key][i + 5] === "d" &&
-              item[key][i + 6] === ">"
-            ) {
-              if (embedLink) {
-                linkEmbedArr[incr] = [item[key].slice(embedPosEnd, i)];
-                linkPosEnd = 0;
-              }
-              embedThere = true;
-              embedPos = i;
-            } else if (
-              item[key][i] === "<" &&
-              item[key][i + 1] === "/" &&
-              item[key][i + 2] === "e" &&
-              item[key][i + 3] === "m" &&
-              item[key][i + 4] === "b" &&
-              item[key][i + 5] === "e" &&
-              item[key][i + 6] === "d" &&
-              item[key][i + 7] === ">"
-            ) {
-              embedLink = item[key].slice(embedPos, i + 8);
-              embedPosEnd = i + 8;
-              linkEmbedArr[incr] = [{ embed: embedLink }];
-              incr++;
-            }
-            if (i === item[key].length - 1 && !linkThere && !embedThere) {
-              tempArr.push({ [key]: item[key] });
-            } else if (i === item[key].length - 1 && linkThere && !embedThere) {
-              if (i > linkPosEnd) {
-                tempArr.push({ text: item[key].slice(linkPosEnd) });
-              }
-              linkThere = false;
-            } else if (i === item[key].length - 1 && !linkThere && embedThere) {
-              tempArr.push({ text: item[key].slice(embedPosEnd) });
-              embedThere = false;
-            }
+          };
+          if (!data || Object.keys(data).length < 9) {
+            return;
           }
-          if (key === "list") {
-            listSkipLink = false;
+          fn(
+            indeces,
+            Math.floor(Math.random() * Object.keys(data).length),
+            Object.keys(data).length
+          );
+          console.log(indeces);
+          const promoArr = [];
+          for (let i = 0; i < indeces.length; i++) {
+            promoArr.push(data[Object.keys(data)[indeces[i]]]);
+          }
+          console.log(promoArr);
+          setPromoArticles([...promoArr]);
+        });
+
+      let replyLength = 0;
+      // for (let i = 0; i < location.state.articleData.comments.length; i++) {
+      //   if (location.state.articleData.comments[i].replies) {
+      //     replyLength += location.state.articleData.comments[i].replies.length;
+      //   }
+      // }
+      if (location.state.articleData.comments) {
+        for (let key in location.state.articleData.comments) {
+          if (location.state.articleData.comments[key].replies) {
+            replyLength += Object.keys(
+              location.state.articleData.comments[key].replies
+            ).length;
+          }
+        }
+        fullComLength.current =
+          replyLength + Object.keys(location.state.articleData.comments).length;
+      }
+      const txt = location.state.articleData.articleText;
+      const paragraphs = [];
+      let temp = "";
+      const finalParagraphs = [];
+      let pos = 0;
+      for (let i = 0; i < txt.length; i++) {
+        if (txt[i] === "\n" && txt[i + 1] === "\n") {
+          paragraphs.push({ text: txt.slice(pos, i) });
+          pos = i;
+        }
+        if (i === txt.length - 1) {
+          paragraphs.push({ text: txt.slice(pos) });
+        }
+      }
+      console.log(paragraphs);
+
+      const inbetweenArray = [];
+      let check = null;
+      let checkBool = false;
+      let ind = 0;
+      let testArr = [];
+      let linkStart = 0;
+      paragraphs.forEach((paragraph) => {
+        console.log(paragraph);
+        for (let i = 0; i < paragraph.text.length; i++) {
+          if (
+            paragraph.text[i] === "<" &&
+            paragraph.text[i + 1] === "b" &&
+            paragraph.text[i + 2] === ">" &&
+            !paragraph.text.includes("<list>") &&
+            !paragraph.text.includes("</list>")
+          ) {
+            check = i;
+            checkBool = true;
+            if (temp) {
+              // inbetweenArray[ind].push({ text: temp });
+              testArr.push({ text: temp });
+              temp = "";
+            }
+          } else if (
+            paragraph.text[i] === "<" &&
+            paragraph.text[i + 1] === "/" &&
+            paragraph.text[i + 2] === "b" &&
+            paragraph.text[i + 3] === ">" &&
+            !paragraph.text.includes("<list>") &&
+            !paragraph.text.includes("</list>")
+          ) {
+            // inbetweenArray[ind].push({
+            //   bold: paragraph.text.slice(check + 3, i),
+            // });
+            testArr.push({
+              bold: paragraph.text.slice(check + 3, i),
+            });
+            i = i + 4;
+            check = null;
+            checkBool = false;
+          } else if (paragraph.text[i] !== "\n" && !checkBool) {
+            temp = temp.concat(paragraph.text[i]);
+          }
+          if (i === paragraph.text.length - 1 || i >= paragraph.text.length) {
+            console.log(ind);
+            let listChecker = false;
+            if (temp !== "") {
+              for (let j = 0; j < temp.length; j++) {
+                if (
+                  temp[j] === "<" &&
+                  temp[j + 1] === "l" &&
+                  temp[j + 2] === "i" &&
+                  temp[j + 3] === "s" &&
+                  temp[j + 4] === "t" &&
+                  temp[j + 5] === ">"
+                ) {
+                  listChecker = j + 6;
+                } else if (
+                  temp[j] === "<" &&
+                  temp[j + 1] === "/" &&
+                  temp[j + 2] === "l" &&
+                  temp[j + 3] === "i" &&
+                  temp[j + 4] === "s" &&
+                  temp[j + 5] === "t" &&
+                  temp[j + 6] === ">"
+                ) {
+                  let configListArr = temp.slice(listChecker, j);
+                  testArr.push({ list: configListArr });
+                }
+              }
+              if (!listChecker) {
+                testArr.push({ text: temp });
+              }
+            }
+            // inbetweenArray[ind].push({ texts: temp });
+            inbetweenArray.push([...testArr]);
+            ind++;
+            finalParagraphs.push({ text: temp });
+            temp = "";
+            testArr = [];
           }
         }
       });
-      linkEmbedArr[incr] = [...tempArr];
-      incr++;
-      tempArr = [];
-    });
-    console.log(linkEmbedArr);
-    console.log(finalParagraphs);
-    console.log(linksArr);
-    const finishedLinks = [];
-    const internalLinks = [];
-    let checker = false;
-    linksArr.forEach((linkInd, ind) => {
-      console.log(linkInd);
-      if (linkInd.includes(" external")) {
-        const splitArr = linkInd.split(" ");
-        finishedLinks.push({
-          external: { url: splitArr[0], text: splitArr[1] },
-        });
-      } else if (linkInd.includes(" image")) {
-        let splitArr = linkInd.slice(6, linkInd.length - 7);
-        let imageText = "";
-        console.log(splitArr);
-        for (let i = 0; i < splitArr.length; i++) {
-          if (
-            splitArr[i] === " " &&
-            splitArr[i - 1] === "e" &&
-            splitArr[i - 2] === "g" &&
-            splitArr[i - 3] === "a" &&
-            splitArr[i - 4] === "m" &&
-            splitArr[i - 5] === "i" &&
-            splitArr[i - 6] === " "
-          ) {
-            imageText = splitArr.slice(i + 1);
-            splitArr = splitArr.slice(0, i);
-            splitArr = splitArr.split(" ");
-            console.log(splitArr);
-            splitArr.push(imageText);
+      console.log(paragraphs);
+      console.log(finalParagraphs);
+      console.log(inbetweenArray);
+      let start = undefined;
+      const linkEmbedArr = [];
+      const linksArr = [];
+      let tempArr = [];
+      let tempLink = "";
+      let linkThere = false;
+      let linkPos = 0;
+      let linkPosEnd = 0;
+      let embedLink = "";
+      let embedThere = false;
+      let embedPos = 0;
+      let embedPosEnd = 0;
+      let incr = 0;
+      let listSkipLink = false;
+      inbetweenArray.forEach((items, ind) => {
+        console.log(items);
+        items.forEach((item) => {
+          console.log(ind);
+          for (let key in item) {
+            if (key === "list") {
+              listSkipLink = true;
+            }
+            console.log(item[key]);
+            for (let i = 0; i < item[key].length; i++) {
+              if (
+                item[key][i] === "<" &&
+                item[key][i + 1] === "l" &&
+                item[key][i + 2] === "i" &&
+                item[key][i + 3] === "n" &&
+                item[key][i + 4] === "k" &&
+                item[key][i + 5] === ">" &&
+                !listSkipLink
+              ) {
+                if (tempLink) {
+                  //text inbetween links
+                  for (let j = i + 6; j < item[key].length; j++) {
+                    if (
+                      item[key][j] === "<" &&
+                      item[key][j + 1] === "/" &&
+                      item[key][j + 2] === "l" &&
+                      item[key][j + 3] === "i" &&
+                      item[key][j + 4] === "n" &&
+                      item[key][j + 5] === "k" &&
+                      item[key][j + 6] === ">"
+                    ) {
+                      if (item[key].slice(i, j + 7).includes(" external")) {
+                        //push text inbetween links but if next link is externallink dont make new line link like usually but just add it together with the text
+                        tempArr.push({ text: item[key].slice(linkPosEnd, i) });
+                        linkPosEnd = 0;
+                        break;
+                      } else {
+                        linkEmbedArr[incr] = [item[key].slice(0, i)]; //in case it's image or internal link
+                        incr++;
+                      }
+                    }
+                  }
+                  // linkEmbedArr[incr] = [item[key].slice(linkPosEnd, i)];
+                  // linkPosEnd = 0;
+                  // incr++;
+                } else if (!tempLink && !embedThere && i - 4 > 0) {
+                  //text before link
+                  for (let j = i + 6; j < item[key].length; j++) {
+                    if (
+                      item[key][j] === "<" &&
+                      item[key][j + 1] === "/" &&
+                      item[key][j + 2] === "l" &&
+                      item[key][j + 3] === "i" &&
+                      item[key][j + 4] === "n" &&
+                      item[key][j + 5] === "k" &&
+                      item[key][j + 6] === ">"
+                    ) {
+                      if (item[key].slice(i, j + 7).includes(" external")) {
+                        //push text before link but if next link is externallink dont push new line since next link is part of the text
+                        tempArr.push({ text: item[key].slice(0, i) });
+                        console.log(JSON.parse(JSON.stringify(tempArr)));
+                        break; //in case we have more ext links in the same paragraph we wanna stop once we get what we need here
+                      } else {
+                        linkEmbedArr[incr] = [item[key].slice(0, i)]; //in case it's image or internal link
+                        incr++;
+                      }
+                    }
+                  }
+                  // linkEmbedArr[incr] = [item[key].slice(0, i)];
+                  // incr++;
+                }
+                linkThere = true;
+                linkPos = i;
+              } else if (
+                item[key][i] === "<" &&
+                item[key][i + 1] === "/" &&
+                item[key][i + 2] === "l" &&
+                item[key][i + 3] === "i" &&
+                item[key][i + 4] === "n" &&
+                item[key][i + 5] === "k" &&
+                item[key][i + 6] === ">" &&
+                !listSkipLink
+              ) {
+                tempLink = item[key].slice(linkPos, i + 7);
+                linkPosEnd = i + 7;
+                linksArr.push(tempLink);
+                console.log("s");
+                if (tempLink.includes(" external")) {
+                  tempArr.push({ externalLink: tempLink });
+                  console.log(tempArr);
+                } else {
+                  //if not extlink make new line for image or innerlink to article
+                  linkEmbedArr[incr] = [{ link: tempLink }];
+                  incr++;
+                }
+              }
+              if (
+                item[key][i] === "<" &&
+                item[key][i + 1] === "e" &&
+                item[key][i + 2] === "m" &&
+                item[key][i + 3] === "b" &&
+                item[key][i + 4] === "e" &&
+                item[key][i + 5] === "d" &&
+                item[key][i + 6] === ">"
+              ) {
+                if (embedLink) {
+                  linkEmbedArr[incr] = [item[key].slice(embedPosEnd, i)];
+                  linkPosEnd = 0;
+                }
+                embedThere = true;
+                embedPos = i;
+              } else if (
+                item[key][i] === "<" &&
+                item[key][i + 1] === "/" &&
+                item[key][i + 2] === "e" &&
+                item[key][i + 3] === "m" &&
+                item[key][i + 4] === "b" &&
+                item[key][i + 5] === "e" &&
+                item[key][i + 6] === "d" &&
+                item[key][i + 7] === ">"
+              ) {
+                embedLink = item[key].slice(embedPos, i + 8);
+                embedPosEnd = i + 8;
+                linkEmbedArr[incr] = [{ embed: embedLink }];
+                incr++;
+              }
+              if (i === item[key].length - 1 && !linkThere && !embedThere) {
+                tempArr.push({ [key]: item[key] });
+              } else if (
+                i === item[key].length - 1 &&
+                linkThere &&
+                !embedThere
+              ) {
+                if (i > linkPosEnd) {
+                  tempArr.push({ text: item[key].slice(linkPosEnd) });
+                }
+                linkThere = false;
+              } else if (
+                i === item[key].length - 1 &&
+                !linkThere &&
+                embedThere
+              ) {
+                tempArr.push({ text: item[key].slice(embedPosEnd) });
+                embedThere = false;
+              }
+            }
+            if (key === "list") {
+              listSkipLink = false;
+            }
+            tempLink = ""; //so that if we have a link in a new p we empty out everything so it can func normally
           }
-        }
-        // splitArr = splitArr.split(" ");
-        console.log(splitArr);
-        finishedLinks.push({
-          image: { url: splitArr[0], text: splitArr[2] },
         });
-      } else {
-        //internal
-        let linkText = linkInd.slice(6, linkInd.length - 7);
-        console.log(linkText);
-        linkText = linkText.split(" ");
-        let path = `${linkText[1]}/-${linkText[0]}`;
-        console.log(path);
-        const path2 = linkText[1].split("/");
-        for (let key in catSubCat) {
-          // if (key === path2[0]) {
-          //   alert("d");
-          // }
-          if (key.toLowerCase().includes(path2[0])) {
-            for (let i = 0; i < catSubCat[key].length; i++) {
-              if (catSubCat[key][i].toLowerCase().includes(path2[1])) {
-                path = `${key}/${catSubCat[key][i]}`;
+        linkEmbedArr[incr] = [...tempArr];
+        incr++;
+        tempArr = [];
+      });
+      console.log(linkEmbedArr);
+      console.log(finalParagraphs);
+      console.log(linksArr);
+      const finishedLinks = [];
+      const internalLinks = [];
+      let checker = false;
+      linksArr.forEach((linkInd, ind) => {
+        console.log(linkInd);
+        if (linkInd.includes(" external")) {
+          linkInd = linkInd.slice(6, linkInd.length - 7);
+          console.log(linkInd);
+          const splitArr = linkInd.split(" ");
+          console.log(splitArr);
+          finishedLinks.push({
+            external: { url: splitArr[0], text: splitArr[1] },
+          });
+        } else if (linkInd.includes(" image")) {
+          let splitArr = linkInd.slice(6, linkInd.length - 7);
+          let imageText = "";
+          console.log(splitArr);
+          for (let i = 0; i < splitArr.length; i++) {
+            if (
+              splitArr[i] === " " &&
+              splitArr[i - 1] === "e" &&
+              splitArr[i - 2] === "g" &&
+              splitArr[i - 3] === "a" &&
+              splitArr[i - 4] === "m" &&
+              splitArr[i - 5] === "i" &&
+              splitArr[i - 6] === " "
+            ) {
+              imageText = splitArr.slice(i + 1);
+              splitArr = splitArr.slice(0, i);
+              splitArr = splitArr.split(" ");
+              console.log(splitArr);
+              splitArr.push(imageText);
+            }
+          }
+          // splitArr = splitArr.split(" ");
+          console.log(splitArr);
+          finishedLinks.push({
+            image: { url: splitArr[0], text: splitArr[2] },
+          });
+        } else {
+          //internal
+          let linkText = linkInd.slice(6, linkInd.length - 7);
+          console.log(linkText);
+          linkText = linkText.split(" ");
+          let path = `${linkText[1]}/-${linkText[0]}`;
+          console.log(path);
+          const path2 = linkText[1].split("/");
+          for (let key in catSubCat) {
+            // if (key === path2[0]) {
+            //   alert("d");
+            // }
+            if (key.toLowerCase().includes(path2[0])) {
+              for (let i = 0; i < catSubCat[key].length; i++) {
+                if (catSubCat[key][i].toLowerCase().includes(path2[1])) {
+                  path = `${key}/${catSubCat[key][i]}`;
+                }
               }
             }
           }
-        }
-        fetch(
-          `https://klix-74c29-default-rtdb.europe-west1.firebasedatabase.app/articles/${path}/-${linkText[0]}.json`
-        )
-          .then((response) => response.json())
-          .then((data) => {
-            console.log(data);
-            const titleSplit = data.title.split(" ");
-            let titleSplit2 = [];
-            let titleSplit3;
-            titleSplit.forEach((split) => {
-              titleSplit2.push(split.toLowerCase());
+          fetch(
+            `https://klix-74c29-default-rtdb.europe-west1.firebasedatabase.app/articles/${path}/-${linkText[0]}.json`
+          )
+            .then((response) => response.json())
+            .then((data) => {
+              console.log(data);
+              const titleSplit = data.title.split(" ");
+              let titleSplit2 = [];
+              let titleSplit3;
+              titleSplit.forEach((split) => {
+                titleSplit2.push(split.toLowerCase());
+              });
+              titleSplit3 = titleSplit2.join("-");
+              titleSplit3 = titleSplit3
+                .split(",")
+                .join("")
+                .split(" ")
+                .join("-");
+              setInternalLinks((old) => [
+                ...old,
+                {
+                  title: data.title,
+                  subTitle: data.subTitle,
+                  imageUrl: data.images[0],
+                  linkPath: `/${data.category}/${data.subCategory}/${titleSplit3}/${data.id}`,
+                  cat: data.category.toLowerCase(),
+                },
+              ]);
+              // internalLinks.push({
+              //   internal: {
+              //     title: data.title,
+              //     subTitle: data.subTitle,
+              //     imageUrl: data.images[0],
+              //     linkPath: `/${data.category}/${data.subCategory}/${titleSplit3}/${data.id}`,
+              //   },
+              // });
             });
-            titleSplit3 = titleSplit2.join("-");
-            titleSplit3 = titleSplit3.split(",").join("").split(" ").join("-");
-            setInternalLinks((old) => [
-              ...old,
-              {
-                title: data.title,
-                subTitle: data.subTitle,
-                imageUrl: data.images[0],
-                linkPath: `/${data.category}/${data.subCategory}/${titleSplit3}/${data.id}`,
-                cat: data.category.toLowerCase(),
-              },
-            ]);
-            // internalLinks.push({
-            //   internal: {
-            //     title: data.title,
-            //     subTitle: data.subTitle,
-            //     imageUrl: data.images[0],
-            //     linkPath: `/${data.category}/${data.subCategory}/${titleSplit3}/${data.id}`,
-            //   },
-            // });
+        }
+        if (ind === linksArr.length - 1) {
+          console.log(internalLinks);
+          console.log(finishedLinks);
+          setLinkData([...finishedLinks]);
+        }
+      });
+      // setText(finalParagraphs);
+      setText(linkEmbedArr);
+    } else {
+      console.log(history.location.pathname);
+      let deconstructPathName = history.location.pathname.split("/");
+      console.log(deconstructPathName);
+      const path = {
+        category: deconstructPathName[1],
+        subCategory: deconstructPathName[2],
+        id: deconstructPathName[4],
+      };
+      fetch(
+        `https://klix-74c29-default-rtdb.europe-west1.firebasedatabase.app/articles/${path.category}/${path.subCategory}/-${path.id}.json`
+      )
+        .then((response) => response.json())
+        .then((data) => {
+          console.log(data);
+          let commentData = [];
+          let replies = [];
+          let linkPath = "";
+          if (data.comments) {
+            for (let key in data.comments) {
+              if (data.comments[key].replies) {
+                for (let keyRep in data.comments[key].replies) {
+                  replies.push(data.comments[key].replies[keyRep]);
+                }
+                commentData.push(data.comments[key]);
+                commentData[commentData.length - 1].replies = [...replies];
+                replies = [];
+              } else {
+                commentData.push(data.comments[key]);
+              }
+            }
+            data.comments = [...commentData];
+          }
+          const titleSplit = data.title.split(" ");
+          let titleSplit2 = [];
+          let titleSplit3;
+          titleSplit.forEach((split) => {
+            titleSplit2.push(split.toLowerCase());
           });
-      }
-      if (ind === linksArr.length - 1) {
-        console.log(internalLinks);
-        console.log(finishedLinks);
-        setLinkData([...finishedLinks]);
-      }
-    });
-    // setText(finalParagraphs);
-    setText(linkEmbedArr);
+          titleSplit3 = titleSplit2.join("-");
+          titleSplit3 = titleSplit3.split(",").join("").split(" ").join("-");
+          data.timeDiff = timeDifference(data.date);
+          data.linkPath = `/${data.category}/${data.subCategory}/${titleSplit3}/${data.id}`;
+          history.replace({
+            state: {
+              articleData: {
+                ...JSON.parse(JSON.stringify(data)),
+              },
+            },
+          });
+        });
+    }
   }, [location]);
 
   useEffect(() => {
     if (articleData) {
       console.log(articleData.shares);
-      console.log(Object.keys(articleData.comments[0]).length);
+      // console.log(Object.keys(articleData.comments[0]).length);
       console.log(articleData.images[0]);
       // if (typeof articleData.comments[0] == 'undefined') {
       //   alert('x');
@@ -506,6 +660,7 @@ const ArticleComp = () => {
       // console.log(articleData.comments[0]);
       console.log(typeof articleData.images);
       console.log(articleData.comments);
+      console.log(Array.isArray(articleData.comments));
 
       // console.log(articleData.comments.length);
       // console.log(articleData.comments[0]);
@@ -515,8 +670,11 @@ const ArticleComp = () => {
   useEffect(() => {
     console.log(linkData);
   }, [linkData]);
-
   const itemsarr = [];
+  const [itemsarrtxt, setitemsarrtxt] = useState([]);
+  useEffect(() => {
+    console.log(itemsarrtxt);
+  }, [itemsarrtxt]);
   let intLinkThere = false;
   let imageThere = false;
   let embedThere = false;
@@ -525,7 +683,8 @@ const ArticleComp = () => {
   let arrTemp = [];
   let listIncr = 0;
   console.log(text);
-  text.map((textInd) => {
+  text.map((textInd, l) => {
+    console.log(window.twttr);
     console.log(textInd);
     textInd.map((it) => {
       for (let key in it) {
@@ -538,9 +697,17 @@ const ArticleComp = () => {
           );
         } else if (key === "link") {
           if (it[key].includes(" external")) {
+            console.log(it[key]);
+            console.log(linkData[0].url);
+            console.log(linkData[0].text);
             itemsarr.push(
-              <a key={uuid()} href={linkData[0][0].url}>
-                {linkData[0][0].text}
+              <a
+                key={uuid()}
+                href={linkData[0].external.url}
+                target="_blank"
+                rel="noreferrer noopener"
+              >
+                {linkData[0].external.text}
               </a>
             );
           } else if (it[key].includes(" image")) {
@@ -553,9 +720,13 @@ const ArticleComp = () => {
                   key={uuid()}
                   src={linkData[extLinkIncr].image.url}
                 />
-                <p className={s.textBelowImage}>
-                  {linkData[extLinkIncr].image.text}
-                </p>
+                {linkData[extLinkIncr].image.text !== "blank" ? (
+                  <p className={s.textBelowImage}>
+                    {linkData[extLinkIncr].image.text}
+                  </p>
+                ) : (
+                  <br />
+                )}
               </>
             );
             imageThere = true;
@@ -579,7 +750,19 @@ const ArticleComp = () => {
             }
           }
         } else if (key === "embed") {
-          itemsarr.push(parse(it[key]));
+          console.log(it[key]);
+          if (!it[key].includes("YouTube video player")) {
+            itemsarr.push(
+              // <div style={{ display: "flex", justifyContent: "center" }}>
+              //   {parse(it[key])}
+              // </div>
+              <div style={{ maxWidth: "70%", margin: "auto" }}>
+                {parse(it[key])}
+              </div>
+            );
+          } else {
+            itemsarr.push(<div className={s.ytConfig}>{parse(it[key])}</div>);
+          }
           embedThere = true;
         } else if (key === "list") {
           const listArr = it[key].split(" || ");
@@ -609,11 +792,13 @@ const ArticleComp = () => {
                   listArr[i][j + 3] === ">"
                 ) {
                   if (tempListText) {
-                    tempListLinkArr.push(<span>{tempListText}</span>);
+                    tempListLinkArr.push(
+                      <span key={uuid()}>{tempListText}</span>
+                    );
                     tempListText = "";
                   }
                   tempListLinkArr.push(
-                    <b>{listArr[i].slice(foundBoldVar, j)}</b>
+                    <b key={uuid()}>{listArr[i].slice(foundBoldVar, j)}</b>
                   );
                   foundBoldVar = 0;
                   j = j + 3;
@@ -640,11 +825,20 @@ const ArticleComp = () => {
                   const listLinkFirstIndex = listLink.split(" ")[0];
                   listLink = listLink.replace(listLinkFirstIndex + " ", "");
                   if (tempListText) {
-                    tempListLinkArr.push(<span>{tempListText}</span>);
+                    tempListLinkArr.push(
+                      <span key={uuid()}>{tempListText}</span>
+                    );
                     tempListText = "";
                   }
                   tempListLinkArr.push(
-                    <a href={listLinkFirstIndex}>{listLink}</a>
+                    <a
+                      key={uuid()}
+                      href={listLinkFirstIndex}
+                      target="_blank"
+                      rel="noreferrer noopener"
+                    >
+                      {listLink}
+                    </a>
                   );
                   console.log(listLink);
                   console.log(listLinkFirstIndex);
@@ -657,9 +851,11 @@ const ArticleComp = () => {
                 }
                 if (j === listArr[i].length - 1) {
                   if (tempListText) {
-                    tempListLinkArr.push(<span>{tempListText}</span>);
+                    tempListLinkArr.push(
+                      <span key={uuid()}>{tempListText}</span>
+                    );
                   }
-                  tempListArr.push(<li>{tempListLinkArr}</li>);
+                  tempListArr.push(<li key={uuid()}>{tempListLinkArr}</li>);
                   console.log(tempListLinkArr);
                   console.log(tempListArr);
                   tempListLinkArr = [];
@@ -667,27 +863,45 @@ const ArticleComp = () => {
                 }
               }
             } else {
-              tempListArr.push(<li>{listArr[i]}</li>);
+              tempListArr.push(<li key={uuid()}>{listArr[i]}</li>);
             }
           }
           if (articleData.listOrder[listIncr] === "ol") {
-            itemsarr.push(<ol>{tempListArr}</ol>);
+            itemsarr.push(<ol key={uuid()}>{tempListArr}</ol>);
           } else if (articleData.listOrder[listIncr] === "ul") {
-            itemsarr.push(<ul>{tempListArr}</ul>);
+            itemsarr.push(<ul key={uuid()}>{tempListArr}</ul>);
           }
           listIncr++;
           console.log(tempListText);
         } else {
           if (textInd.length > 1) {
             if (key === "bold") {
-              arrTemp.push(<b>{it[key]}</b>);
+              arrTemp.push(<b key={uuid()}>{it[key]}</b>);
             } else if (key === "externalLink") {
               let separate = it[key];
+              console.log(separate);
+              console.log(it);
+              console.log(key);
               separate = separate.slice(6, separate.length - 8);
               separate = separate.split(" ");
-              arrTemp.push(<a href={separate[0]}>{separate[1]}</a>);
+              let separateurl = separate[0];
+              separate.splice(0, 1);
+              separate.splice(separate.length - 1, 1);
+              let separatetxt = separate.join(" ");
+              console.log(separatetxt);
+              arrTemp.push(
+                <a
+                  key={uuid()}
+                  href={separateurl}
+                  target="_blank"
+                  rel="noreferrer noopener"
+                >
+                  {separatetxt}
+                </a>
+              );
+              extLinkIncr++;
             } else {
-              arrTemp.push(<span>{it[key]}</span>);
+              arrTemp.push(<span key={uuid()}>{it[key]}</span>);
             }
             if (arrTemp.length === textInd.length) {
               console.log(arrTemp);
@@ -700,11 +914,35 @@ const ArticleComp = () => {
             }
           } else {
             console.log(it[key]);
-            itemsarr.push(
-              <React.Fragment key={uuid()}>
-                <p key={uuid()}>{it[key]}</p>
-              </React.Fragment>
-            );
+            if (textInd.length === 1 && key === "externalLink") {
+              //ext link takes up the whole p tag, no txt before or after the ext link
+              console.log(it[key]);
+              let separate = it[key];
+              separate = separate.slice(6, separate.length - 8);
+              separate = separate.split(" ");
+              let separateurl = separate[0];
+              separate.splice(0, 1);
+              separate.splice(separate.length - 1, 1);
+              let separatetxt = separate.join(" ");
+              console.log(separatetxt);
+              itemsarr.push(
+                <a
+                  key={uuid()}
+                  href={separateurl}
+                  target="_blank"
+                  rel="noreferrer noopener"
+                >
+                  {separatetxt}
+                </a>
+              );
+              extLinkIncr++;
+            } else {
+              itemsarr.push(
+                <React.Fragment key={uuid()}>
+                  <p key={uuid()}>{it[key]}</p>
+                </React.Fragment>
+              );
+            }
           }
         }
       }
@@ -718,9 +956,21 @@ const ArticleComp = () => {
       imageThere = false;
     } else if (embedThere) {
       embedThere = false;
+      if (window.instgrm) {
+        //we do it like this because this fn needs to run when the blockquote is in the dom, so it gets transformed to an iframe
+        //at useeff[] the text is not there yet cuz we have to build it first
+        // setTimeout(() => {
+        window.instgrm.Embeds.process();
+        // }, 2000);
+      }
     } else {
       itemsarr.push(<br key={uuid()}></br>);
     }
+    console.log(text.length);
+    if (l === text.length - 1) {
+      // setitemsarrtxt(itemsarr);
+    }
+    console.log(itemsarr);
   });
 
   const handleSliderOverlay = () => {
@@ -1009,6 +1259,67 @@ const ArticleComp = () => {
     }
   };
 
+  const findRelatedTags = (tags, cat, artId) => {
+    const dbRef = db.ref(`related/${cat}`);
+    // dbRef.once("value", (snap) => {
+    //   console.log(snap.val());
+    // });
+    const findLatestThree = [];
+    const dates = [];
+    for (let ind of tags) {
+      const newRef = dbRef.child(ind.constructor === Object ? ind.value : ind);
+      newRef
+        .orderByKey()
+        .limitToLast(4) //4because, same id as cur art now we have 3 useful, same id(not cur art) but it reoccurs in other tags
+        .once("value", (snap) => {
+          console.log(snap.val());
+          const data = snap.val();
+          //we want to not include the existing article in the retailed articles and we want to not have any duplicat articles in related(same art added in many tag branches)
+          for (let key in data) {
+            const id =
+              data[key].articlePath.split("/")[
+                data[key].articlePath.split("/").length - 1
+              ];
+            if (
+              id !== artId &&
+              findLatestThree.filter((el) => el.id !== id).length ===
+                findLatestThree.length
+            ) {
+              findLatestThree.push({
+                ...data[key],
+                id,
+              });
+              dates.push(new Date(data[key].date));
+            }
+          }
+          console.log(findLatestThree);
+          console.log(dates);
+          // console.log(+dates[2] == +dates[3]); //this is how u compare dates with +
+          const findThree = [];
+          let cur;
+          //sort array of objects by date in an descending order
+          cur = findLatestThree.sort((x, y) => {
+            // console.log(a.date);
+            // console.log(b.date);
+            // if (new Date(a.date) > new Date(b.bdate)) {
+            //   return -1; //place in descending, imagine -1 as taking it out of it's normal index and pulling it to the left, 1 is putting it to the right, zero keep pos'
+            // } else if (new Date(a.date) < new Date(b.date)) {
+            //   return 1;
+            // }
+            // return 0;
+            let a = new Date(x.date),
+              b = new Date(y.date);
+            return b - a;
+          });
+          console.log(cur);
+          if (cur.length > 3) {
+            cur.splice(3);
+          }
+          setRelatedArticles([...cur]);
+        });
+    }
+  };
+
   return (
     <div id={s.articleParent}>
       {clickedSlider && (
@@ -1053,7 +1364,9 @@ const ArticleComp = () => {
             </div>
             <div id={s.sliderFooterBar} ref={sliderFooterBar}>
               {/* (Foto: D. S./Klix.ba) */}
-              {articleData.imageText[counter][1]}
+              {articleData.imageText[counter][1] === "blank"
+                ? ""
+                : articleData.imageText[counter][1]}
             </div>
           </div>
         </div>
@@ -1085,20 +1398,44 @@ const ArticleComp = () => {
                 ></i>
               </div>
               <div id={s.postedDataTwo}>
-                <h3>R. D.</h3>
+                <h3>
+                  {(articleData &&
+                    (articleData.sponsored
+                      ? "Sponzorirani članak"
+                      : articleData.author)) ||
+                    "R. D."}
+                </h3>
                 <p>{timeDifference(articleData && articleData.date)}</p>
               </div>
             </div>
             <div id={s.commentsShare}>
               <div id={s.comments}>
                 <h2>
-                  {articleData && articleData.comments[0] === ""
-                    ? 0
-                    : articleData
-                    ? fullComLength.current
-                    : 0}
+                  {articleData && articleData.commentsAllowed === "Ne" ? (
+                    <i
+                      style={{
+                        color: "rgb(75,85,99)",
+                        transform: "scale(0.9)",
+                      }}
+                      class="fas fa-comment-slash"
+                    ></i>
+                  ) : articleData && !articleData.comments ? (
+                    0
+                  ) : articleData && articleData.comments ? (
+                    fullComLength.current
+                  ) : (
+                    0
+                  )}
                 </h2>
-                <p>komentara</p>
+                <p>
+                  {articleData && articleData.commentsAllowed === "Ne"
+                    ? "komentari"
+                    : articleData &&
+                      articleData.comments &&
+                      Object.values(articleData.comments).length === 1
+                    ? "komentar"
+                    : "komentara"}
+                </p>
               </div>
               <div id={s.shares}>
                 <h2>{articleData ? articleData.shares[0].length : ""}</h2>
@@ -1133,11 +1470,12 @@ const ArticleComp = () => {
                 {articleData.imageText.map((img, i) =>
                   i < 4 && i !== 0 ? (
                     <img
+                      key={uuid()}
                       src={img[0]}
                       onClick={() => openSliderFromThumbnail(i)}
                     />
                   ) : i === 4 ? (
-                    <div id={s.clickForMore}>
+                    <div id={s.clickForMore} key={uuid()}>
                       {articleData.imageText.length - 5 > 0 ? (
                         <span onClick={() => openSliderFromThumbnail(i)}>
                           +{articleData.imageText.length - 5}
@@ -1151,13 +1489,23 @@ const ArticleComp = () => {
                   ) : null
                 )}
               </div>
-              <p>{articleData.imageText[0][1]}</p>
+              <p>
+                {articleData &&
+                  (articleData.imageText[0][1] === "blank"
+                    ? ""
+                    : articleData.imageText[0][1])}
+              </p>
             </div>
           ) : (
             <div id={s.imageContainer}>
               <img src={articleData && articleData.imageText[0][0]} />
               <div id={s.captionTxt}>
-                <p>{articleData && articleData.imageText[0][1]}</p>
+                <p>
+                  {articleData &&
+                    (articleData.imageText[0][1] === "blank"
+                      ? ""
+                      : articleData.imageText[0][1])}
+                </p>
               </div>
             </div>
           )}
@@ -1202,60 +1550,91 @@ const ArticleComp = () => {
           </div>
           <div id={s.tags}>
             {articleData &&
-              articleData.tags.map((tag) => <span key={uuid()}>{tag}</span>)}
+              articleData.tags &&
+              articleData.tags.map((tag) => (
+                <span key={uuid()}>
+                  {tag.constructor === Object ? tag.value : tag}
+                </span>
+              ))}
           </div>
-          <div id={s.addComment}>
-            <h3>Komentari</h3>
-            {ctx.isLoggedIn && (
-              <CommentType
-                path={{
-                  category: location.state.articleData.category,
-                  subCategory: location.state.articleData.subCategory,
-                  id: location.state.articleData.id,
-                }}
-              />
-            )}
+          {articleData && articleData.commentsAllowed === "Da" && (
+            <div id={s.addComment}>
+              <h3>Komentari</h3>
+              {ctx.isLoggedIn && (
+                <CommentType
+                  path={{
+                    category:
+                      location.state && location.state.articleData.category,
+                    subCategory:
+                      location.state && location.state.articleData.subCategory,
+                    id: location.state && location.state.articleData.id,
+                  }}
+                />
+              )}
 
-            <button className={s.showComments}>
-              <Link
-                to={
-                  articleData && {
-                    pathname: `${articleData.linkPath}/komentari`,
-                    state: {
-                      articleData,
-                    },
+              <button className={s.showComments}>
+                <Link
+                  to={
+                    articleData && {
+                      pathname: `${articleData.linkPath}/komentari`,
+                      state: {
+                        articleData,
+                      },
+                    }
                   }
-                }
-              >
-                PRIKAŽI SVE KOMENTARE (
-                {articleData && articleData.comments[0] === ""
-                  ? 0
-                  : articleData
-                  ? getComLength(articleData.comments)
-                  : 0}
-                )
-              </Link>
-            </button>
-          </div>
+                >
+                  PRIKAŽI SVE KOMENTARE (
+                  {articleData && !articleData.comments
+                    ? 0
+                    : articleData && articleData.comments
+                    ? fullComLength.current
+                    : 0}
+                  )
+                </Link>
+              </button>
+            </div>
+          )}
           <div id={s.linkedArticles}>
-            <div id={s.linkedArticlesHeader}>
-              <h3>Vezani članci</h3>
-              <i class="fas fa-link"></i>
-            </div>
-            <div id={s.linkedArticlesBody}>
-              <LinkedArticles />
-              <LinkedArticles />
-              <LinkedArticles />
-            </div>
+            {relatedArticles.length > 0 && (
+              <>
+                <div id={s.linkedArticlesHeader}>
+                  <h3>Vezani članci</h3>
+                  <i class="fas fa-link"></i>
+                </div>
+                <div
+                  id={s.linkedArticlesBody}
+                  style={
+                    relatedArticles.length === 1
+                      ? {
+                          gridTemplateColumns: "33%",
+                          justifyContent: "center",
+                        }
+                      : relatedArticles.length === 2
+                      ? {
+                          gridTemplateColumns: "repeat(2, minmax(30%, 1fr))",
+                        }
+                      : null
+                  }
+                >
+                  {relatedArticles.map((relArt, i) => (
+                    <LinkedArticles
+                      key={uuid()}
+                      data={relArt}
+                      indL={[i, relatedArticles.length]}
+                    />
+                  ))}
+                </div>
+              </>
+            )}
             <div id={s.linkedPromo}>
               <div id={s.linkedPromoHeader}>
                 <h3>Promo</h3>
                 <i class="fas fa-mouse-pointer"></i>
               </div>
               <div id={s.linkedPromoBody}>
-                <LinkedPromo />
-                <LinkedPromo />
-                <LinkedPromo />
+                {promoArticles.map((prom, i) => (
+                  <LinkedPromo data={prom} />
+                ))}
               </div>
             </div>
           </div>

@@ -1,0 +1,104 @@
+#reportContainer {
+  width: 37%;
+  height: fit-content;
+  background-color: #fff;
+  margin: auto;
+  margin-top: 6.5rem;
+  padding: 1rem 3rem 5rem;
+}
+#reportContainer h3 {
+  font-size: 1.76rem;
+  font-weight: 600;
+  padding-right: 5rem;
+  text-align: left;
+  color: #111827;
+}
+#reportRadioBtns {
+  display: flex;
+  flex-direction: column;
+  margin-top: 2rem;
+}
+.bundleRadios {
+  display: flex;
+  justify-content: left;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  user-select: none;
+}
+.bundleRadios label {
+  font-size: 1.28rem;
+  margin-left: 0.5rem;
+  color: #111827;
+}
+.bundleRadios input {
+  border-radius: 100%;
+  padding: 0;
+  appearance: none;
+  -webkit-print-color-adjust: exact;
+  display: inline-block;
+  vertical-align: middle;
+  background-origin: border-box;
+  flex-shrink: 0;
+  height: 1.6rem;
+  width: 1.6rem;
+  color: #2563eb;
+  background-color: #fff;
+  border: 0.1rem solid #6b7280;
+}
+.bundleRadios input:checked {
+  background-image: url('data:image/svg+xml;charset=utf-8,%3Csvg viewBox="0 0 16 16" fill="%21fff" xmlns="http://www.w3.org/2000/svg"%3E%3Ccircle cx="8" cy="8" r="3"/%3E%3C/svg%3E');
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg viewBox='0 0 16 16' fill='%23fff' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='8' cy='8' r='3'/%3E%3C/svg%3E");
+  border-color: transparent;
+  background-color: currentColor;
+  background-size: 100% 100%;
+  background-position: 50%;
+  background-repeat: no-repeat;
+}
+.bundleRadios input:checked:focus {
+  border-color: transparent;
+  background-color: currentColor;
+}
+.bundleRadios input:focus {
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+  outline-color: #2563eb;
+}
+#confirm {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+#confirm button {
+  width: 49%;
+  cursor: pointer;
+  font-size: 1.2rem;
+  padding: 1rem 1.8rem;
+  font-weight: 600;
+  border-radius: 0.6rem;
+  border: none;
+  margin-top: 1rem;
+}
+#confirm button:first-of-type {
+  border: 0.1rem solid rgba(209, 213, 219, 1);
+  color: #374151;
+  background-color: #fff;
+  transition: background-color 0.1s ease-in;
+}
+#confirm button:first-of-type:hover {
+  background-color: rgba(249, 250, 251, 1);
+}
+#confirm button:nth-of-type(2) {
+  border: 0.1rem solid transparent;
+  background-color: #dc2626;
+  color: #fff;
+  transition: background-color 0.1s ease-in;
+}
+#confirm button:nth-of-type(2):hover {
+  background-color: rgba(185, 28, 28, 1);
+}
+#footerNote {
+  text-align: left;
+  font-size: 1.28rem;
+  color: #111827;
+  margin-top: 2rem;
+}

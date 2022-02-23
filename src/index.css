@@ -1,4 +1,8 @@
 @import url("https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@200&display=swap");
+@font-face {
+  font-family: "ClanPro-Medium";
+  src: url("./fonts/FFClanProMedium.woff") format("truetype");
+}
 
 html {
   font-size: 10px;
@@ -11,6 +15,7 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   background-color: #f3f4f6;
+  overflow-x: hidden;
 }
 
 iframe.instagram-media {

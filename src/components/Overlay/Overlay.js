@@ -4,22 +4,21 @@ import React, {
   useEffect,
   useImperativeHandle,
   useState,
-} from 'react';
-import ReactDOM from 'react-dom';
-import LoginContext from '../../context';
-import s from './Overlay.module.css';
+} from "react";
+import ReactDOM from "react-dom";
+import LoginContext from "../../context";
+import s from "./Overlay.module.css";
 
 const Overlay = (props, ref) => {
   const ctx = useContext(LoginContext);
   const handleClick = (e) => {
     const id = e.target.id;
-    console.log(id);
     if (
-      (ctx.overlay && id.includes('overlay')) ||
-      (ctx.overlay && e.target.textContent === 'Ne')
+      (ctx.overlay && id.includes("overlay")) ||
+      (ctx.overlay && e.target.textContent === "Ne")
     ) {
       ctx.handleOverlay();
-    } else if (ctx.overlay && e.target.textContent === 'Da') {
+    } else if (ctx.overlay && e.target.textContent === "Da") {
       props.handleConfirm();
       ctx.handleOverlay();
     }
@@ -38,6 +37,11 @@ const Overlay = (props, ref) => {
       onClick={handleClick}
       ref={ref}
       onMouseDown={props.handleCloseOverlay}
+      style={
+        props.navZ && {
+          zIndex: 1,
+        }
+      }
     >
       {props.children}
     </div>

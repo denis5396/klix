@@ -10,7 +10,8 @@
   cursor: pointer;
 }
 .promoImageCnt {
-  width: 8rem;
+  min-width: 8rem;
+  max-width: 8rem;
   height: 8rem;
   margin-right: 1rem;
 }

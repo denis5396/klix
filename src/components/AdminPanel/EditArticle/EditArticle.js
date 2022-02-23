@@ -7,6 +7,7 @@ import Overlay from "../../Overlay/Overlay";
 import { Link, useHistory } from "react-router-dom";
 import { db } from "../../../firebase";
 import Modal from "../../Modal/Modal";
+import { clrs } from "../../ArticleLink/ArticleLink";
 
 export const articleColors = {
   vijesti: "#d33d3d",
@@ -544,32 +545,40 @@ const EditArticles = () => {
             // }
           }
           console.log(realData[0]);
+          const promises = [];
           realData[0].forEach((art, i) => {
             console.log(art[1]);
             console.log(art[0]);
-            fetch(
-              `https://klix-74c29-default-rtdb.europe-west1.firebasedatabase.app/articles/${art[1]}/-${art[0]}.json`
-            )
-              .then((response) => response.json())
-              .then((data) => {
-                console.log(data);
-                dataReady.push(data);
-                if (dataReady[incr]) {
-                  dataReady[incr].timeDiff = timeDifference(
-                    dataReady[incr].date
-                  );
-                  incr++;
-                }
-                if (i === realData[0].length - 1) {
-                  if (dataReady.length < 7) {
-                    const diff = 7 - dataReady.length;
-                    for (let i = 0; i < diff; i++) {
-                      dataReady.push({});
-                    }
-                  }
-                  setArticles(dataReady);
-                }
-              });
+            // if (i < 6) {
+            promises.push(
+              fetch(
+                `https://klix-74c29-default-rtdb.europe-west1.firebasedatabase.app/articles/${art[1]}/-${art[0]}.json`
+              ).then((response) => response.json())
+            );
+            // }
+          });
+
+          const promisedData = Promise.all(promises);
+          promisedData.then((data) => {
+            console.log(data);
+            // dataReady.push(data);
+            // if (dataReady[incr]) {
+            //   dataReady[incr].timeDiff = timeDifference(dataReady[incr].date);
+            //   incr++;
+            // }
+            for (let i = 0; i < data.length; i++) {
+              data[i].timeDiff = timeDifference(data[i].date);
+            }
+            setArticles(data);
+            // if (i === realData[0].length - 1) {
+            //   if (dataReady.length < 7) {
+            //     const diff = 7 - dataReady.length;
+            //     for (let i = 0; i < diff; i++) {
+            //       dataReady.push({});
+            //     }
+            //   }
+            //   setArticles(dataReady);
+            // }
           });
           // setArticles(realData);
         }
@@ -587,6 +596,7 @@ const EditArticles = () => {
             realData[incr].timeDiff = timeDifference(realData[incr].date);
             incr++;
           }
+          realData.reverse();
           setArticleFetch(realData);
         }
       });
@@ -605,8 +615,12 @@ const EditArticles = () => {
     }
   };
 
-  const handleEditFetchedArticle = (artItem) => {
+  const handleEditFetchedArticle = (e, artItem) => {
     console.log(artItem);
+    if (e.button == 1 || e.buttons == 4) {
+      // e.preventDefault();
+      alert("ne moze se koristiti srednji klik");
+    }
   };
 
   useEffect(() => {}, []);
@@ -646,31 +660,36 @@ const EditArticles = () => {
 
   const handleModeSwitch = (e, input) => {
     const { value } = e.target;
-    if (input === "dodaj" && switchingModus) {
-      setSwitchingModus(false);
-      setAddingModus(true);
-      return;
-    } else if (input === "zamjeni" && addingModus) {
-      setAddingModus(false);
-      setSwitchingModus(true);
-      return;
-    }
-    if (input === "dodaj" && !switchingModus && addingModus) {
-      setAddingModus(false);
-      return;
-    } else if (input === "zamjeni" && !addingModus && switchingModus) {
-      setSwitchingModus(false);
-      return;
-    }
     if (input === "dodaj") {
-      setAddingModus(true);
+      if (!addingModus) {
+        setAddingModus(true);
+      } else {
+        setAddingModus(false);
+      }
+      if (editing) {
+        setEditing(false);
+      } else if (switchingModus) {
+        setSwitchingModus(false);
+      }
     } else if (input === "zamjeni") {
-      setSwitchingModus(true);
+      if (!switchingModus) {
+        setSwitchingModus(true);
+      } else {
+        setSwitchingModus(false);
+      }
+      if (addingModus) {
+        setAddingModus(false);
+      } else if (editing) {
+        setEditing(false);
+      }
+    } else if (input === "edituj") {
+      setEditing(true);
+      if (addingModus) {
+        setAddingModus(false);
+      } else if (switchingModus) {
+        setSwitchingModus(false);
+      }
     }
-  };
-
-  const handleEdit = () => {
-    setEditing(true);
   };
 
   const dragStart = (e) => {
@@ -932,24 +951,34 @@ const EditArticles = () => {
                       className={s.articleFetchItem}
                       onClick={handleAddFetchedArticle}
                       key={uuid()}
+                      style={{ flexDirection: "column" }}
                     >
-                      <div className={s.articleFetchItemImgCnt}>
-                        {/* <img src={articleItem.url[0]} /> */}
-                        <img src={articleItem.images[0]} />
-                      </div>
-                      <div className={s.articleItemFetchTitles}>
-                        <h3>{articleItem.subTitle}</h3>
-                        <h3>{articleItem.title}</h3>
+                      <div className={s.addingBundler}>
+                        <div className={s.articleFetchItemImgCnt}>
+                          {/* <img src={articleItem.url[0]} /> */}
+                          <img src={articleItem.images[0]} />
+                        </div>
+                        <div className={s.articleItemFetchTitles}>
+                          <h3
+                            style={{
+                              color: `${
+                                clrs[articleItem.category.toLowerCase()]
+                              }`,
+                            }}
+                          >
+                            {articleItem.subTitle}
+                          </h3>
+                          <h3>{articleItem.title}</h3>
+                        </div>
                       </div>
                       <div className={s.articleItemFetchFooter}>
                         <span>{articleItem.timeDiff}</span>
                         <div className={s.articleItemFetchBundle}>
                           <span>
                             <i class="fas fa-comment"></i>{" "}
-                            {articleItem.comments.length === 1 &&
-                            articleItem.comments[0] === ""
+                            {!articleItem.comments
                               ? 0
-                              : articleItem.comments.length}
+                              : Object.keys(articleItem.comments).length}
                           </span>
                           <span>
                             <i class="fas fa-share-alt"></i>{" "}
@@ -1009,7 +1038,9 @@ const EditArticles = () => {
                   return (
                     <div
                       className={s.articleFetchItem}
-                      onClick={() => handleEditFetchedArticle(articleItem)}
+                      onMouseDown={(e) =>
+                        handleEditFetchedArticle(e, articleItem)
+                      }
                       key={uuid()}
                     >
                       <Link
@@ -1018,23 +1049,32 @@ const EditArticles = () => {
                           state: { articleData: articleItem },
                         }}
                       >
-                        <div className={s.articleFetchItemImgCnt}>
-                          {/* <img src={articleItem.url[0]} /> */}
-                          <img src={articleItem.images[0]} />
-                        </div>
-                        <div className={s.articleItemFetchTitles}>
-                          <h3>{articleItem.subTitle}</h3>
-                          <h3>{articleItem.title}</h3>
+                        <div className={s.editBundler}>
+                          <div className={s.articleFetchItemImgCnt}>
+                            {/* <img src={articleItem.url[0]} /> */}
+                            <img src={articleItem.images[0]} />
+                          </div>
+                          <div className={s.articleItemFetchTitles}>
+                            <h3
+                              style={{
+                                color: `${
+                                  clrs[articleItem.category.toLowerCase()]
+                                }`,
+                              }}
+                            >
+                              {articleItem.subTitle}
+                            </h3>
+                            <h3>{articleItem.title}</h3>
+                          </div>
                         </div>
                         <div className={s.articleItemFetchFooter}>
                           <span>{articleItem.timeDiff}</span>
                           <div className={s.articleItemFetchBundle}>
                             <span>
                               <i class="fas fa-comment"></i>{" "}
-                              {articleItem.comments.length === 1 &&
-                              articleItem.comments[0] === ""
+                              {!articleItem.comments
                                 ? 0
-                                : articleItem.comments.length}
+                                : Object.keys(articleItem.comments).length}
                             </span>
                             <span>
                               <i class="fas fa-share-alt"></i>{" "}
@@ -1102,6 +1142,7 @@ const EditArticles = () => {
                   onClick={(e) => {
                     handleModeSwitch(e, "dodaj");
                   }}
+                  disabled={articles.length ? false : true}
                   checked={addingModus}
                   ref={addArticleBox}
                 />
@@ -1114,6 +1155,7 @@ const EditArticles = () => {
                   onClick={(e) => {
                     handleModeSwitch(e, "zamjeni");
                   }}
+                  disabled={articles.length ? false : true}
                   checked={switchingModus}
                   ref={switchArticleBox}
                 />
@@ -1123,7 +1165,10 @@ const EditArticles = () => {
                   id="editing"
                   name="dodajswitch"
                   value="Edituj clanak"
-                  onClick={handleEdit}
+                  onClick={(e) => {
+                    handleModeSwitch(e, "edituj");
+                  }}
+                  disabled={articles.length ? false : true}
                   checked={editing}
                   ref={editArticleBox}
                 />
@@ -1336,10 +1381,9 @@ const EditArticles = () => {
                                     <span>{article.timeDiff}</span>
                                     <span>
                                       <i class="fas fa-comment"></i>{" "}
-                                      {article.comments.length === 1 &&
-                                      article.comments[0] === ""
+                                      {!article.comments
                                         ? 0
-                                        : article.comments.length}
+                                        : Object.keys(article.comments).length}
                                       <i class="fas fa-share-alt"></i>{" "}
                                       {article.shares.length === 1 &&
                                       article.shares[0] === ""
@@ -1383,10 +1427,10 @@ const EditArticles = () => {
                                     >
                                       <span>
                                         <i class="fas fa-comment"></i>{" "}
-                                        {article.comments.length === 1 &&
-                                        article.comments[0] === ""
+                                        {!article.comments
                                           ? 0
-                                          : article.comments.length}
+                                          : Object.keys(article.comments)
+                                              .length}
                                       </span>
                                       <span>
                                         <i class="fas fa-share-alt"></i>{" "}
@@ -1446,10 +1490,13 @@ const EditArticles = () => {
                               onDragOver={(e) => allowDrop(e)}
                             >
                               <div className={s.articleImgCnt}>
-                                <img src={article.images[0]} />
-                                {article.images.length > 1 && (
-                                  <i class="far fa-images"></i>
-                                )}
+                                <img
+                                  src={article.images && article.images[0]}
+                                />
+                                {article.images &&
+                                  article.images.length > 1 && (
+                                    <i class="far fa-images"></i>
+                                  )}
                               </div>
                               <div className={s.articleTitles}>
                                 <h3>{article.subTitle}</h3>
@@ -1459,10 +1506,9 @@ const EditArticles = () => {
                                 <span>{article.timeDiff}</span>
                                 <span>
                                   <i class="fas fa-comment"></i>{" "}
-                                  {article.comments.length === 1 &&
-                                  article.comments[0] === ""
+                                  {!article.comments
                                     ? 0
-                                    : article.comments.length}
+                                    : Object.keys(article.comments).length}
                                   <i class="fas fa-share-alt"></i>{" "}
                                   {article.shares.length === 1 &&
                                   article.shares[0] === ""
@@ -1496,8 +1542,7 @@ const EditArticles = () => {
                                 <div className={s.articleItemBgFooterBundle}>
                                   <span>
                                     <i class="fas fa-comment"></i>{" "}
-                                    {article.comments.length === 1 &&
-                                    article.comments[0] === ""
+                                    {!article.comments
                                       ? 0
                                       : article.comments.length}
                                   </span>

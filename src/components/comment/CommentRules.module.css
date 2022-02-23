@@ -1,0 +1,51 @@
+#commentRulesCnt {
+  width: 93.5vw;
+  margin: 7.2rem auto 4rem;
+  background-color: #fff;
+  height: fit-content;
+  padding: 1.6rem 2.4rem 4rem;
+  text-align: left;
+}
+#commentRulesBody {
+  width: 80%;
+  margin: auto;
+}
+#commentRulesBody h1 {
+  font-weight: 600;
+  border-bottom: 0.1rem solid #e5e7eb;
+  margin-bottom: 1.6rem;
+  padding-bottom: 0.8rem;
+  font-size: 2.4rem;
+  margin-top: 1.5rem;
+}
+#commentRulesBody p {
+  margin-bottom: 2rem;
+  line-height: 1.4;
+  font-size: 1.7rem;
+}
+#commentRulesBody p b {
+  font-weight: 600;
+}
+#commentRulesBody h3 {
+  font-size: 1.8rem;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+}
+#commentRulesBody ul {
+  font-size: 1.7rem;
+}
+#commentRulesBody ul li {
+  margin: 2rem 0;
+  padding-left: 2.8rem;
+  position: relative;
+}
+#commentRulesBody ul li::before {
+  content: "";
+  position: absolute;
+  width: 0.6rem;
+  height: 0.6rem;
+  background-color: #d1d5db;
+  border-radius: 50%;
+  top: 1.1rem;
+  left: 0.4rem;
+}

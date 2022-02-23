@@ -5,13 +5,21 @@ const CommentShow = (props) => {
   return (
     <div
       className={`${s.showCommentReplies}${
-        !props.showReply ? " " + s.showCommentMore : ""
+        props.showAll
+          ? " " + s.showAll
+          : !props.showReply
+          ? " " + s.showCommentMore
+          : ""
       }`}
       onClick={props.onClick}
     >
-      {props.showReply
+      {props.showAll
+        ? `PRIKAŽI SVE KOMENTARE (${props.showAll})`
+        : props.showReply
         ? `PRIKAŽI ODGOVORE (${props.showReply})`
-        : "PRIKAŽI JOŠ KOMENTARA"}
+        : props.loading
+        ? "Učitavam..."
+        : !props.loading && "PRIKAŽI JOŠ KOMENTARA"}
     </div>
   );
 };

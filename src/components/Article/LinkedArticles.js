@@ -1,15 +1,36 @@
-import React from 'react';
-import s from './LinkedArticles.module.css';
+import React, { useState } from "react";
+import { clrs } from "../ArticleLink/ArticleLink";
+import s from "./LinkedArticles.module.css";
 
-const LinkedArticles = () => {
+const LinkedArticles = ({ data, indL }) => {
+  useState(() => {
+    console.log(indL);
+    console.log(indL[1] === 3 && indL[0] === 1);
+  }, []);
   return (
-    <div className={s.linkedArticle}>
+    <div
+      className={`${s.linkedArticle}${
+        indL[1] === 1 ? ` ${s.linkedArticleSolo}` : ""
+      }`}
+      style={indL[1] === 2 && indL[0] === 1 ? { position: "static" } : null} //hide right border of second item when we have length of 2, aesthetic purpose
+    >
       <div className={s.imageContainer}>
-        <img src="https://firebasestorage.googleapis.com/v0/b/klix-74c29.appspot.com/o/images%2FPromo%2F-MgFb1HqkOYF1RAojD6v%2FHearthstone%20Screenshot%2003-25-21%2021.19.39.png?alt=media&token=3215a9d9-a7b6-4b2a-a5c6-7219538a0206" />
+        <img
+          src={data.thumbnail.replace(
+            "https://firebasestorage.googleapis.com",
+            "https://ik.imagekit.io/1cryg5xvxsq/tr:w-300"
+          )}
+        />
       </div>
       <div className={s.titles}>
-        <h3>BUSIJE DONACIJA</h3>
-        <h3>Pola miliona dobro poznajem stize 9. augusta bih </h3>
+        <h3
+          style={{
+            color: `${clrs[data.articlePath.split("/")[0].toLowerCase()]}`,
+          }}
+        >
+          {data.subTitle}
+        </h3>
+        <h3>{data.title}</h3>
       </div>
     </div>
   );

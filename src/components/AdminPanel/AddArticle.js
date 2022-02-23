@@ -90,6 +90,7 @@ const AddArticle = () => {
   const [showSecondList, setShowSecondList] = useState(false);
   const [currentList, setCurrentList] = useState("ul");
   const [lists, setLists] = useState([]);
+  const [subCatInit, setSubCatInit] = useState(false);
 
   //dragging
   const [dragIndex, setDragIndex] = useState(0);
@@ -112,12 +113,21 @@ const AddArticle = () => {
   const sendArticleOverlay = useRef();
   const commentsRadio = useRef();
   const subcategorySelect = useRef();
+  const isPromo = useRef();
 
   useEffect(() => {
     console.log(progress);
   }, [progress]);
 
   useEffect(() => {}, []);
+  useEffect(() => {
+    if (subCatInit) {
+      setSaveSubcat(location.state.articleData.subCategory);
+      setSubCatInit(false);
+    }
+    console.log(subcategoriesMap);
+    console.log(didMountRef.current);
+  }, [subcategoriesMap, subCatInit]);
 
   useEffect(() => {
     if (location.state) {
@@ -127,16 +137,31 @@ const AddArticle = () => {
       const strDate = timeDifference(articleData.date);
       console.log(strDate);
       titles.current.children[0].value = articleData.title;
-      titles.current.children[1].value = articleData.subTitle;
+      titles.current.children[1].value =
+        articleData.sponsored && articleData.subTitle !== "PROMO"
+          ? `PROMO ${articleData.subTitle}`
+          : articleData.sponsored && articleData.subTitle === "PROMO"
+          ? "PROMO"
+          : articleData.subTitle;
+      if (articleData.sponsored) {
+        commentsRadio.current.children[0].children[1].disabled = true;
+        commentsRadio.current.children[1].children[1].disabled = true;
+      }
       textareaRef.current.value = articleData.articleText;
-      setTags([...articleData.tags]);
+      if (articleData.tags) {
+        setTags([...articleData.tags]);
+      }
       if (articleData.commentsAllowed === "Da") {
         commentsRadio.current.children[0].children[1].checked = true;
       } else {
         commentsRadio.current.children[1].children[1].checked = true;
       }
+      console.log(subcategories[articleData.category.toLowerCase()]);
+      console.log(articleData.subCategory);
       categorySelect.current.value = articleData.category;
-      subcategorySelect.current.value = articleData.subCategory;
+      const event = new Event("change", { bubbles: true });
+      categorySelect.current.dispatchEvent(event);
+      setSubCatInit(true); //init subcategory in select when first loading an art which we want to edit
       if (typeof articleData.imageText === "string") {
         captionText.current.value = articleData.imageText;
       } else {
@@ -2319,13 +2344,14 @@ const AddArticle = () => {
     if (e.keyCode === 13) {
       let { value } = e.target;
       if (value) {
-        value = value.split("");
-        value[0] = value[0].toUpperCase();
-        value = value.join("");
+        // value = value.split("");
+        // value[0] = value[0].toUpperCase();
+        // value = value.join("");
         e.target.value = "";
         setTags((old) => {
           const oldCopy = [...old];
           oldCopy.push(value);
+          console.log(oldCopy);
           return oldCopy;
         });
       }
@@ -2354,8 +2380,56 @@ const AddArticle = () => {
 
   const checkIfContainsPromo = (string) => {
     const str = string.toLowerCase();
-    if (str.includes(" promo") || str.includes("promo ") || str === "promo") {
+    if (str.trim() === "promo" || str.trim().includes("promo ")) {
       return true;
+    }
+  };
+
+  const seeWhichList = (str, mode, selStart) => {
+    let occurence = 0;
+    let start;
+    if (mode === "deleting") {
+      for (let i = 0; i < str.length; i++) {
+        if (
+          str[i] === "<" &&
+          str[i + 1] === "l" &&
+          str[i + 2] === "i" &&
+          str[i + 3] === "s" &&
+          str[i + 4] === "t" &&
+          str[i + 5] === ">"
+        ) {
+          start = i;
+          occurence++;
+        } else if (
+          str[i] === "<" &&
+          str[i + 1] === "/" &&
+          str[i + 2] === "l" &&
+          str[i + 3] === "i" &&
+          str[i + 4] === "s" &&
+          str[i + 5] === "t" &&
+          str[i + 6] === ">"
+        ) {
+          if (selStart >= start && selStart <= i + 6) {
+            return occurence;
+          }
+        }
+      }
+    } else {
+      for (let i = 0; i < str.length; i++) {
+        if (
+          str[i] === "<" &&
+          str[i + 1] === "l" &&
+          str[i + 2] === "i" &&
+          str[i + 3] === "s" &&
+          str[i + 4] === "t" &&
+          str[i + 5] === ">"
+        ) {
+          occurence++;
+        }
+        if (i === selStart) {
+          return occurence;
+        }
+      }
     }
   };
 
@@ -2364,14 +2438,17 @@ const AddArticle = () => {
     const subTitle = titles.current.children[1].value.toUpperCase();
     console.log(title);
     console.log(subTitle);
-    const articleText = textareaRef.current.value;
-    const captionTxt = captionText.current.value;
+    const articleText = textareaRef.current.value.trim();
+    const captionTxt = captionText.current.value.trim();
     let catSel = categorySelect.current.value;
     let subcatSel = subcategorySelect.current.value;
-
     const checkIfPromo = checkIfContainsPromo(subTitle);
-
-    if (catSel === "Promo") {
+    let promoSubTitle;
+    if (checkIfPromo && subTitle.trim().length > 5) {
+      promoSubTitle = subTitle.trim().split("PROMO ");
+      promoSubTitle.splice(0, 1);
+      promoSubTitle = promoSubTitle.join("").trim();
+      console.log(promoSubTitle);
     }
     const commentChoice =
       commentsRadio.current.children[0].children[1].checked &&
@@ -2379,13 +2456,32 @@ const AddArticle = () => {
         ? "Da"
         : "Ne";
     console.log(imageArray);
+    console.log(location.state);
+    console.log(tags);
+    let deletedTags = [];
+    if (location.state && location.state.articleData.tags) {
+      deletedTags = location.state.articleData.tags.reduce((acc, cur) => {
+        if (
+          !tags.some((el) =>
+            el.value ? el.value === cur.value : el === cur.value
+          )
+        ) {
+          return [...acc, cur];
+        }
+        return acc;
+      }, []);
+      console.log(deletedTags);
+    }
     // alert(commentChoice);
-
-    if (title && subTitle && articleText && tags.length > 0) {
+    console.log(lists);
+    console.log(location.state.articleData.listOrder);
+    return;
+    if (title && subTitle && articleText) {
       if (imageArray.length > 0 && captionTxt) {
         const articleFinished = {
+          author: ctx.user.displayName,
           title: title,
-          subTitle: subTitle,
+          subTitle: promoSubTitle ? promoSubTitle : subTitle,
           articleText: articleText,
           category: catSel,
           subCategory: subcatSel,
@@ -2396,184 +2492,310 @@ const AddArticle = () => {
           shares: [""],
         };
         let captTxt = [];
-        if (commentChoice) {
-          articleFinished.comments = [""];
-        }
         if (lists.length > 0) {
           articleFinished.listOrder = [...lists];
         }
+        if (checkIfPromo) {
+          articleFinished.sponsored = true;
+        }
+        if (
+          location.state &&
+          checkIfPromo &&
+          location.state.articleData.promoId
+        ) {
+          //means that we wanna edit an already existing promo article and we did not change the promo status of it so we can keep the previous promoid
+          articleFinished.promoId = location.state.articleData.promoId;
+        }
+        console.log(articleFinished.tags);
+        console.log(articleFinished);
         setSending(true);
         let length = !checkIfPromo ? 1 : 2;
+        console.log(length);
         // alert(length);
         auth.onAuthStateChanged((user) => {
           if (user) {
             user.getIdToken(true).then((idToken) => {
-              for (let k = 0; k < length; k++) {
-                fetch(
-                  `https://klix-74c29-default-rtdb.europe-west1.firebasedatabase.app/articles/${
-                    k === 1 ? "Promo" : catSel
-                  }/${k === 1 ? catSel : subcatSel}${
-                    location.state ? "-" + location.state.articleData.id : ""
-                  }.json?auth=${idToken}`,
-                  {
-                    method: `${!location.state ? "POST" : "PATCH"}`,
-                    body: JSON.stringify(articleFinished),
-                    headers: {
-                      "Content-Type": "application/json",
-                    },
-                  }
-                )
-                  .then((response) => response.json())
-                  .then((data) => {
-                    console.log(data);
-                    let id = data.name;
-                    const imgUrls = [];
-                    if (!location.state) {
-                      id = id.slice(1);
-                    } else {
+              const categoriesNoChange =
+                location.state &&
+                catSel === location.state.articleData.category &&
+                subcatSel === location.state.articleData.subCategory;
+              fetch(
+                `https://klix-74c29-default-rtdb.europe-west1.firebasedatabase.app/articles/${catSel}/${subcatSel}${
+                  categoriesNoChange ? "/-" + location.state.articleData.id : ""
+                }.json?auth=${idToken}`,
+                {
+                  method: `${
+                    !location.state
+                      ? "POST"
+                      : !categoriesNoChange
+                      ? "POST"
+                      : "PATCH"
+                  }`,
+                  body: JSON.stringify(articleFinished),
+                  headers: {
+                    "Content-Type": "application/json",
+                  },
+                }
+              )
+                .then((response) => response.json())
+                .then((data) => {
+                  console.log(data);
+                  let id;
+                  const imgUrls = [];
+                  if (!location.state) {
+                    id = data.name.slice(1);
+                  } else {
+                    if (categoriesNoChange) {
+                      //patch
                       id = location.state.articleData.id;
+                    } else {
+                      //cats changed so we have a new id
+                      id = data.name.slice(1);
                     }
-                    // id.split('');
-                    // console.log(id);
-                    // id.join('');
-                    console.log(id);
+                  }
+                  // id.split('');
+                  // console.log(id);
+                  // id.join('');
+                  console.log(id);
+                  if (!articleFinished.id) {
+                    //always happens, we do not init the id where we declare the var, but we do it here
                     articleFinished.id = id;
-                    console.log(articleFinished);
-                    let progressArray = [];
-                    if (imageArray) {
-                      // console.log(image);
-                      if (imageArray.length >= 1) {
-                        imageArray.forEach((img, i) => {
-                          progressArray.push({
-                            imageName: img.name,
-                            percent: "",
-                          });
-                          console.log(k);
-                          console.log(
-                            `images/${catSel}/${subcatSel}/-${id}/${img.name}`
-                          );
-                          const uploadTask = storage
-                            .ref(
-                              `images/${k === 1 ? "Promo" : catSel}/${
-                                k === 1 ? catSel : subcatSel
-                              }/-${id}/${img.name}`
-                            )
-                            .put(img);
-                          uploadTask.on(
-                            "state_changed",
-                            (snapshot) => {
-                              console.log(snapshot);
+                  }
+                  console.log(articleFinished);
+                  let progressArray = [];
+                  // console.log(image);
+                  imageArray.forEach((img, i) => {
+                    progressArray.push({
+                      imageName: img.name,
+                      percent: "",
+                    });
+                    console.log(
+                      `images/${catSel}/${subcatSel}/-${id}/${img.name}`
+                    );
+                    const uploadTask = storage
+                      .ref(`images/${catSel}/${subcatSel}/-${id}/${img.name}`)
+                      .put(img);
+                    uploadTask.on(
+                      "state_changed",
+                      (snapshot) => {
+                        console.log(snapshot);
+                        console.log(
+                          `bytesTransfered: ${
+                            snapshot.bytesTransferred
+                          }, percent: ${Math.floor(
+                            (snapshot.bytesTransferred / snapshot.totalBytes) *
+                              100
+                          )}% fileName: ${img.name}`
+                        );
+
+                        progressArray.forEach((arr, i) => {
+                          if (arr.imageName === img.name) {
+                            if (progressRef.current.children[0]) {
                               console.log(
-                                `bytesTransfered: ${
-                                  snapshot.bytesTransferred
-                                }, percent: ${Math.floor(
+                                progressRef.current.children[i].children[1]
+                                  .children[0]
+                              );
+                              progressRef.current.children[
+                                i
+                              ].children[1].children[0].style.width = `${Math.floor(
+                                (snapshot.bytesTransferred /
+                                  snapshot.totalBytes) *
+                                  100
+                              )}%`;
+                              if (
+                                Math.floor(
                                   (snapshot.bytesTransferred /
                                     snapshot.totalBytes) *
                                     100
-                                )}% fileName: ${img.name}`
-                              );
-
-                              progressArray.forEach((arr, i) => {
-                                if (arr.imageName === img.name && k === 0) {
-                                  if (progressRef.current.children[0]) {
-                                    console.log(
-                                      progressRef.current.children[i]
-                                        .children[1].children[0]
-                                    );
-                                    progressRef.current.children[
-                                      i
-                                    ].children[1].children[0].style.width = `${Math.floor(
-                                      (snapshot.bytesTransferred /
-                                        snapshot.totalBytes) *
-                                        100
-                                    )}%`;
-                                    if (
-                                      Math.floor(
-                                        (snapshot.bytesTransferred /
-                                          snapshot.totalBytes) *
-                                          100
-                                      ) !== 0
-                                    ) {
-                                      progressRef.current.children[
-                                        i
-                                      ].children[1].children[0].textContent = `${Math.floor(
-                                        (snapshot.bytesTransferred /
-                                          snapshot.totalBytes) *
-                                          100
-                                      )}%`;
-                                    }
-
-                                    if (
-                                      Math.floor(
-                                        (snapshot.bytesTransferred /
-                                          snapshot.totalBytes) *
-                                          100
-                                      ) === 100
-                                    ) {
-                                      setTimeout(() => {
-                                        progressRef.current.children[
-                                          i
-                                        ].children[2].children[0].style.display =
-                                          "inline-block";
-                                      }, 200);
-                                    }
-                                    // progressRef.current.children[i].children[1]
-                                    // .children[0]
-                                  }
-                                }
-                              });
-                              if (k === 0) {
-                                setCurProgress(progressArray);
+                                ) !== 0
+                              ) {
+                                progressRef.current.children[
+                                  i
+                                ].children[1].children[0].textContent = `${Math.floor(
+                                  (snapshot.bytesTransferred /
+                                    snapshot.totalBytes) *
+                                    100
+                                )}%`;
                               }
-                              console.log(snapshot.totalBytes);
-                              console.log(
-                                `images/${catSel}/${subcatSel}/-${id}`
+
+                              if (
+                                Math.floor(
+                                  (snapshot.bytesTransferred /
+                                    snapshot.totalBytes) *
+                                    100
+                                ) === 100
+                              ) {
+                                setTimeout(() => {
+                                  progressRef.current.children[
+                                    i
+                                  ].children[2].children[0].style.display =
+                                    "inline-block";
+                                }, 200);
+                              }
+                              // progressRef.current.children[i].children[1]
+                              // .children[0]
+                            }
+                          }
+                        });
+                        setCurProgress(progressArray);
+                        console.log(snapshot.totalBytes);
+                        console.log(`images/${catSel}/${subcatSel}/-${id}`);
+                      },
+                      (error) => {
+                        console.log(error);
+                      },
+                      () => {
+                        storage
+                          .ref(`images/${catSel}/${subcatSel}/-${id}`)
+                          .child(img.name)
+                          .getDownloadURL()
+                          .then((url) => {
+                            console.log(url);
+                            imgUrls.push(url);
+                            // let imgNames = [];
+                            // imgNames.push([img.name, url]);
+                            articleFinished.imageText.forEach(
+                              (imgTxt, indx) => {
+                                if (imgTxt.name === img.name) {
+                                  captTxt[indx] = [
+                                    url,
+                                    imgTxt.captionText,
+                                    img.name,
+                                  ];
+                                }
+                              }
+                            );
+                            if (imgUrls.length === imageArray.length) {
+                              articleFinished.images = [...imgUrls];
+                              articleFinished.imageText = [...captTxt];
+                              if (!location.state) {
+                                const date = new Date();
+                                const time = `${date.getFullYear()}-${
+                                  date.getMonth() + 1
+                                }-${date.getDate()} ${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}`;
+                                articleFinished.date = time;
+                                console.log(articleFinished);
+                              } else {
+                                articleFinished.date =
+                                  location.state.articleData.date;
+                              }
+                              captTxt = [];
+                              const dbRef = db.ref(
+                                `articles/${catSel}/${subcatSel}/-${id}`
                               );
-                            },
-                            (error) => {
-                              console.log(error);
-                            },
-                            () => {
-                              storage
-                                .ref(
-                                  `images/${k === 1 ? "Promo" : catSel}/${
-                                    k === 1 ? catSel : subcatSel
-                                  }/-${id}`
-                                )
-                                .child(img.name)
-                                .getDownloadURL()
-                                .then((url) => {
-                                  console.log(url);
-                                  imgUrls.push(url);
-                                  // let imgNames = [];
-                                  // imgNames.push([img.name, url]);
-                                  articleFinished.imageText.forEach(
-                                    (imgTxt, indx) => {
-                                      if (imgTxt.name === img.name) {
-                                        captTxt[indx] = [
-                                          url,
-                                          imgTxt.captionText,
-                                          img.name,
-                                        ];
-                                      }
-                                    }
-                                  );
-                                  if (imgUrls.length === imageArray.length) {
-                                    articleFinished.images = [...imgUrls];
-                                    articleFinished.imageText = [...captTxt];
-                                    const date = new Date();
-                                    const time = `${date.getFullYear()}-${
-                                      date.getMonth() + 1
-                                    }-${date.getDate()} ${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}`;
-                                    articleFinished.date = time;
-                                    console.log(articleFinished);
-                                    articleFinished.id = id;
-                                    captTxt = [];
-                                    const dbRef = db.ref(
-                                      `articles/${k === 1 ? "Promo" : catSel}/${
-                                        k === 1 ? catSel : subcatSel
-                                      }/-${id}`
+                              const promises = [];
+                              if (!location.state) {
+                                //POST
+                                if (articleFinished.tags.length) {
+                                  for (
+                                    let i = 0;
+                                    i < articleFinished.tags.length;
+                                    i++
+                                  ) {
+                                    promises.push(
+                                      fetch(
+                                        `https://klix-74c29-default-rtdb.europe-west1.firebasedatabase.app/related/${articleFinished.category}/${articleFinished.tags[i]}.json`,
+                                        {
+                                          method: "POST",
+                                          headers: {
+                                            "Content-Type": "application/json",
+                                          },
+                                          body: JSON.stringify({
+                                            articlePath: `${articleFinished.category}/${articleFinished.subCategory}/-${id}`,
+                                            thumbnail:
+                                              articleFinished.imageText[0][0],
+                                            title: articleFinished.title,
+                                            subTitle: articleFinished.subTitle,
+                                            date: articleFinished.date,
+                                          }),
+                                        }
+                                      ).then((res) => res.json())
                                     );
+                                  }
+                                  const promisedData = Promise.all(promises);
+                                  promisedData.then((data) => {
+                                    console.log(data);
+                                    const patchPromises = [];
+                                    const reformattedTags = []; //tag obj with val and db id
+                                    for (
+                                      let i = 0;
+                                      i < articleFinished.tags.length;
+                                      i++
+                                    ) {
+                                      patchPromises.push(
+                                        fetch(
+                                          `https://klix-74c29-default-rtdb.europe-west1.firebasedatabase.app/related/${articleFinished.category}/${articleFinished.tags[i]}/${data[i].name}.json`,
+                                          {
+                                            method: "PATCH",
+                                            headers: {
+                                              "Content-Type":
+                                                "application/json",
+                                            },
+                                            body: JSON.stringify({
+                                              articlePath: `${articleFinished.category}/${articleFinished.subCategory}/-${id}`,
+                                              thumbnail:
+                                                articleFinished.imageText[0][0],
+                                              title: articleFinished.title,
+                                              subTitle:
+                                                articleFinished.subTitle,
+                                              date: articleFinished.date,
+                                              id: data[i].name,
+                                            }),
+                                          }
+                                        ).then((res) => res.json())
+                                      );
+                                      reformattedTags.push({
+                                        id: data[i].name,
+                                        value: articleFinished.tags[i],
+                                      });
+                                    }
+                                    articleFinished.tags = [...reformattedTags];
+                                    const promisedPatch =
+                                      Promise.all(patchPromises);
+                                    promisedPatch.then((data) => {
+                                      if (length === 1) {
+                                        dbRef
+                                          .update(articleFinished)
+                                          .then((res) => {
+                                            dbRef
+                                              .once("value")
+                                              .then((snapshot) => {
+                                                setArticleAdded(true);
+                                              });
+                                          });
+                                      } else {
+                                        fetch(
+                                          `https://klix-74c29-default-rtdb.europe-west1.firebasedatabase.app/articles/Promo/${catSel}.json?auth=${idToken}`,
+                                          {
+                                            method: "POST",
+                                            body: JSON.stringify(
+                                              articleFinished
+                                            ),
+                                            headers: {
+                                              "Content-Type":
+                                                "application/json",
+                                            },
+                                          }
+                                        )
+                                          .then((res) => res.json())
+                                          .then((data) => {
+                                            articleFinished.promoId = data.name;
+                                            dbRef
+                                              .update(articleFinished)
+                                              .then((res) => {
+                                                dbRef
+                                                  .once("value")
+                                                  .then((snapshot) => {
+                                                    setArticleAdded(true);
+                                                  });
+                                              });
+                                          });
+                                      }
+                                    });
+                                  });
+                                } else {
+                                  // no tags post art
+                                  if (length === 1) {
                                     dbRef
                                       .update(articleFinished)
                                       .then((res) => {
@@ -2581,16 +2803,639 @@ const AddArticle = () => {
                                           setArticleAdded(true);
                                         });
                                       });
+                                  } else {
+                                    fetch(
+                                      `https://klix-74c29-default-rtdb.europe-west1.firebasedatabase.app/articles/Promo/${catSel}.json?auth=${idToken}`,
+                                      {
+                                        method: "POST",
+                                        body: JSON.stringify(articleFinished),
+                                        headers: {
+                                          "Content-Type": "application/json",
+                                        },
+                                      }
+                                    )
+                                      .then((res) => res.json())
+                                      .then((data) => {
+                                        articleFinished.promoId = data.name;
+                                        dbRef
+                                          .update(articleFinished)
+                                          .then((res) => {
+                                            dbRef
+                                              .once("value")
+                                              .then((snapshot) => {
+                                                setArticleAdded(true);
+                                              });
+                                          });
+                                      });
                                   }
-                                })
-                                .catch((error) => console.log(error));
+                                }
+                              } else {
+                                //PATCH
+                                //newly added tag
+                                const newlyAdded = [];
+                                const oldTags = [];
+                                if (
+                                  location.state.articleData.tags &&
+                                  articleFinished.tags.length
+                                ) {
+                                  for (
+                                    let i = 0;
+                                    i < articleFinished.tags.length;
+                                    i++
+                                  ) {
+                                    if (
+                                      //arr.includes, arr.some stops after 1 el is found and returns bool, filter returns arr and empty arr can still be truthy so use.length on the arr
+                                      // !location.state.articleData.tags.includes(
+                                      //   articleFinished.tags[i]
+                                      // )
+                                      !location.state.articleData.tags.some(
+                                        (el) =>
+                                          el.value ===
+                                          (articleFinished.tags[i].value
+                                            ? articleFinished.tags[i].value
+                                            : articleFinished.tags[i])
+                                      )
+                                    ) {
+                                      newlyAdded.push(articleFinished.tags[i]);
+                                    } else {
+                                      oldTags.push(
+                                        location.state.articleData.tags.find(
+                                          (el) =>
+                                            el.value ===
+                                            articleFinished.tags[i].value
+                                        ) //find returns the first val that matches so it's faster than filter
+                                      );
+                                    }
+                                  }
+                                } else if (articleFinished.tags.length) {
+                                  //zero tags before so we spread the new existing ones
+                                  newlyAdded.push(
+                                    ...articleFinished.tags //no need to do [...tags] that would create an array as the first value of newlyadded
+                                  );
+                                }
+
+                                let changedCat;
+                                if (
+                                  articleFinished.category !==
+                                  location.state.articleData.category
+                                ) {
+                                  changedCat = true;
+                                }
+                                let changedSubCat;
+                                if (
+                                  articleFinished.subCategory !==
+                                  location.state.articleData.subCategory
+                                ) {
+                                  changedSubCat = true;
+                                }
+
+                                //find out if title,subtitle,first img(thumbnail) changed if yes add the previous tags as well and patch them
+                                let checker = false;
+                                if (
+                                  articleFinished.title !==
+                                  location.state.articleData.title
+                                ) {
+                                  checker = true;
+                                } else if (
+                                  articleFinished.subTitle !==
+                                  location.state.articleData.subTitle
+                                ) {
+                                  checker = true;
+                                } else if (
+                                  articleFinished.imageText[0][0] ===
+                                  location.state.articleData.imageText[0][0]
+                                ) {
+                                  checker = true;
+                                } else if (changedCat) {
+                                  checker = true;
+                                } else if (changedSubCat) {
+                                  checker = true;
+                                }
+                                if (newlyAdded.length) {
+                                  console.log("butwhyman");
+                                  console.log(newlyAdded);
+                                  console.log(oldTags);
+                                  for (let i = 0; i < newlyAdded.length; i++) {
+                                    promises.push(
+                                      fetch(
+                                        `https://klix-74c29-default-rtdb.europe-west1.firebasedatabase.app/related/${articleFinished.category}/${newlyAdded[i]}.json`,
+                                        {
+                                          method: "POST",
+                                          headers: {
+                                            "Content-Type": "application/json",
+                                          },
+                                          body: JSON.stringify({
+                                            articlePath: `${articleFinished.category}/${articleFinished.subCategory}/-${id}`,
+                                            thumbnail:
+                                              articleFinished.imageText[0][0],
+                                            title: articleFinished.title,
+                                            subTitle: articleFinished.subTitle,
+                                            date: articleFinished.date,
+                                          }),
+                                        }
+                                      ).then((res) => res.json())
+                                    );
+                                  }
+                                }
+                                if (checker && oldTags.length) {
+                                  console.log("does this run");
+                                  console.log(oldTags);
+                                  for (let i = 0; i < oldTags.length; i++) {
+                                    if (changedCat) {
+                                      deletedTags.push({
+                                        id: oldTags[i].id,
+                                        value: oldTags[i].value,
+                                      });
+                                    }
+                                    promises.push(
+                                      fetch(
+                                        `https://klix-74c29-default-rtdb.europe-west1.firebasedatabase.app/related/${
+                                          articleFinished.category
+                                        }/${oldTags[i].value}${
+                                          !changedCat ? "/" + oldTags[i].id : ""
+                                        }.json`,
+                                        {
+                                          method: `${
+                                            changedCat ? "POST" : "PATCH"
+                                          }`,
+                                          headers: {
+                                            "Content-Type": "application/json",
+                                          },
+                                          body: JSON.stringify({
+                                            articlePath: `${articleFinished.category}/${articleFinished.subCategory}/-${id}`,
+                                            thumbnail:
+                                              articleFinished.imageText[0][0],
+                                            title: articleFinished.title,
+                                            subTitle: articleFinished.subTitle,
+                                            date: articleFinished.date,
+                                            id: oldTags[i].id,
+                                          }),
+                                        }
+                                      ).then((res) => res.json())
+                                    );
+                                  }
+                                }
+                                if (deletedTags.length) {
+                                  for (let i = 0; i < deletedTags.length; i++) {
+                                    promises.push(
+                                      fetch(
+                                        `https://klix-74c29-default-rtdb.europe-west1.firebasedatabase.app/related/${
+                                          !changedCat
+                                            ? articleFinished.category
+                                            : location.state.articleData
+                                                .category
+                                        }/${deletedTags[i].value}/${
+                                          deletedTags[i].id
+                                        }.json`,
+                                        {
+                                          method: "DELETE",
+                                          headers: {
+                                            "Content-Type": "application/json",
+                                          },
+                                        }
+                                      ).then((res) => res.json())
+                                    );
+                                  }
+                                }
+                                const promisedData = Promise.all(promises);
+                                promisedData.then((data) => {
+                                  let reformattedTags = []; //tag obj with val and db id
+                                  const promisesPatch = [];
+                                  if (newlyAdded.length) {
+                                    for (
+                                      let i = 0;
+                                      i < newlyAdded.length;
+                                      i++
+                                    ) {
+                                      reformattedTags.push({
+                                        id: data[i].name,
+                                        value: newlyAdded[i],
+                                      });
+                                      promisesPatch.push(
+                                        fetch(
+                                          `https://klix-74c29-default-rtdb.europe-west1.firebasedatabase.app/related/${articleFinished.category}/${newlyAdded[i]}/${data[i].name}.json`,
+                                          {
+                                            method: "PATCH",
+                                            headers: {
+                                              "Content-Type":
+                                                "application/json",
+                                            },
+                                            body: JSON.stringify({
+                                              articlePath: `${articleFinished.category}/${articleFinished.subCategory}/-${id}`,
+                                              thumbnail:
+                                                articleFinished.imageText[0][0],
+                                              title: articleFinished.title,
+                                              subTitle:
+                                                articleFinished.subTitle,
+                                              date: articleFinished.date,
+                                              id: data[i].name,
+                                            }),
+                                          }
+                                        ).then((res) => res.json())
+                                      );
+                                    }
+                                  }
+                                  if (oldTags.length) {
+                                    if (!changedCat) {
+                                      reformattedTags = [
+                                        ...reformattedTags,
+                                        ...oldTags,
+                                      ];
+                                    } else {
+                                      let pos = newlyAdded.length;
+                                      let incr = 0;
+                                      for (
+                                        let i = pos;
+                                        i < pos + oldTags.length;
+                                        i++
+                                      ) {
+                                        reformattedTags.push({
+                                          id: data[i].name,
+                                          value: oldTags[incr].value,
+                                        });
+                                        promisesPatch.push(
+                                          fetch(
+                                            `https://klix-74c29-default-rtdb.europe-west1.firebasedatabase.app/related/${articleFinished.category}/${oldTags[incr].value}/${data[i].name}.json`,
+                                            {
+                                              method: "PATCH",
+                                              headers: {
+                                                "Content-Type":
+                                                  "application/json",
+                                              },
+                                              body: JSON.stringify({
+                                                articlePath: `${articleFinished.category}/${articleFinished.subCategory}/-${id}`,
+                                                thumbnail:
+                                                  articleFinished
+                                                    .imageText[0][0],
+                                                title: articleFinished.title,
+                                                subTitle:
+                                                  articleFinished.subTitle,
+                                                date: articleFinished.date,
+                                                id: data[i].name,
+                                              }),
+                                            }
+                                          ).then((res) => res.json())
+                                        );
+                                        incr++;
+                                      }
+                                    }
+                                  }
+                                  //delete old article if we have changed either cat or subcat
+                                  if (changedCat || changedSubCat) {
+                                    console.log("zasto");
+                                    promisesPatch.push(
+                                      fetch(
+                                        `https://klix-74c29-default-rtdb.europe-west1.firebasedatabase.app/articles/${location.state.articleData.category}/${location.state.articleData.subCategory}/-${location.state.articleData.id}.json`,
+                                        {
+                                          method: "DELETE",
+                                          headers: {
+                                            "Content-Type": "application/json",
+                                          },
+                                        }
+                                      ).then((res) => res.json())
+                                    );
+                                  }
+                                  if (
+                                    deletedTags.length &&
+                                    !newlyAdded.length &&
+                                    !oldTags.length
+                                  ) {
+                                    delete articleFinished.tags;
+                                  } else {
+                                    articleFinished.tags = [...reformattedTags];
+                                  }
+                                  if (promisesPatch.length) {
+                                    const promised = Promise.all(promisesPatch);
+                                    promised.then((data) => {
+                                      dbRef
+                                        .update(articleFinished)
+                                        .then((res) => {
+                                          dbRef
+                                            .once("value")
+                                            .then((snapshot) => {
+                                              if (length === 1) {
+                                                if (
+                                                  location.state.articleData
+                                                    .sponsored &&
+                                                  !articleFinished.sponsored
+                                                ) {
+                                                  //WAS PROMO, no longer is
+                                                  fetch(
+                                                    `https://klix-74c29-default-rtdb.europe-west1.firebasedatabase.app/articles/Promo/${location.state.articleData.category}/${location.state.articleData.promoId}.json?auth=${idToken}`,
+                                                    {
+                                                      method: "DELETE",
+                                                      headers: {
+                                                        "Content-Type":
+                                                          "application/json",
+                                                      },
+                                                    }
+                                                  )
+                                                    .then((res) => res.json())
+                                                    .then((data) => {
+                                                      delete articleFinished.promoId;
+                                                      delete articleFinished.sponsored;
+                                                      dbRef
+                                                        .set(articleFinished)
+                                                        .then((res) => {
+                                                          dbRef
+                                                            .once("value")
+                                                            .then(
+                                                              (snapshot) => {
+                                                                setArticleAdded(
+                                                                  true
+                                                                );
+                                                              }
+                                                            );
+                                                        });
+                                                    });
+                                                } else {
+                                                  setArticleAdded(true);
+                                                }
+                                              } else {
+                                                if (
+                                                  !location.state.articleData
+                                                    .sponsored &&
+                                                  articleFinished.sponsored
+                                                ) {
+                                                  //WAS NOT PROMO, NOW IS
+                                                  fetch(
+                                                    `https://klix-74c29-default-rtdb.europe-west1.firebasedatabase.app/articles/Promo/${catSel}.json?auth=${idToken}`,
+                                                    {
+                                                      method: "POST",
+                                                      body: JSON.stringify(
+                                                        articleFinished
+                                                      ),
+                                                      headers: {
+                                                        "Content-Type":
+                                                          "application/json",
+                                                      },
+                                                    }
+                                                  )
+                                                    .then((res) => res.json())
+                                                    .then((data) => {
+                                                      articleFinished.promoId =
+                                                        data.name;
+                                                      dbRef
+                                                        .update(articleFinished)
+                                                        .then((res) => {
+                                                          dbRef
+                                                            .once("value")
+                                                            .then(
+                                                              (snapshot) => {
+                                                                setArticleAdded(
+                                                                  true
+                                                                );
+                                                              }
+                                                            );
+                                                        });
+                                                    });
+                                                } else {
+                                                  //WAS PROMO, IS PROMO NOW AS WELL
+                                                  //if cat changed delete old one post new one otherwise update(put) old one
+                                                  if (!changedCat) {
+                                                    fetch(
+                                                      `https://klix-74c29-default-rtdb.europe-west1.firebasedatabase.app/articles/Promo/${catSel}/${location.state.articleData.promoId}.json?auth=${idToken}`,
+                                                      {
+                                                        method: "PUT",
+                                                        body: JSON.stringify(
+                                                          articleFinished
+                                                        ),
+                                                        headers: {
+                                                          "Content-Type":
+                                                            "application/json",
+                                                        },
+                                                      }
+                                                    )
+                                                      .then((res) => res.json())
+                                                      .then((data) =>
+                                                        setArticleAdded(true)
+                                                      );
+                                                  } else {
+                                                    //if only subcat changed put/update is enough as demonstrated above, if cat changed then post
+                                                    const finalizePromo = [];
+                                                    finalizePromo.push(
+                                                      fetch(
+                                                        `https://klix-74c29-default-rtdb.europe-west1.firebasedatabase.app/articles/Promo/${catSel}.json?auth=${idToken}`,
+                                                        {
+                                                          method: "POST",
+                                                          body: JSON.stringify(
+                                                            articleFinished
+                                                          ),
+                                                          headers: {
+                                                            "Content-Type":
+                                                              "application/json",
+                                                          },
+                                                        }
+                                                      ).then((res) =>
+                                                        res.json()
+                                                      ),
+                                                      fetch(
+                                                        `https://klix-74c29-default-rtdb.europe-west1.firebasedatabase.app/articles/Promo/${location.state.articleData.category}/${location.state.articleData.promoId}.json?auth=${idToken}`,
+                                                        {
+                                                          method: "DELETE",
+                                                          headers: {
+                                                            "Content-Type":
+                                                              "application/json",
+                                                          },
+                                                        }
+                                                      ).then((res) =>
+                                                        res.json()
+                                                      )
+                                                    );
+                                                    const promisedFinalize =
+                                                      Promise.all(
+                                                        finalizePromo
+                                                      );
+                                                    promisedFinalize.then(
+                                                      (data) => {
+                                                        articleFinished.promoId =
+                                                          data[0].name;
+                                                        dbRef
+                                                          .update(
+                                                            articleFinished
+                                                          )
+                                                          .then((res) => {
+                                                            dbRef
+                                                              .once("value")
+                                                              .then(
+                                                                (snapshot) => {
+                                                                  setArticleAdded(
+                                                                    true
+                                                                  );
+                                                                }
+                                                              );
+                                                          });
+                                                      }
+                                                    );
+                                                  }
+                                                }
+                                              }
+                                            });
+                                        });
+                                    });
+                                  } else {
+                                    dbRef
+                                      .update(articleFinished)
+                                      .then((res) => {
+                                        dbRef.once("value").then((snapshot) => {
+                                          if (length === 1) {
+                                            if (
+                                              location.state.articleData
+                                                .sponsored &&
+                                              !articleFinished.sponsored
+                                            ) {
+                                              //WAS PROMO, no longer is
+                                              fetch(
+                                                `https://klix-74c29-default-rtdb.europe-west1.firebasedatabase.app/articles/Promo/${location.state.articleData.category}/${location.state.articleData.promoId}.json?auth=${idToken}`,
+                                                {
+                                                  method: "DELETE",
+                                                  headers: {
+                                                    "Content-Type":
+                                                      "application/json",
+                                                  },
+                                                }
+                                              )
+                                                .then((res) => res.json())
+                                                .then((data) => {
+                                                  delete articleFinished.promoId;
+                                                  delete articleFinished.sponsored;
+                                                  dbRef
+                                                    .set(articleFinished)
+                                                    .then((res) => {
+                                                      dbRef
+                                                        .once("value")
+                                                        .then((snapshot) => {
+                                                          setArticleAdded(true);
+                                                        });
+                                                    });
+                                                });
+                                            } else {
+                                              setArticleAdded(true);
+                                            }
+                                          } else {
+                                            console.log(articleFinished);
+                                            if (
+                                              !location.state.articleData
+                                                .sponsored &&
+                                              articleFinished.sponsored
+                                            ) {
+                                              //WAS NOT PROMO, NOW IS
+                                              fetch(
+                                                `https://klix-74c29-default-rtdb.europe-west1.firebasedatabase.app/articles/Promo/${catSel}.json?auth=${idToken}`,
+                                                {
+                                                  method: "POST",
+                                                  body: JSON.stringify(
+                                                    articleFinished
+                                                  ),
+                                                  headers: {
+                                                    "Content-Type":
+                                                      "application/json",
+                                                  },
+                                                }
+                                              )
+                                                .then((res) => res.json())
+                                                .then((data) => {
+                                                  articleFinished.promoId =
+                                                    data.name;
+                                                  dbRef
+                                                    .update(articleFinished)
+                                                    .then((res) => {
+                                                      dbRef
+                                                        .once("value")
+                                                        .then((snapshot) => {
+                                                          setArticleAdded(true);
+                                                        });
+                                                    });
+                                                });
+                                            } else {
+                                              //WAS PROMO, IS PROMO NOW AS WELL
+                                              //if cat changed delete old one post new one otherwise update(put) old one
+                                              if (!changedCat) {
+                                                fetch(
+                                                  `https://klix-74c29-default-rtdb.europe-west1.firebasedatabase.app/articles/Promo/${catSel}/${location.state.articleData.promoId}.json?auth=${idToken}`,
+                                                  {
+                                                    method: "PUT",
+                                                    body: JSON.stringify(
+                                                      articleFinished
+                                                    ),
+                                                    headers: {
+                                                      "Content-Type":
+                                                        "application/json",
+                                                    },
+                                                  }
+                                                )
+                                                  .then((res) => res.json())
+                                                  .then((data) =>
+                                                    setArticleAdded(true)
+                                                  );
+                                              } else {
+                                                //if only subcat changed put/update is enough if cat changed then post
+                                                const finalizePromo = [];
+                                                finalizePromo.push(
+                                                  fetch(
+                                                    `https://klix-74c29-default-rtdb.europe-west1.firebasedatabase.app/articles/Promo/${catSel}.json?auth=${idToken}`,
+                                                    {
+                                                      method: "POST",
+                                                      body: JSON.stringify(
+                                                        articleFinished
+                                                      ),
+                                                      headers: {
+                                                        "Content-Type":
+                                                          "application/json",
+                                                      },
+                                                    }
+                                                  ).then((res) => res.json()),
+                                                  fetch(
+                                                    `https://klix-74c29-default-rtdb.europe-west1.firebasedatabase.app/articles/Promo/${location.state.articleData.category}/${location.state.articleData.promoId}.json?auth=${idToken}`,
+                                                    {
+                                                      method: "DELETE",
+                                                      headers: {
+                                                        "Content-Type":
+                                                          "application/json",
+                                                      },
+                                                    }
+                                                  ).then((res) => res.json())
+                                                );
+                                                const promisedFinalize =
+                                                  Promise.all(finalizePromo);
+                                                promisedFinalize.then(
+                                                  (data) => {
+                                                    articleFinished.promoId =
+                                                      data[0].name;
+                                                    dbRef
+                                                      .update(articleFinished)
+                                                      .then((res) => {
+                                                        dbRef
+                                                          .once("value")
+                                                          .then((snapshot) => {
+                                                            setArticleAdded(
+                                                              true
+                                                            );
+                                                          });
+                                                      });
+                                                  }
+                                                );
+                                              }
+                                            }
+                                          }
+                                        });
+                                      });
+                                  }
+                                });
+                                // else if (
+                                //   location.state.articleData.tags &&
+                                //   !articleFinished.tags.length
+                                // ) {
+
+                                // }
+                              }
                             }
-                          );
-                        });
+                          })
+                          .catch((error) => console.log(error));
                       }
-                    }
+                    );
                   });
-              }
+                });
             });
           }
         });
@@ -2624,7 +3469,9 @@ const AddArticle = () => {
       }
     } else {
       didMountRef.current = true;
-      setSubcategoriesMap([...subcategories.vijesti]);
+      if (!location.state) {
+        setSubcategoriesMap([...subcategories.vijesti]);
+      }
     }
   }, [sending]);
 
@@ -2647,13 +3494,14 @@ const AddArticle = () => {
   };
 
   const handleIfPromo = (e) => {
-    if (e.target.value.length === 0) {
+    const { value } = e.target;
+    if (value.length === 0) {
       commentsRadio.current.children[0].children[1].disabled = false;
       commentsRadio.current.children[1].children[1].disabled = false;
       commentsRadio.current.children[0].children[1].checked = true;
     }
-    if (e.target.value) {
-      const contains = checkIfContainsPromo(e.target.value);
+    if (value) {
+      const contains = checkIfContainsPromo(value);
       if (contains) {
         commentsRadio.current.children[0].children[1].disabled = true;
         commentsRadio.current.children[1].children[1].disabled = true;
@@ -2728,13 +3576,25 @@ const AddArticle = () => {
 
   const imageCaptionTextAttach = () => {
     let strValue = captionText.current.value;
-    strValue = strValue.split(" || ");
+    if (strValue.trim() === "blank") {
+      //skip typing blank for every time if we have all blank imgs
+      strValue = [];
+      imagePreview.forEach((img, i) => {
+        strValue.push("blank");
+      });
+    } else {
+      strValue = strValue.split(" || ");
+    }
     const finalValue = [];
     if (imagePreview.length !== strValue.length) {
       return;
     }
     imagePreview.forEach((img, i) => {
-      finalValue.push({ name: img.name, captionText: strValue[i] });
+      if (captionText.current.value.trim() !== "") {
+        finalValue.push({ name: img.name, captionText: strValue[i] });
+      } else {
+        finalValue.push({ name: img.name, captionText: "" });
+      }
     });
     console.log(finalValue);
     return finalValue;
@@ -2959,7 +3819,7 @@ const AddArticle = () => {
               <div id={s.tagContainer} ref={tagContainer}>
                 {tags.map((tag) => (
                   <div className={s.tagItem} key={uuid()}>
-                    <span>{tag}</span>
+                    <span>{tag.value ? tag.value : tag}</span>
                     <i onClick={handleRemoveTag} class="fas fa-times"></i>
                   </div>
                 ))}

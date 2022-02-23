@@ -12,6 +12,8 @@ fbProvider.addScope("user_birthday");
 const LoginForm = () => {
   const ctx = useContext(LoginContext);
   const [uId, setUid] = useState();
+  const [errMsg, setErrMsg] = useState(null);
+  const [forgotten, setForgotten] = useState(false);
   const history = useHistory();
   const emailRef = useRef();
   const passwordRef = useRef();
@@ -22,14 +24,31 @@ const LoginForm = () => {
 
   const API_KEY = "AIzaSyDDpLMfCuKs4jQJwf_5xsNQ5VuSBPZtIDk";
 
-  const submitForm = (e) => {
+  const handleError = (err) => {
+    console.log(err);
+  };
+
+  const submitForm = async (e) => {
     e.preventDefault();
     let url = `https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${API_KEY}`;
     let expirationTime;
-    fetch(url, {
+    console.log(emailRef.current.value);
+    let userNameLoginEmail = undefined;
+    if (!emailRef.current.value.includes("@")) {
+      const res = await fetch(
+        `https://klix-74c29-default-rtdb.europe-west1.firebasedatabase.app/userNames/${emailRef.current.value}.json`
+      );
+      userNameLoginEmail = await res.json();
+      console.log(userNameLoginEmail);
+      if (!userNameLoginEmail) {
+        setErrMsg("Korisnicko ime ne postoji.");
+        return;
+      }
+    }
+    await fetch(url, {
       method: "POST",
       body: JSON.stringify({
-        email: emailRef.current.value,
+        email: userNameLoginEmail || emailRef.current.value,
         password: passwordRef.current.value,
         returnSecureToken: true,
       }),
@@ -48,6 +67,7 @@ const LoginForm = () => {
             firebase
               .auth()
               .setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+            localStorage.setItem("rememberMe", true);
           } else if (!rememberMe.current.checked) {
             firebase
               .auth()
@@ -58,8 +78,16 @@ const LoginForm = () => {
           );
           auth.onAuthStateChanged((user) => {
             if (user) {
+              let date = new Date()
+                .toJSON()
+                .slice(0, 10)
+                .split("-")
+                .reverse()
+                .join(".");
               ctx.signUp(user.uid);
-              ctx.login(data.idToken, expirationTime.toISOString());
+              if (!rememberMe.current.checked) {
+                ctx.login(data.idToken, expirationTime.toISOString());
+              }
               console.log(data);
               history.push("/");
             }
@@ -67,18 +95,30 @@ const LoginForm = () => {
         }
       })
       .catch((error) => {
-        alert(error.message);
+        console.log(error);
       });
 
     auth
       .signInWithEmailAndPassword(
-        emailRef.current.value,
+        userNameLoginEmail || emailRef.current.value,
         passwordRef.current.value
       )
       .then((userCredential) => {
         const uId = userCredential.user.providerData[0].uid.slice(0, 10);
         console.log(userCredential.user);
         console.log(userCredential.user.refreshToken);
+      })
+      .catch((err) => {
+        console.log(err);
+        if (err.code.includes("user-not-found")) {
+          setErrMsg("Email adresa ne odgovara nijednom profilu.");
+        } else if (err.code.includes("password")) {
+          setErrMsg("Lozinka je neispravna.");
+        } else if (err.code.includes("too-many-requests")) {
+          setErrMsg(
+            "Previse puta ste unijeli pogresne podatke, tako da pristup ovom profilu je privremeno zabranjen, molimo vas pokusajte kasnije, ili resetujte lozinku."
+          );
+        }
       });
 
     // if (user) {
@@ -123,10 +163,10 @@ const LoginForm = () => {
             .split("-")
             .reverse()
             .join(".");
-          ctx.signUp(user.uid, providerName, date);
+          ctx.signUp(user.uid, providerName, date); //check if acc is created already or not if not push acc information to db, otherwise take data and put it in ls
           const expirationTime = new Date(new Date().getTime() + 3600 * 1000);
           if (!localStorage.getItem("rememberMe")) {
-            ctx.login(user.refreshToken, expirationTime.toISOString());
+            ctx.login(user.refreshToken, expirationTime.toISOString()); //set ls with token and exp time
           }
           history.push("/");
         }
@@ -158,11 +198,15 @@ const LoginForm = () => {
     <>
       <h1>Prijava korisnika</h1>
       <p>
-        Na portal se možeš prijaviti ili registrovati putem svog Facebook ili
-        Google računa.
+        Na portal se možeš prijaviti ili registrovati putem svog Facebook <br />
+        ili Google računa.
       </p>
       <form id={s.loginForm} onSubmit={submitForm}>
-        <h3></h3>
+        {errMsg && (
+          <div id={s.error}>
+            <h3>{errMsg}</h3>
+          </div>
+        )}
         <div id={s.fbgoo}>
           <div id={s.fb} onClick={() => login("fb")}>
             <i class="fab fa-facebook"></i>

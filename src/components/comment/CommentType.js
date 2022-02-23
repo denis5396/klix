@@ -1,6 +1,8 @@
 import React from "react";
 import { useEffect, useRef } from "react/cjs/react.development";
+import { auth } from "../../firebase";
 import s from "./CommentType.module.css";
+import { v1 as uuid } from "uuid";
 
 const CommentType = (props) => {
   const textareaRef = useRef();
@@ -17,14 +19,12 @@ const CommentType = (props) => {
       const time = `${date.getFullYear()}-${
         date.getMonth() + 1
       }-${date.getDate()} ${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}`;
-      const arraycom = {};
-      arraycom[0] = {
+      // const arraycom = {};
+      const arraycom = {
         userName: userName,
         avatarColor: avatarColor,
         date: time,
         comment: textareaRef.current.value,
-        commentLikes: 0,
-        commentDislikes: 0,
       };
       // replies: [
       //   {
@@ -35,52 +35,110 @@ const CommentType = (props) => {
       //     commentDislikes: 0,
       //   },
       // ],
-
-      console.log(arraycom);
+      const userId = auth.currentUser.uid;
       fetch(
-        `https://klix-74c29-default-rtdb.europe-west1.firebasedatabase.app/articles/${props.path.category}/${props.path.subCategory}/-${props.path.id}/comments.json`
+        `https://klix-74c29-default-rtdb.europe-west1.firebasedatabase.app/articles/${props.path.category}/${props.path.subCategory}/-${props.path.id}/comments.json`,
+        {
+          method: "POST",
+          body: JSON.stringify(arraycom),
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
       )
-        .then((response) => response.json())
+        .then((res) => res.json())
         .then((data) => {
-          let previousComments = {};
-          console.log(data);
-          let incr = 1;
-          if (data[0] !== "") {
-            for (let i = 0; i < data.length; i++) {
-              previousComments[incr] = { ...data[i] };
-              incr++;
-              if (i === data.length - 1) {
-                previousComments[0] = { ...arraycom[0] };
-              }
-            }
-          } else {
-            previousComments = { ...arraycom[0] };
+          textareaRef.current.value = "";
+          if (props.getComments) {
+            console.log(props);
+            console.log(props.getComments);
+            //to fix if we write a comment on the article page instead of its comment page
+            props.getComments(true);
           }
-          console.log(previousComments);
+          console.log(data);
+          const commentInfo = {
+            articlePath: `${props.path.category}/${props.path.subCategory}/-${props.path.id}`,
+            commentId: data.name,
+          };
           fetch(
-            `https://klix-74c29-default-rtdb.europe-west1.firebasedatabase.app/articles/${
-              props.path.category
-            }/${props.path.subCategory}/-${props.path.id}/comments${
-              data[0] !== "" ? ".json" : "/0.json"
-            }`,
-            {
-              method: "PATCH",
-              body: JSON.stringify(previousComments),
-              headers: {
-                "Content-Type": "application/json",
-              },
-            }
+            `https://klix-74c29-default-rtdb.europe-west1.firebasedatabase.app/users/${userId}/comments/comLength.json`
           )
-            .then((response) => response.json())
+            .then((res) => res.json())
             .then((data) => {
-              textareaRef.current.value = "";
-              if (props.getComments) {
-                //to fix if we write a comment on the article page instead of its comment page
-                props.getComments(true);
-              }
               console.log(data);
+              const sendData = data + 1;
+              console.log(sendData);
+              // let num = data + 10;
+              // num = `${num}`;
+              // num = num.substring(0, num.length - 1);
+              // num = +num.concat("0");
+              const promises = [
+                fetch(
+                  `https://klix-74c29-default-rtdb.europe-west1.firebasedatabase.app/users/${userId}/comments/${
+                    data === null ? 0 : data
+                  }/${commentInfo.commentId}.json`,
+                  {
+                    method: "PUT",
+                    headers: {
+                      "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify(commentInfo),
+                  }
+                ).then((res) => res.json()),
+                fetch(
+                  `https://klix-74c29-default-rtdb.europe-west1.firebasedatabase.app/users/${userId}/comments/comLength.json`,
+                  {
+                    method: "PUT",
+                    headers: {
+                      "Content-Type": "application/json",
+                    },
+                    body: sendData,
+                  }
+                ).then((res) => res.json()),
+              ];
+              const promiseData = Promise.all(promises);
+              promiseData.then((data) => {
+                console.log(data);
+              });
             });
         });
+
+      // fetch(
+      //   `https://klix-74c29-default-rtdb.europe-west1.firebasedatabase.app/articles/${props.path.category}/${props.path.subCategory}/-${props.path.id}/comments.json`
+      // )
+      //   .then((response) => response.json())
+      //   .then((data) => {
+      //     let previousComments = {};
+      //     let previousComments1 = {};
+      //     console.log(data);
+      //     console.log(data[1]);
+      //     let incr = 1;
+      // if (data[0] !== "") {
+      //   for (let i = 0; i < data.length; i++) {
+      //     previousComments[incr] = { ...data[i] };
+      //     incr++;
+      //     if (i === data.length - 1) {
+      //       previousComments[0] = { ...arraycom[0] };
+      //     }
+      //   }
+      // } else {
+      //   previousComments = { ...arraycom[0] };
+      // }
+      // if (data[0] === undefined) {
+      //   for (let i = 0; i < data.length; i++) {
+      //     previousComments[data[i].commentId] = { ...data[i] };
+      //     if (i === data.length - 1) {
+      //       const keyValue = Object.entries(previousComments);
+      //       console.log(keyValue);
+      //       keyValue.splice(0, 0, [`${commentId}`, arraycom[commentId]]);
+      //       console.log(keyValue);
+      //       previousComments1 = Object.fromEntries(keyValue);
+      //     }
+      //   }
+      // } else {
+      //   previousComments1 = { ...arraycom };
+      // }
+      // console.log(previousComments1);
       // fetch(
       //   `https://klix-74c29-default-rtdb.europe-west1.firebasedatabase.app/articles/${props.path.category}/${props.path.subCategory}/-${props.path.id}/comments.json`,
       //   {

@@ -16,6 +16,10 @@ import Article from "./pages/Article";
 import EditArticlesPage from "./pages/EditArticles";
 import Comment from "./components/comment/Comment";
 import Comments from "./pages/Comments";
+import CommentRulesPage from "./pages/CommentRulesPage";
+import CommentLink from "./pages/CommentLink";
+import ResetPass from "./pages/ResetPass";
+import ResetPassword from "./components/Login/ResetPassword";
 
 function App() {
   const ctx = useContext(LoginContext);
@@ -74,6 +78,17 @@ function App() {
         </Route>
         <Route path="/:category/:subCategory/:title/:articleId">
           <Article />
+        </Route>
+        <Route path="/komentar/:commentId">
+          <CommentLink />
+        </Route>
+        <Route path="/komentari">
+          <CommentRulesPage />
+        </Route>
+        <Route path="/resetpass">
+          <ResetPass>
+            <ResetPassword />
+          </ResetPass>
         </Route>
       </Switch>
       <Footer />

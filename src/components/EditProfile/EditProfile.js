@@ -1,14 +1,14 @@
-import React, { useContext, useEffect, useRef, useState } from 'react';
-import LoginContext from '../../context';
-import { auth, db } from '../../firebase';
-import s from './EditProfile.module.css';
+import React, { useContext, useEffect, useRef, useState } from "react";
+import LoginContext from "../../context";
+import { auth, db } from "../../firebase";
+import s from "./EditProfile.module.css";
 
 const EditProfile = () => {
   const ctx = useContext(LoginContext);
   const [error, setError] = useState({
-    username: '',
-    password: '',
-    success: '',
+    username: "",
+    password: "",
+    success: "",
   });
   const username = useRef();
   const avatarColor = useRef();
@@ -17,10 +17,10 @@ const EditProfile = () => {
   const gender = useRef();
 
   const [uData, setUData] = useState({
-    username: '',
-    avatarColor: '',
-    password: '',
-    gender: '',
+    username: "",
+    avatarColor: "",
+    password: "",
+    gender: "",
   });
 
   useEffect(() => {
@@ -29,31 +29,31 @@ const EditProfile = () => {
     for (let i = 0; i < avatarColor.current.children.length; i++) {
       let temp = window
         .getComputedStyle(avatarColor.current.children[i])
-        .getPropertyValue('background-color')
+        .getPropertyValue("background-color")
         .match(/(\d+)/g);
       temp = rgbToHex(+temp[0], +temp[1], +temp[2]);
       if (temp === clrUser) {
         avatarColor.current.children[i].children[0].click();
       }
     }
-    if (ctx.user.gender === 'Ženski') {
+    if (ctx.user.gender === "Ženski") {
       gender.current.children[1].children[0].click();
     }
   }, []);
 
   const rgbToHex = (r, g, b) =>
-    [r, g, b].map((x) => x.toString(16).padStart(2, '0')).join('');
+    [r, g, b].map((x) => x.toString(16).padStart(2, "0")).join("");
   //  '#' + [r, g, b].map((x) => x.toString(16).padStart(2, '0')).join('');
 
-  const saveInfo = () => {
+  const saveInfo = async () => {
     setError((old) => {
-      return { ...old, success: '' };
+      return { ...old, success: "" };
     });
     let usernameVal =
       username.current.value.trim().length >= 4 &&
       username.current.value.trim().length <= 20
         ? username.current.value.trim()
-        : '';
+        : "";
     const ok =
       username.current.value.trim().length >= 4 &&
       username.current.value.trim().length <= 20;
@@ -71,7 +71,7 @@ const EditProfile = () => {
       if (avatarColor.current.children[i].children[0].checked) {
         clr = window
           .getComputedStyle(avatarColor.current.children[i])
-          .getPropertyValue('background-color');
+          .getPropertyValue("background-color");
         // console.log(rgbToHex(clr));
         clr = clr.match(/(\d+)/g);
         clr = rgbToHex(+clr[0], +clr[1], +clr[2]);
@@ -91,7 +91,7 @@ const EditProfile = () => {
       setError((old) => {
         return {
           ...old,
-          password: '',
+          password: "",
         };
       });
     } else if (
@@ -104,7 +104,7 @@ const EditProfile = () => {
       setError((old) => {
         return {
           ...old,
-          password: 'Lozinke se ne podudaraju.',
+          password: "Lozinke se ne podudaraju.",
         };
       });
     } else if (
@@ -116,7 +116,7 @@ const EditProfile = () => {
       setError((old) => {
         return {
           ...old,
-          password: 'Ponovite lozinku.',
+          password: "Ponovite lozinku.",
         };
       });
     } else if (
@@ -128,7 +128,7 @@ const EditProfile = () => {
       setError((old) => {
         return {
           ...old,
-          password: 'Lozinka mora imati minimalno 6 karaktera.',
+          password: "Lozinka mora imati minimalno 6 karaktera.",
         };
       });
     } else if (
@@ -141,7 +141,7 @@ const EditProfile = () => {
         return {
           ...old,
           password:
-            'Lozinka mora imati minimalno 6 karaktera i barem jedan broj',
+            "Lozinka mora imati minimalno 6 karaktera i barem jedan broj",
         };
       });
     } else if (
@@ -153,7 +153,7 @@ const EditProfile = () => {
       setError((old) => {
         return {
           ...old,
-          password: 'Lozinka mora imati minimalno jedan broj',
+          password: "Lozinka mora imati minimalno jedan broj",
         };
       });
     } else if (
@@ -163,35 +163,35 @@ const EditProfile = () => {
       setError((old) => {
         return {
           ...old,
-          password: '',
+          password: "",
         };
       });
     }
     console.log(clr);
     console.log(usernameVal ? usernameVal : ctx.user.displayName);
-    if (usernameVal.includes(' ') && ok) {
+    if (usernameVal.includes(" ") && ok) {
       check = false;
       setError((old) => {
         return {
           ...old,
-          username: 'Korisničko ime ne može imati razmak, koristite _ ili -',
+          username: "Korisničko ime ne može imati razmak, koristite _ ili -",
         };
       });
-    } else if (usernameVal.includes(' ') && !ok) {
+    } else if (usernameVal.includes(" ") && !ok) {
       check = false;
       setError((old) => {
         return {
           ...old,
           username:
-            'Korisničko ime ne može imati razmak, koristite _ ili -, i mora imati između 4 i 20 karaktera',
+            "Korisničko ime ne može imati razmak, koristite _ ili -, i mora imati između 4 i 20 karaktera",
         };
       });
-    } else if (!usernameVal.includes(' ') && !ok) {
+    } else if (!usernameVal.includes(" ") && !ok) {
       check = false;
       setError((old) => {
         return {
           ...old,
-          username: 'Korisničko ime mora imati između 4 i 20 karaktera',
+          username: "Korisničko ime mora imati između 4 i 20 karaktera",
         };
       });
     } else {
@@ -199,26 +199,72 @@ const EditProfile = () => {
       setError((old) => {
         return {
           ...old,
-          username: '',
+          username: "",
         };
       });
     }
-    passwordVal = passwordVal ? passwordVal : '';
-    genderVal = genderVal ? genderVal : '';
+    passwordVal = passwordVal ? passwordVal : "";
+    genderVal = genderVal ? genderVal : "";
     if (check) {
-      setUData({
-        username: usernameVal ? usernameVal : ctx.user.displayName,
-        avatarColor: clr ? clr : ctx.user.avatarColor,
-        password: passwordVal ? passwordVal : '',
-        gender: genderVal ? genderVal : '',
-      });
+      // setUData({
+      //   username: usernameVal ? usernameVal : ctx.user.displayName,
+      //   avatarColor: clr ? clr : ctx.user.avatarColor,
+      //   password: passwordVal
+      //     ? passwordVal
+      //     : ctx.user.password
+      //     ? ctx.user.password
+      //     : "",
+      //   gender: genderVal ? genderVal : "",
+      // });
       let oldObjCopy;
+      const userNameExists = await checkIfUserNameExists(usernameVal);
+      console.log(userNameExists);
+      console.log("see?");
+      if (userNameExists || usernameVal === ctx.user.displayName) {
+        setError((old) => {
+          return {
+            ...old,
+            success: "Trenutno korisničko ime je zauzeto.",
+          };
+        });
+        return;
+      } else {
+        const promises = [
+          fetch(
+            `https://klix-74c29-default-rtdb.europe-west1.firebasedatabase.app/userNames/${usernameVal}.json`,
+            {
+              method: "PUT",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify(auth.currentUser.email),
+            }
+          ).then((res) => res.json()),
+          fetch(
+            `https://klix-74c29-default-rtdb.europe-west1.firebasedatabase.app/userNames/${ctx.user.displayName}.json`,
+            {
+              method: "DELETE",
+              headers: {
+                "Content-Type": "application/json",
+              },
+            }
+          ).then((res) => res.json()),
+        ];
+        const promisedData = await Promise.all(promises);
+        // promisedData.then((data) => console.log(data));
+        console.log(promisedData);
+      }
+      console.log("why?");
       ctx.setUserObj((oldObj) => {
         oldObjCopy = {
           ...oldObj,
           displayName: usernameVal,
           avatarColor: clr ? clr : ctx.user.avatarColor,
-          password: passwordVal,
+          password: passwordVal
+            ? passwordVal
+            : ctx.user.password
+            ? ctx.user.password
+            : "",
           gender: genderVal,
         };
         return oldObjCopy;
@@ -231,7 +277,7 @@ const EditProfile = () => {
               .updatePassword(passwordVal)
               .then(() => {
                 // Update successful.
-                console.log('update successful');
+                console.log("update successful");
               })
               .catch((error) => {
                 // An error ocurred
@@ -239,38 +285,56 @@ const EditProfile = () => {
                 console.log(error);
               });
           }
-          const dbRef = db.ref('/users');
-          dbRef.get().then((snapshot) => {
-            if (snapshot.exists) {
-              console.log(snapshot.val());
-              const data = snapshot.val();
-              console.log(user.uid);
-              for (let key in data) {
-                console.log(data[key]);
-                if (data[key].uId === user.uid) {
-                  keyId = key;
-                  console.log(key);
-                  dbRef
-                    .child(`${key}`)
-                    .update({ ...oldObjCopy })
-                    .then((res) => {
-                      setError((old) => {
-                        return {
-                          ...old,
-                          success: 'Uspješno ste editovali profil.',
-                        };
-                      });
-                    });
-                  break;
-                }
-              }
-            }
+          const dbRef = db.ref(`/users/${user.uid}/userData`);
+          dbRef.update({ ...oldObjCopy }).then((res) => {
+            setError((old) => {
+              return {
+                ...old,
+                success: "Uspješno ste editovali profil.",
+              };
+            });
           });
+          // dbRef.get().then((snapshot) => {
+          // if (snapshot.exists) {
+          //   console.log(snapshot.val());
+          //   const data = snapshot.val();
+          //   console.log(user.uid);
+          //   for (let key in data) {
+          //     console.log(data[key]);
+          //     if (data[key].uId === user.uid) {
+          //       keyId = key;
+          //       console.log(key);
+          //       dbRef
+          //         .child(`${key}`)
+          //         .update({ ...oldObjCopy })
+          //         .then((res) => {
+          //           setError((old) => {
+          //             return {
+          //               ...old,
+          //               success: 'Uspješno ste editovali profil.',
+          //             };
+          //           });
+          //         });
+          //       break;
+          //     }
+          //   }
+          // }
+          // });
         }
       });
     }
 
     window.scrollTo(0, 0);
+  };
+
+  const checkIfUserNameExists = async (userName) => {
+    const res = await fetch(
+      `https://klix-74c29-default-rtdb.europe-west1.firebasedatabase.app/userNames/${userName}.json`
+    );
+    const data = await res.json();
+    console.log(data);
+
+    return data;
   };
 
   useEffect(() => {
@@ -289,8 +353,8 @@ const EditProfile = () => {
             <h2>{error.success}</h2>
           ) : (
             <>
-              <h2>{error.username.length > 0 ? error.username : ''}</h2>
-              <h2>{error.password.length > 0 ? error.password : ''}</h2>
+              <h2>{error.username.length > 0 ? error.username : ""}</h2>
+              <h2>{error.password.length > 0 ? error.password : ""}</h2>
             </>
           )}
         </div>
