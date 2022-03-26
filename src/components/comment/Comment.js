@@ -15,6 +15,7 @@ import CommentShow from "./CommentShow";
 import ReportComment from "./reportComment/ReportComment";
 import Overlay from "../Overlay/Overlay";
 import { scrollFnSticky } from "../Article/Article";
+import Popular from "../Article/Popular";
 
 export const getComLength = (data) => {
   let fullCommentsLength = 0;
@@ -75,6 +76,7 @@ const Comment = () => {
   const pushFinal2 = useRef(undefined);
   const fullCommentsLengthRef = useRef(0);
   const stickLeftSidebar = useRef();
+  const stickRightSideBar = useRef();
   // useEffect(() => {
   //   window.onbeforeunload = function () {
   //     return true;
@@ -93,6 +95,7 @@ const Comment = () => {
     console.log("");
     function handlerFn() {
       scrollFnSticky(stickLeftSidebar);
+      scrollFnSticky(stickRightSideBar);
     }
     window.addEventListener("scroll", handlerFn);
     return () => {
@@ -113,7 +116,9 @@ const Comment = () => {
       if (!initRef.current) {
         console.log(location.state.articleData.comments);
         if (location.state.articleData.comments) {
-          const reverseArr = [...location.state.articleData.comments];
+          const reverseArr = [
+            ...Object.values(location.state.articleData.comments),
+          ];
           reverseArr.reverse();
           setComments([...reverseArr]);
         }
@@ -467,7 +472,10 @@ const Comment = () => {
             </h1>
           </div>
           <div id={s.headerShares}>
-            <i class={"fas fa-share-alt"}></i> 63
+            <i class={"fas fa-share-alt"}></i>{" "}
+            {location.state.articleData.shares.constructor === Object
+              ? Object.keys(location.state.articleData.shares).length
+              : 0}
           </div>
         </div>
         <div id={s.commentPageContainerBody}>
@@ -504,7 +512,11 @@ const Comment = () => {
                   <p>komentara</p>
                 </div>
                 <div>
-                  <h2>0</h2>
+                  <h2>
+                    {location.state.articleData.shares.constructor === Object
+                      ? Object.keys(location.state.articleData.shares).length
+                      : 0}
+                  </h2>
                   <p>dijeljenja</p>
                 </div>
               </div>
@@ -1056,7 +1068,9 @@ const Comment = () => {
                 })}
             </div>
           </div>
-          <div id={s.commentSidebarRight}></div>
+          <div id={s.commentSidebarRight} ref={stickRightSideBar}>
+            <Popular />
+          </div>
         </div>
       </div>
     </>

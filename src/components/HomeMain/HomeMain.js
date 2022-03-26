@@ -6,6 +6,7 @@ import { v1 as uuid } from "uuid";
 import { auth, db } from "../../firebase";
 import { Link } from "react-router-dom";
 import { getComLength } from "../comment/Comment";
+import HomeMainSub from "./HomeMainSub";
 
 export const splitTitle = (title) => {
   const titleSplit = title.split(" ");
@@ -193,11 +194,11 @@ const HomeMain = () => {
                   <div className={s.mainBoxImg}>
                     <Link
                       to={{
-                        pathname: article.linkPath,
+                        pathname: encodeURI(article.linkPath), //encodeuri problem with % char
                         state: { articleData: article },
                       }}
                     >
-                      <img src={article.images[0]} alt="" />
+                      <img src={article.imageText[0][0]} alt="" />
                       {article.images.length > 1 && (
                         <i class="far fa-images"></i>
                       )}
@@ -210,7 +211,7 @@ const HomeMain = () => {
                     <h3>
                       <Link
                         to={{
-                          pathname: article.linkPath,
+                          pathname: encodeURI(article.linkPath),
                           state: { articleData: article },
                         }}
                       >
@@ -229,7 +230,7 @@ const HomeMain = () => {
                         <i class="fas fa-share-alt"></i>{" "}
                         {article.shares.length === 1 && article.shares[0] === ""
                           ? 0
-                          : article.shares.length}
+                          : Object.keys(article.shares).length}
                       </span>
                     </div>
                   </div>
@@ -241,11 +242,11 @@ const HomeMain = () => {
                   <div className={s.mainBoxImg}>
                     <Link
                       to={{
-                        pathname: article.linkPath,
+                        pathname: encodeURI(article.linkPath),
                         state: { articleData: article },
                       }}
                     >
-                      <img src={article.images[0]} alt="" />
+                      <img src={article.imageText[0][0]} alt="" />
                       {article.images.length > 1 && (
                         <i class="far fa-images"></i>
                       )}
@@ -256,7 +257,7 @@ const HomeMain = () => {
                     <h3>
                       <Link
                         to={{
-                          pathname: article.linkPath,
+                          pathname: encodeURI(article.linkPath),
                           state: { articleData: article },
                         }}
                       >
@@ -275,7 +276,7 @@ const HomeMain = () => {
                         <i class="fas fa-share-alt"></i>{" "}
                         {article.shares.length === 1 && article.shares[0] === ""
                           ? 0
-                          : article.shares.length}
+                          : Object.keys(article.shares).length}
                       </span>
                     </div>
                   </div>
@@ -283,452 +284,8 @@ const HomeMain = () => {
               );
             }
           })}
-        {/* <div className={s.mainBox}>
-          <div className={s.mainBoxImg}>
-            <img
-              src={require('../../assets/img/powerplant.jpg').default}
-              alt=""
-            />
-          </div>
-          <div className={s.mainBoxHeader}>
-            <h3>Blah blah ssas</h3>
-            <h3>Ramiz Salkić u Trebinju pozvao na ukidanje Republike Srpske</h3>
-          </div>
-          <div className={s.mainBoxFooter}>
-            <span>35 min</span>
-            <div className={s.mainBoxFooterBundle}>
-              <span>
-                <i class="fas fa-comments"></i>
-                29
-              </span>
-              <span>
-                <i class="fas fa-share-alt"></i>0
-              </span>
-            </div>
-          </div>
-        </div>
-        <div className={s.mainBoxBig}>
-          <div className={s.mainBoxImg}>
-            <img
-              src={require('../../assets/img/powerplant.jpg').default}
-              alt=""
-            />
-          </div>
-          <div className={s.mainBoxHeader}>
-            <h3>Blah asd</h3>
-            <h3>Blahb sad dsa aaddsx</h3>
-          </div>
-          <div className={s.mainBoxFooter}>
-            <span>35 min</span>
-            <div className={s.mainBoxFooterBundle}>
-              <span>
-                <i class="fas fa-comments"></i>
-                29
-              </span>
-              <span>
-                <i class="fas fa-share-alt"></i>0
-              </span>
-            </div>
-          </div>
-        </div>
-        <div className={s.mainBox}>
-          <div className={s.mainBoxImg}>
-            <img
-              src={require('../../assets/img/powerplant.jpg').default}
-              alt=""
-            />
-          </div>
-          <div className={s.mainBoxHeader}>
-            <h3>Blahblah</h3>
-            <h3>Blahblah</h3>
-          </div>
-          <div className={s.mainBoxFooter}>
-            <span>35 min</span>
-            <div className={s.mainBoxFooterBundle}>
-              <span>
-                <i class="fas fa-comments"></i>
-                29
-              </span>
-              <span>
-                <i class="fas fa-share-alt"></i>0
-              </span>
-            </div>
-          </div>
-        </div>
-        <div className={s.mainBox}>
-          <div className={s.mainBoxImg}>
-            <img
-              src={require('../../assets/img/powerplant.jpg').default}
-              alt=""
-            />
-          </div>
-          <div className={s.mainBoxHeader}>
-            <h3>Blahblah</h3>
-            <h3>Blahblah</h3>
-          </div>
-          <div className={s.mainBoxFooter}>
-            <span>35 min</span>
-            <div className={s.mainBoxFooterBundle}>
-              <span>
-                <i class="fas fa-comments"></i>
-                29
-              </span>
-              <span>
-                <i class="fas fa-share-alt"></i>0
-              </span>
-            </div>
-          </div>
-        </div>
-        <div className={s.mainBox}>
-          <div className={s.mainBoxImg}>
-            <img
-              src={require('../../assets/img/powerplant.jpg').default}
-              alt=""
-            />
-          </div>
-          <div className={s.mainBoxHeader}>
-            <h3>Blahblah</h3>
-            <h3>Blahblah</h3>
-          </div>
-          <div className={s.mainBoxFooter}>
-            <span>35 min</span>
-            <div className={s.mainBoxFooterBundle}>
-              <span>
-                <i class="fas fa-comments"></i>
-                29
-              </span>
-              <span>
-                <i class="fas fa-share-alt"></i>0
-              </span>
-            </div>
-          </div>
-        </div>
-        <div className={s.mainBox}>
-          <div className={s.mainBoxImg}>
-            <img
-              src={require('../../assets/img/powerplant.jpg').default}
-              alt=""
-            />
-          </div>
-          <div className={s.mainBoxHeader}>
-            <h3>Blahblah</h3>
-            <h3>Blahblah</h3>
-          </div>
-          <div className={s.mainBoxFooter}>
-            <span>35 min</span>
-            <div className={s.mainBoxFooterBundle}>
-              <span>
-                <i class="fas fa-comments"></i>
-                29
-              </span>
-              <span>
-                <i class="fas fa-share-alt"></i>0
-              </span>
-            </div>
-          </div>
-        </div>
-        <div className={s.mainBox}>
-          <div className={s.mainBoxImg}>
-            <img
-              src={require('../../assets/img/powerplant.jpg').default}
-              alt=""
-            />
-          </div>
-          <div className={s.mainBoxHeader}>
-            <h3>Blahblah</h3>
-            <h3>Blahblah</h3>
-          </div>
-          <div className={s.mainBoxFooter}>
-            <span>35 min</span>
-            <div className={s.mainBoxFooterBundle}>
-              <span>
-                <i class="fas fa-comments"></i>
-                29
-              </span>
-              <span>
-                <i class="fas fa-share-alt"></i>0
-              </span>
-            </div>
-          </div>
-        </div> */}
       </div>
-      <div id={s.sideBar}>
-        <div id={s.sideBarControls}>
-          <div className={s.sideBarControlItem}>Najnovije</div>
-          <div className={s.sideBarControlItem}>Najčitanije</div>
-          <div className={s.sideBarControlItem}>Preporuke</div>
-        </div>
-        <div id={s.sideBarContent}>
-          <div className={s.sideBarItem}>
-            <h3>PRVI SLUČAJ</h3>
-            <p>Ramiz Salkić u Trebinju pozvao na ukidanje Republike Srpske</p>
-            <div className={s.sideBarItemBundle}>
-              <span>22 min</span>
-              <div className={s.sideBarItemBundleRight}>
-                <span>
-                  <i class="fas fa-comments"></i>
-                  29
-                </span>
-                <span>
-                  <i class="fas fa-share-alt"></i>0
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div id={s.sideBarContent}>
-          <div className={s.sideBarItem}>
-            <h3>PRVI SLUČAJ</h3>
-            <p>Ramiz Salkić u Trebinju pozvao na ukidanje Republike Srpske</p>
-            <div className={s.sideBarItemBundle}>
-              <span>22 min</span>
-              <div className={s.sideBarItemBundleRight}>
-                <span>
-                  <i class="fas fa-comments"></i>
-                  29
-                </span>
-                <span>
-                  <i class="fas fa-share-alt"></i>0
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div id={s.sideBarContent}>
-          <div className={s.sideBarItem}>
-            <h3>PRVI SLUČAJ</h3>
-            <p>Ramiz Salkić u Trebinju pozvao na ukidanje Republike Srpske</p>
-            <div className={s.sideBarItemBundle}>
-              <span>22 min</span>
-              <div className={s.sideBarItemBundleRight}>
-                <span>
-                  <i class="fas fa-comments"></i>
-                  29
-                </span>
-                <span>
-                  <i class="fas fa-share-alt"></i>0
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div id={s.sideBarContent}>
-          <div className={s.sideBarItem}>
-            <h3>PRVI SLUČAJ</h3>
-            <p>Ramiz Salkić u Trebinju pozvao na ukidanje Republike Srpske</p>
-            <div className={s.sideBarItemBundle}>
-              <span>22 min</span>
-              <div className={s.sideBarItemBundleRight}>
-                <span>
-                  <i class="fas fa-comments"></i>
-                  29
-                </span>
-                <span>
-                  <i class="fas fa-share-alt"></i>0
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div id={s.sideBarContent}>
-          <div className={s.sideBarItem}>
-            <h3>PRVI SLUČAJ</h3>
-            <p>Ramiz Salkić u Trebinju pozvao na ukidanje Republike Srpske</p>
-            <div className={s.sideBarItemBundle}>
-              <span>22 min</span>
-              <div className={s.sideBarItemBundleRight}>
-                <span>
-                  <i class="fas fa-comments"></i>
-                  29
-                </span>
-                <span>
-                  <i class="fas fa-share-alt"></i>0
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div id={s.sideBarContent}>
-          <div className={s.sideBarItem}>
-            <h3>PRVI SLUČAJ</h3>
-            <p>Ramiz Salkić u Trebinju pozvao na ukidanje Republike Srpske</p>
-            <div className={s.sideBarItemBundle}>
-              <span>22 min</span>
-              <div className={s.sideBarItemBundleRight}>
-                <span>
-                  <i class="fas fa-comments"></i>
-                  29
-                </span>
-                <span>
-                  <i class="fas fa-share-alt"></i>0
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div id={s.sideBarContent}>
-          <div className={s.sideBarItem}>
-            <h3>PRVI SLUČAJ</h3>
-            <p>Ramiz Salkić u Trebinju pozvao na ukidanje Republike Srpske</p>
-            <div className={s.sideBarItemBundle}>
-              <span>22 min</span>
-              <div className={s.sideBarItemBundleRight}>
-                <span>
-                  <i class="fas fa-comments"></i>
-                  29
-                </span>
-                <span>
-                  <i class="fas fa-share-alt"></i>0
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div id={s.sideBarContent}>
-          <div className={s.sideBarItem}>
-            <h3>PRVI SLUČAJ</h3>
-            <p>Ramiz Salkić u Trebinju pozvao na ukidanje Republike Srpske</p>
-            <div className={s.sideBarItemBundle}>
-              <span>22 min</span>
-              <div className={s.sideBarItemBundleRight}>
-                <span>
-                  <i class="fas fa-comments"></i>
-                  29
-                </span>
-                <span>
-                  <i class="fas fa-share-alt"></i>0
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div id={s.sideBarContent}>
-          <div className={s.sideBarItem}>
-            <h3>PRVI SLUČAJ</h3>
-            <p>Ramiz Salkić u Trebinju pozvao na ukidanje Republike Srpske</p>
-            <div className={s.sideBarItemBundle}>
-              <span>22 min</span>
-              <div className={s.sideBarItemBundleRight}>
-                <span>
-                  <i class="fas fa-comments"></i>
-                  29
-                </span>
-                <span>
-                  <i class="fas fa-share-alt"></i>0
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div id={s.sideBarContent}>
-          <div className={s.sideBarItem}>
-            <h3>PRVI SLUČAJ</h3>
-            <p>Ramiz Salkić u Trebinju pozvao na ukidanje Republike Srpske</p>
-            <div className={s.sideBarItemBundle}>
-              <span>22 min</span>
-              <div className={s.sideBarItemBundleRight}>
-                <span>
-                  <i class="fas fa-comments"></i>
-                  29
-                </span>
-                <span>
-                  <i class="fas fa-share-alt"></i>0
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div id={s.sideBarContent}>
-          <div className={s.sideBarItem}>
-            <h3>PRVI SLUČAJ</h3>
-            <p>Ramiz Salkić u Trebinju pozvao na ukidanje Republike Srpske</p>
-            <div className={s.sideBarItemBundle}>
-              <span>22 min</span>
-              <div className={s.sideBarItemBundleRight}>
-                <span>
-                  <i class="fas fa-comments"></i>
-                  29
-                </span>
-                <span>
-                  <i class="fas fa-share-alt"></i>0
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div id={s.sideBarContent}>
-          <div className={s.sideBarItem}>
-            <h3>PRVI SLUČAJ</h3>
-            <p>Ramiz Salkić u Trebinju pozvao na ukidanje Republike Srpske</p>
-            <div className={s.sideBarItemBundle}>
-              <span>22 min</span>
-              <div className={s.sideBarItemBundleRight}>
-                <span>
-                  <i class="fas fa-comments"></i>
-                  29
-                </span>
-                <span>
-                  <i class="fas fa-share-alt"></i>0
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div id={s.sideBarContent}>
-          <div className={s.sideBarItem}>
-            <h3>PRVI SLUČAJ</h3>
-            <p>Ramiz Salkić u Trebinju pozvao na ukidanje Republike Srpske</p>
-            <div className={s.sideBarItemBundle}>
-              <span>22 min</span>
-              <div className={s.sideBarItemBundleRight}>
-                <span>
-                  <i class="fas fa-comments"></i>
-                  29
-                </span>
-                <span>
-                  <i class="fas fa-share-alt"></i>0
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div id={s.sideBarContent}>
-          <div className={s.sideBarItem}>
-            <h3>PRVI SLUČAJ</h3>
-            <p>Ramiz Salkić u Trebinju pozvao na ukidanje Republike Srpske</p>
-            <div className={s.sideBarItemBundle}>
-              <span>22 min</span>
-              <div className={s.sideBarItemBundleRight}>
-                <span>
-                  <i class="fas fa-comments"></i>
-                  29
-                </span>
-                <span>
-                  <i class="fas fa-share-alt"></i>0
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-        <div id={s.sideBarContent}>
-          <div className={s.sideBarItem}>
-            <h3>PRVI SLUČAJ</h3>
-            <p>Ramiz Salkić u Trebinju pozvao na ukidanje Republike Srpske</p>
-            <div className={s.sideBarItemBundle}>
-              <span>22 min</span>
-              <div className={s.sideBarItemBundleRight}>
-                <span>
-                  <i class="fas fa-comments"></i>
-                  29
-                </span>
-                <span>
-                  <i class="fas fa-share-alt"></i>0
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      <HomeMainSub />
     </div>
   );
 };

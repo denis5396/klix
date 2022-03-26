@@ -162,7 +162,9 @@
   margin-right: 0.5rem;
   font-size: 1rem;
 }
-
+.mainBoxFooter .mainBoxFooterBundle span:nth-of-type(2) i {
+  margin-right: 0.25rem;
+}
 .mainBoxImg img {
   width: 100%;
   height: 100%;

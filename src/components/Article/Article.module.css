@@ -434,16 +434,22 @@ iframe {
 #articleText ul li {
   position: relative;
   padding-left: 2.5rem;
-  margin: 1.25rem auto;
+  margin: 2.8rem auto;
+  font-size: 1.8rem;
 }
 #articleText ol li {
-  margin: 1.25rem auto;
+  margin: 2.8rem auto;
   margin-left: 2.5rem;
   padding-left: 1rem;
+  font-size: 1.8rem;
 }
 #articleText ul li:nth-of-type(1),
 #articleText ol li:nth-of-type(1) {
   margin-top: 0;
+}
+#articleText ol li:last-of-type,
+#articleText ul li:last-of-type {
+  margin-bottom: 0;
 }
 #articleText ul li::before {
   content: "";
@@ -458,6 +464,9 @@ iframe {
 #articleText ol li::marker {
   color: #6b7280;
   font-weight: 400;
+}
+#articleText img {
+  width: 95% !important;
 }
 .ytConfig {
   min-height: 40rem;

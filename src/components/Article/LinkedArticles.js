@@ -1,9 +1,11 @@
 import React, { useState } from "react";
+import { Link } from "react-router-dom";
 import { clrs } from "../ArticleLink/ArticleLink";
 import s from "./LinkedArticles.module.css";
 
 const LinkedArticles = ({ data, indL }) => {
   useState(() => {
+    console.log(data);
     console.log(indL);
     console.log(indL[1] === 3 && indL[0] === 1);
   }, []);
@@ -15,12 +17,19 @@ const LinkedArticles = ({ data, indL }) => {
       style={indL[1] === 2 && indL[0] === 1 ? { position: "static" } : null} //hide right border of second item when we have length of 2, aesthetic purpose
     >
       <div className={s.imageContainer}>
-        <img
-          src={data.thumbnail.replace(
-            "https://firebasestorage.googleapis.com",
-            "https://ik.imagekit.io/1cryg5xvxsq/tr:w-300"
-          )}
-        />
+        <Link
+          to={{
+            pathname: encodeURI(`/${data.articlePath}`),
+            state: undefined,
+          }}
+        >
+          <img
+            src={data.thumbnail.replace(
+              "https://firebasestorage.googleapis.com",
+              "https://ik.imagekit.io/1cryg5xvxsq/tr:w-300"
+            )}
+          />
+        </Link>
       </div>
       <div className={s.titles}>
         <h3
@@ -30,7 +39,16 @@ const LinkedArticles = ({ data, indL }) => {
         >
           {data.subTitle}
         </h3>
-        <h3>{data.title}</h3>
+        <h3>
+          <Link
+            to={{
+              pathname: encodeURI(`/${data.articlePath}`),
+              state: undefined,
+            }}
+          >
+            {data.title}
+          </Link>
+        </h3>
       </div>
     </div>
   );

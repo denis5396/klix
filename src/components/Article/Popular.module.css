@@ -1,0 +1,76 @@
+#popularCnt {
+  display: flex;
+  flex-direction: column;
+  padding: 0 1.5rem;
+}
+
+#popularHeader {
+  /* display: grid;
+  grid-template-columns: 1fr 1fr; */
+  display: flex;
+  justify-content: space-between;
+  padding-bottom: 0.5rem;
+}
+#popularHeader span svg {
+  height: 2rem;
+  color: rgb(75, 85, 99);
+}
+#popularHeader h3 {
+  color: rgb(75, 85, 99);
+  font-size: 1.5rem;
+}
+.popularItem {
+  display: flex;
+  flex-direction: column;
+  border-top: 0.1rem solid #e5e7eb;
+}
+
+.popularItemHeader {
+  padding-top: 0.8rem;
+  margin-bottom: 0.4rem;
+  font-size: 1rem;
+  text-transform: uppercase;
+  text-align: left;
+}
+.popularItemBody {
+  margin-bottom: 0.4rem;
+  color: #111827;
+  font-size: 1.5rem;
+  text-align: left;
+  transition: color 0.1s ease-in;
+}
+
+.popularItemBody p a {
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+}
+.popularItemBody p a:hover {
+  color: rgb(75, 85, 99);
+}
+.popularItemFooter {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+  margin-top: 0.5rem;
+}
+.popularItemFooter .itemTime {
+  color: #9ca3af;
+  font-size: 1.3rem;
+}
+.spanComShare {
+  display: flex;
+  color: rgb(156, 163, 175);
+  font-size: 1.3rem;
+}
+.spanComShare span svg {
+  width: 1.3rem;
+  height: 1.3rem;
+  margin-left: 0.4rem;
+  margin-right: 0.2rem;
+  transform: translateY(25%);
+}
+.spanShare,
+.spanComment {
+  display: flex;
+}

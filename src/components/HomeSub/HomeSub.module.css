@@ -42,7 +42,7 @@
 #subBody {
   display: grid;
   grid-template-columns: repeat(6, 1fr);
-  grid-template-columns: 72.5% 27.5%;
+  grid-template-columns: 73% 27%;
   gap: 0.1rem;
   grid-column: 1/-1;
 }

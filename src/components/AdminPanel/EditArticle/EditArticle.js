@@ -270,110 +270,11 @@ const EditArticles = () => {
   const [loading, setLoading] = useState(false);
   const [switching, setSwitching] = useState(false);
   const [editing, setEditing] = useState(false);
-  const [articles, setArticles] = useState([
-    // {
-    //   articleText: '',
-    //   category: '',
-    //   subCategory: '',
-    //   commentsAllowed: '',
-    //   date: '',
-    //   id: '',
-    //   imageText: '',
-    //   tags: [],
-    //   timeDiff: '',
-    //   title: 'asd',
-    //   subTitle: 'asdd1',
-    //   images: [
-    //     'https://firebasestorage.googleapis.com/v0/b/klix-74c29.appspot.com/o/images%2FBiznis%2FFinansije%2F-Mh9IGTA76VEvVt_QsSj%2FHearthstone%20Screenshot%2003-25-21%2021.19.39.png?alt=media&token=c654015b-96f1-44b0-8c04-a49849e623ee',
-    //   ],
-    //   shares: [''],
-    //   comments: [''],
-    // },
-    // {
-    //   articleText: '',
-    //   category: '',
-    //   subCategory: '',
-    //   commentsAllowed: '',
-    //   date: '',
-    //   id: '',
-    //   imageText: '',
-    //   tags: [],
-    //   timeDiff: '',
-    //   title: 'asd',
-    //   subTitle: 'asdd2',
-    //   images: [
-    //     'https://firebasestorage.googleapis.com/v0/b/klix-74c29.appspot.com/o/images%2FBiznis%2FFinansije%2F-Mh9IGTA76VEvVt_QsSj%2FHearthstone%20Screenshot%2003-25-21%2021.19.39.png?alt=media&token=c654015b-96f1-44b0-8c04-a49849e623ee',
-    //   ],
-    //   shares: [''],
-    //   comments: [''],
-    // },
-    // {
-    //   articleText: '',
-    //   category: '',
-    //   subCategory: '',
-    //   commentsAllowed: '',
-    //   date: '',
-    //   id: '',
-    //   imageText: '',
-    //   tags: [],
-    //   timeDiff: '',
-    //   title: 'asd',
-    //   subTitle: 'asdd3',
-    //   images: [
-    //     'https://firebasestorage.googleapis.com/v0/b/klix-74c29.appspot.com/o/images%2FBiznis%2FFinansije%2F-Mh9IGTA76VEvVt_QsSj%2FHearthstone%20Screenshot%2003-25-21%2021.19.39.png?alt=media&token=c654015b-96f1-44b0-8c04-a49849e623ee',
-    //   ],
-    //   shares: [''],
-    //   comments: [''],
-    // },
-    // {},
-    // {
-    //   articleText: '',
-    //   category: '',
-    //   subCategory: '',
-    //   commentsAllowed: '',
-    //   date: '',
-    //   id: '',
-    //   imageText: '',
-    //   tags: [],
-    //   timeDiff: '',
-    //   title: 'asd',
-    //   subTitle: 'asdd4',
-    //   images: [
-    //     'https://firebasestorage.googleapis.com/v0/b/klix-74c29.appspot.com/o/images%2FBiznis%2FFinansije%2F-Mh9IGTA76VEvVt_QsSj%2FHearthstone%20Screenshot%2003-25-21%2021.19.39.png?alt=media&token=c654015b-96f1-44b0-8c04-a49849e623ee',
-    //   ],
-    //   shares: [''],
-    //   comments: [''],
-    // },
-    // {
-    //   articleText: '',
-    //   category: '',
-    //   subCategory: '',
-    //   commentsAllowed: '',
-    //   date: '',
-    //   id: '',
-    //   imageText: '',
-    //   tags: [],
-    //   timeDiff: '',
-    //   title: 'asd',
-    //   subTitle: 'asdd5',
-    //   images: [
-    //     'https://firebasestorage.googleapis.com/v0/b/klix-74c29.appspot.com/o/images%2FBiznis%2FFinansije%2F-Mh9IGTA76VEvVt_QsSj%2FHearthstone%20Screenshot%2003-25-21%2021.19.39.png?alt=media&token=c654015b-96f1-44b0-8c04-a49849e623ee',
-    //   ],
-    //   shares: [''],
-    //   comments: [''],
-    // },
-    // {},
-    {},
-    {},
-    {},
-    {},
-    {},
-    {},
-    {},
-  ]);
+  const [articles, setArticles] = useState([{}, {}, {}, {}, {}, {}, {}]);
   const [clickedPos, setClickedPos] = useState(null);
   const [fetchPos, setFetchPos] = useState(null);
   const [showAddingItem, setShowAddingItem] = useState(false);
+  const [switchMode, setSwitchMode] = useState(false);
 
   const switchSelect = useRef();
   const selectMainVal = useRef();
@@ -385,6 +286,7 @@ const EditArticles = () => {
   const addArticleBox = useRef();
   const switchArticleBox = useRef();
   const editArticleBox = useRef();
+  const switchSelect2 = useRef();
   const history = useHistory();
 
   const [articleFetch, setArticleFetch] = useState([]);
@@ -395,6 +297,7 @@ const EditArticles = () => {
     if (articles) {
       console.log(articles[0]);
     }
+    console.log(articles);
   });
 
   useEffect(() => {
@@ -420,14 +323,27 @@ const EditArticles = () => {
   };
 
   const handleSelectMain = (e, mode) => {
+    //mode = jedan (editing and adding in overlay), two = main select box
     setArticleFetch([]);
-    const { value } = e.target;
-    setShowSubCat(true);
+    const { value } = (e && e.target) || switchSelect2.current;
+    if (mode === "two" && switchSelect2.current.value === "Početna") {
+      setShowSubCat(false);
+    } else {
+      setShowSubCat(true);
+    }
+    if (mode === "two" && switchSelect2.current.value !== "Početna") {
+      //when adding, if we do not change the subcat(so it's automatically the first subcat) and we press fetch cnt it wont work because curselect didnt change, this way we fix it
+      setCurSelect(subcategories[value.toLowerCase()][0]);
+    }
+    setSelect([...subcategories[value.toLowerCase()]]);
     switch (value) {
       case "Početna":
         if (mode === "two") {
           setSelectTwo([...subcategories.početna]);
-          setCurSelectTwo([...subcategories.početna[0]]);
+          setCurSelectTwo(subcategories.početna[0]);
+          if (glavni) {
+            fetchArticles("init");
+          }
           break;
         }
       case "Vijesti":
@@ -438,6 +354,9 @@ const EditArticles = () => {
         } else if (mode === "two") {
           setSelectTwo([...subcategories.vijesti]);
           setCurSelectTwo(subcategories.vijesti[0]);
+          if (glavni) {
+            fetchArticles("init");
+          }
           break;
         }
       case "Biznis":
@@ -448,6 +367,9 @@ const EditArticles = () => {
         } else if (mode === "two") {
           setSelectTwo([...subcategories.biznis]);
           setCurSelectTwo(subcategories.biznis[0]);
+          if (glavni) {
+            fetchArticles("init");
+          }
           break;
         }
       case "Sport":
@@ -458,6 +380,9 @@ const EditArticles = () => {
         } else if (mode === "two") {
           setSelectTwo([...subcategories.sport]);
           setCurSelectTwo(subcategories.sport[0]);
+          if (glavni) {
+            fetchArticles("init");
+          }
           break;
         }
       case "Magazin":
@@ -468,6 +393,9 @@ const EditArticles = () => {
         } else if (mode === "two") {
           setSelectTwo([...subcategories.magazin]);
           setCurSelectTwo(subcategories.magazin[0]);
+          if (glavni) {
+            fetchArticles("init");
+          }
           break;
         }
       case "Lifestyle":
@@ -478,6 +406,9 @@ const EditArticles = () => {
         } else if (mode === "two") {
           setSelectTwo([...subcategories.lifestyle]);
           setCurSelectTwo(subcategories.lifestyle[0]);
+          if (glavni) {
+            fetchArticles("init");
+          }
           break;
         }
       case "Scitech":
@@ -488,6 +419,9 @@ const EditArticles = () => {
         } else if (mode === "two") {
           setSelectTwo([...subcategories.scitech]);
           setCurSelectTwo(subcategories.scitech[0]);
+          if (glavni) {
+            fetchArticles("init");
+          }
           break;
         }
       case "Auto":
@@ -498,6 +432,9 @@ const EditArticles = () => {
         } else if (mode === "two") {
           setSelectTwo([...subcategories.auto]);
           setCurSelectTwo(subcategories.auto[0]);
+          if (glavni) {
+            fetchArticles("init");
+          }
           break;
         }
     }
@@ -506,16 +443,36 @@ const EditArticles = () => {
   const handleGlavni = (e) => {
     if (e.target.value === "Glavni sadržaj") {
       setGlavni(true);
+      switchSelect2.current.value = "Početna";
+      setSwitchMode(true);
     } else {
       setGlavni(false);
+      switchSelect2.current.value = "Početna";
+      setSelectTwo([...subcategories["početna"]]);
+      setCurSelectTwo("Vijesti");
+      setSwitchMode(true);
     }
   };
+
+  useEffect(() => {
+    if (!glavni && curSelectTwo && switchMode) {
+      handleSelectMain(null, "two");
+      setSwitchMode(false);
+    } else if (!glavni && curSelectTwo) {
+      fetchArticles("init");
+    } else if (glavni && switchMode) {
+      handleSelectMain(null, "two");
+      setSwitchMode(false);
+    }
+  }, [glavni, curSelectTwo, switchMode]);
 
   const handleCloseOverlay = (e) => {
     const { id } = e.target;
     if (id.includes("overlay") && !showModal) {
       setAdding(false);
-      setShowSubCat(false);
+      if (switchSelect2.current.value === "Početna") {
+        setShowSubCat(false);
+      }
       setArticleFetch([]);
       setClickedPos(null);
       if (editing) {
@@ -527,12 +484,45 @@ const EditArticles = () => {
   const fetchArticles = (mode) => {
     setLoading(true);
     let dbRef = undefined;
+    console.log(mode);
     if (mode === "init") {
-      dbRef = db.ref(`viewContent/Glavni sadržaj/Početna`);
+      if (switchSelect.current.value === "Glavni sadržaj") {
+        dbRef = db.ref(
+          `viewContent/${switchSelect.current.value}/${switchSelect2.current.value}`
+        );
+      } else if (switchSelect.current.value === "Sporedni sadržaj") {
+        dbRef = db.ref(
+          `viewContent/${switchSelect.current.value}/${switchSelect2.current.value}/${curSelectTwo}`
+        );
+        console.log(
+          `viewContent/${switchSelect.current.value}/${switchSelect2.current.value}/${curSelectTwo}`
+        );
+      }
       dbRef.get().then((snapshot) => {
         if (snapshot.exists) {
           const data = snapshot.val();
           console.log(data);
+          if (!data) {
+            if (
+              switchSelect.current.value === "Sporedni sadržaj" &&
+              (curSelectTwo !== "Auto" || curSelectTwo !== "Scitech")
+            ) {
+              setArticles([{}, {}, {}, {}, {}, {}]);
+            } else if (
+              (switchSelect.current.value === "Sporedni sadržaj" &&
+                switchSelect2.current.value ===
+                  "Početna"(
+                    curSelectTwo === "Auto" || curSelectTwo === "Scitech"
+                  )) ||
+              (switchSelect.current.value === "Sporedni sadržaj" &&
+                switchSelect2.current.value !== "Početna")
+            ) {
+              setArticles([{}, {}, {}, {}]);
+            } else {
+              setArticles([{}, {}, {}, {}, {}, {}, {}]);
+            }
+            return;
+          }
           let realData = [];
           const dataReady = [];
           let incr = 0;
@@ -550,17 +540,20 @@ const EditArticles = () => {
             console.log(art[1]);
             console.log(art[0]);
             // if (i < 6) {
-            promises.push(
-              fetch(
-                `https://klix-74c29-default-rtdb.europe-west1.firebasedatabase.app/articles/${art[1]}/-${art[0]}.json`
-              ).then((response) => response.json())
-            );
+            if (Array.isArray(art)) {
+              promises.push(
+                fetch(
+                  `https://klix-74c29-default-rtdb.europe-west1.firebasedatabase.app/articles/${art[1]}/-${art[0]}.json`
+                ).then((response) => response.json())
+              );
+            }
             // }
           });
 
           const promisedData = Promise.all(promises);
           promisedData.then((data) => {
             console.log(data);
+            let cpy = [];
             // dataReady.push(data);
             // if (dataReady[incr]) {
             //   dataReady[incr].timeDiff = timeDifference(dataReady[incr].date);
@@ -569,7 +562,25 @@ const EditArticles = () => {
             for (let i = 0; i < data.length; i++) {
               data[i].timeDiff = timeDifference(data[i].date);
             }
-            setArticles(data);
+            if (data.length < 7) {
+              //if what we have fetched has empty str fields, so some places have an art some do not
+              let inc = 0;
+              realData[0].forEach((art) => {
+                if (!art) {
+                  cpy.push({});
+                } else {
+                  cpy.push(data[inc]);
+                  inc++;
+                }
+              });
+              console.log(cpy);
+              cpy.forEach((cp) => {
+                console.log(Object.keys(cp).length);
+              });
+              setArticles(cpy);
+            } else {
+              setArticles(data);
+            }
             // if (i === realData[0].length - 1) {
             //   if (dataReady.length < 7) {
             //     const diff = 7 - dataReady.length;
@@ -584,8 +595,10 @@ const EditArticles = () => {
         }
       });
     } else {
+      //fetchdata in adding/editing overlay box
       const mainVal = selectMainVal.current.value;
       dbRef = db.ref(`articles/${mainVal}/${curSelect}`);
+      console.log(curSelect);
       dbRef.get().then((snapshot) => {
         if (snapshot.exists) {
           const data = snapshot.val();
@@ -815,18 +828,48 @@ const EditArticles = () => {
 
     const val1 = switchSelect.current.value;
     const val2 = switchSelect.current.nextSibling.value;
-    const dbRef = db.ref(`viewContent/${val1}/${val2}`);
+    const dbRef = db.ref(
+      `viewContent/${val1}/${val2}${
+        val1 === "Sporedni sadržaj" ? "/" + curSelectTwo : ""
+      }`
+    );
+    console.log(curSelectTwo);
+    console.log(
+      `viewContent/${val1}/${val2}${
+        val1 === "Sporedni sadržaj" ? "/" + curSelectTwo : ""
+      }`
+    );
     // const dbRef = db.ref(`articles/auto/Testovi`);
     console.log(articles);
     const articleIds = {};
     let incr = 0;
-
-    articles.forEach((art) => {
-      if (art.id) {
-        articleIds[incr] = [];
-        articleIds[incr][0] = art.id;
-        articleIds[incr][1] = `${art.category}/${art.subCategory}`;
-        incr++;
+    let notBiggerThanFour;
+    if (!subConentCntRight.current && !glavni) {
+      notBiggerThanFour = true;
+    }
+    articles.forEach((art, i) => {
+      if (!notBiggerThanFour) {
+        if (art.id) {
+          articleIds[incr] = [];
+          articleIds[incr][0] = art.id;
+          articleIds[incr][1] = `${art.category}/${art.subCategory}`;
+          incr++;
+        } else {
+          articleIds[incr] = "";
+          incr++;
+        }
+      } else {
+        if (i < 4) {
+          if (art.id) {
+            articleIds[incr] = [];
+            articleIds[incr][0] = art.id;
+            articleIds[incr][1] = `${art.category}/${art.subCategory}`;
+            incr++;
+          } else {
+            articleIds[incr] = "";
+            incr++;
+          }
+        }
       }
     });
     console.log(articleIds);
@@ -840,7 +883,9 @@ const EditArticles = () => {
           console.log(objKey);
           alert("does exist");
           fetch(
-            `https://klix-74c29-default-rtdb.europe-west1.firebasedatabase.app/viewContent/${val1}/${val2}/${objKey[0]}.json`,
+            `https://klix-74c29-default-rtdb.europe-west1.firebasedatabase.app/viewContent/${val1}/${val2}${
+              val1 === "Sporedni sadržaj" ? "/" + curSelectTwo : ""
+            }/${objKey[0]}.json`,
             {
               method: "PATCH",
               body: JSON.stringify(articleIds),
@@ -856,7 +901,9 @@ const EditArticles = () => {
         } else {
           alert("does not exist");
           fetch(
-            `https://klix-74c29-default-rtdb.europe-west1.firebasedatabase.app/viewContent/${val1}/${val2}.json`,
+            `https://klix-74c29-default-rtdb.europe-west1.firebasedatabase.app/viewContent/${val1}/${val2}${
+              val1 === "Sporedni sadržaj" ? "/" + curSelectTwo : ""
+            }.json`,
             {
               method: "POST",
               body: JSON.stringify(articleIds),
@@ -917,6 +964,16 @@ const EditArticles = () => {
               onChange={(e) => handleSelectMain(e, "jedan")}
               defaultValue={""}
               ref={selectMainVal}
+              disabled={
+                showSubCat && switchSelect2.current.value !== "Početna"
+                  ? true
+                  : false
+              }
+              value={
+                showSubCat && switchSelect2.current.value !== "Početna"
+                  ? switchSelect2.current.value
+                  : null
+              }
             >
               <option disabled={true} label={" -- Izaberi opciju -- "}></option>
               <option>Vijesti</option>
@@ -982,10 +1039,9 @@ const EditArticles = () => {
                           </span>
                           <span>
                             <i class="fas fa-share-alt"></i>{" "}
-                            {articleItem.shares.length === 1 &&
-                            articleItem.shares[0] === ""
+                            {articleItem.shares.constructor !== Object
                               ? 0
-                              : articleItem.shares.length}
+                              : Object.keys(articleItem.shares).length}
                           </span>
                         </div>
                       </div>
@@ -1078,10 +1134,9 @@ const EditArticles = () => {
                             </span>
                             <span>
                               <i class="fas fa-share-alt"></i>{" "}
-                              {articleItem.shares.length === 1 &&
-                              articleItem.shares[0] === ""
+                              {articleItem.shares.constructor !== Object
                                 ? 0
-                                : articleItem.shares.length}
+                                : Object.keys(articleItem.shares).length}
                             </span>
                           </div>
                         </div>
@@ -1112,6 +1167,7 @@ const EditArticles = () => {
               <select
                 onChange={(e) => handleSelectMain(e, "two")}
                 defaultValue={"Početna"}
+                ref={switchSelect2}
               >
                 <option>Početna</option>
                 <option>Vijesti</option>
@@ -1179,7 +1235,21 @@ const EditArticles = () => {
               </div>
             </div>
             {!glavni && (
-              <div className={s.articleSubCnt}>
+              <div
+                className={s.articleSubCnt}
+                style={
+                  (switchSelect2.current.value !== "Početna" &&
+                    curSelectTwo !== "Scitech") ||
+                  (switchSelect2.current.value !== "Početna" &&
+                    curSelectTwo !== "Auto") ||
+                  (switchSelect2.current.value === "Početna" &&
+                    (curSelectTwo === "Auto" || curSelectTwo === "Scitech"))
+                    ? {
+                        gridTemplateColumns: "1fr",
+                      }
+                    : null
+                }
+              >
                 <div className={s.subLeft} ref={subConentCntLeft}>
                   {articles.map((article, i) => {
                     if (Object.keys(article).length !== 0 && i < 4) {
@@ -1205,17 +1275,15 @@ const EditArticles = () => {
                                   <div className={s.subLeftBundleRight}>
                                     <span>
                                       <i class="fas fa-comment"></i>{" "}
-                                      {article.comments.length === 1 &&
-                                      article.comments[0] === ""
+                                      {!article.comments
                                         ? 0
-                                        : article.comments.length}
+                                        : Object.keys(article.comments).length}
                                     </span>
                                     <span>
                                       <i class="fas fa-share-alt"></i>{" "}
-                                      {article.shares.length === 1 &&
-                                      article.shares[0] === ""
+                                      {article.shares.constructor !== Object
                                         ? 0
-                                        : article.shares.length}
+                                        : Object.keys(article.shares).length}
                                     </span>
                                   </div>
                                 </div>
@@ -1256,17 +1324,15 @@ const EditArticles = () => {
                                 <div className={s.subLeftBundleRight}>
                                   <span>
                                     <i class="fas fa-comment"></i>{" "}
-                                    {article.comments.length === 1 &&
-                                    article.comments[0] === ""
+                                    {!article.comments
                                       ? 0
-                                      : article.comments.length}
+                                      : Object.keys(article.comments).length}
                                   </span>
                                   <span>
                                     <i class="fas fa-share-alt"></i>{" "}
-                                    {article.shares.length === 1 &&
-                                    article.shares[0] === ""
+                                    {article.shares.constructor !== Object
                                       ? 0
-                                      : article.shares.length}
+                                      : Object.keys(article.shares).length}
                                   </span>
                                 </div>
                               </div>
@@ -1296,59 +1362,127 @@ const EditArticles = () => {
                     }
                   })}
                 </div>
-                <div className={s.subRight} ref={subConentCntRight}>
-                  {articles.map((article, i) => {
-                    if (Object.keys(article).length !== 0) {
-                      if (i >= 4 && i <= 5) {
-                        return (
-                          <div
-                            className={s.subRightItem}
-                            key={uuid()}
-                            draggable={true}
-                            onDragStart={(e) => dragStart(e)}
-                            onDrop={(e) => drop(e)}
-                            onDragOver={(e) => allowDrop(e)}
-                          >
-                            <div className={s.subRightText}>
-                              <h3>{article.subTitle}</h3>
-                              <h3>{article.title}</h3>
-                            </div>
-                            <div className={s.subRightBundle}>
-                              <span>{article.timeDiff}</span>
-                              <div className={s.subRightBundleRight}>
-                                <span>
-                                  <i class="fas fa-comment"></i>{" "}
-                                  {article.comments.length === 1 &&
-                                  article.comments[0] === ""
-                                    ? 0
-                                    : article.comments.length}
-                                </span>
-                                <span>
-                                  <i class="fas fa-share-alt"></i>{" "}
-                                  {article.shares.length === 1 &&
-                                  article.shares[0] === ""
-                                    ? 0
-                                    : article.shares.length}
-                                </span>
+                {switchSelect2.current.value === "Početna" &&
+                  curSelectTwo !== "Scitech" &&
+                  curSelectTwo !== "Auto" && (
+                    <div className={s.subRight} ref={subConentCntRight}>
+                      {articles.map((article, i) => {
+                        if (Object.keys(article).length !== 0) {
+                          if (i >= 4 && i <= 5) {
+                            if (addingModus) {
+                              return (
+                                <div
+                                  className={s.subRightItem}
+                                  key={uuid()}
+                                  onMouseEnter={() => showAdding(i)}
+                                  onMouseLeave={hideAdding}
+                                >
+                                  {clickedPos !== i && (
+                                    <>
+                                      <div className={s.subRightText}>
+                                        <h3>{article.subTitle}</h3>
+                                        <h3>{article.title}</h3>
+                                      </div>
+                                      <div className={s.subRightBundle}>
+                                        <span>{article.timeDiff}</span>
+                                        <div className={s.subRightBundleRight}>
+                                          <span>
+                                            <i class="fas fa-comment"></i>{" "}
+                                            {!article.comments
+                                              ? 0
+                                              : Object.keys(article.comments)
+                                                  .length}
+                                          </span>
+                                          <span>
+                                            <i class="fas fa-share-alt"></i>{" "}
+                                            {article.shares.constructor !==
+                                            Object
+                                              ? 0
+                                              : Object.keys(article.shares)
+                                                  .length}
+                                          </span>
+                                        </div>
+                                      </div>
+                                    </>
+                                  )}
+                                  {clickedPos === i && (
+                                    <div
+                                      className={s.addArticle}
+                                      onMouseEnter={() => showAdding(i)}
+                                      key={uuid()}
+                                      style={{
+                                        borderTop: "0.1rem solid #e5e7eb",
+                                      }}
+                                    >
+                                      <i
+                                        class="fas fa-plus"
+                                        onClick={() => setAdding(true)}
+                                      ></i>
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            } else {
+                              return (
+                                <div
+                                  className={s.subRightItem}
+                                  key={uuid()}
+                                  onMouseEnter={() => showAdding(i)}
+                                  onMouseLeave={hideAdding}
+                                  draggable={true}
+                                  onDragStart={(e) => dragStart(e)}
+                                  onDrop={(e) => drop(e)}
+                                  onDragOver={(e) => allowDrop(e)}
+                                >
+                                  <div className={s.subRightText}>
+                                    <h3>{article.subTitle}</h3>
+                                    <h3>{article.title}</h3>
+                                  </div>
+                                  <div className={s.subRightBundle}>
+                                    <span>{article.timeDiff}</span>
+                                    <div className={s.subRightBundleRight}>
+                                      <span>
+                                        <i class="fas fa-comment"></i>{" "}
+                                        {!article.comments
+                                          ? 0
+                                          : Object.keys(article.comments)
+                                              .length}
+                                      </span>
+                                      <span>
+                                        <i class="fas fa-share-alt"></i>{" "}
+                                        {article.shares.constructor !== Object
+                                          ? 0
+                                          : Object.keys(article.shares).length}
+                                      </span>
+                                    </div>
+                                  </div>
+                                </div>
+                              );
+                            }
+                          }
+                        } else {
+                          if (i >= 4 && i < 6 && addingModus) {
+                            return (
+                              <div
+                                className={s.addArticle}
+                                onMouseEnter={() => showAdding(i)}
+                                key={uuid()}
+                              >
+                                <i
+                                  class="fas fa-plus"
+                                  onClick={() => setAdding(true)}
+                                ></i>
                               </div>
-                            </div>
-                          </div>
-                        );
-                      }
-                    } else {
-                      if (i >= 4 && i < 6) {
-                        return (
-                          <div className={s.addArticle} key={uuid()}>
-                            <i
-                              class="fas fa-plus"
-                              onClick={() => setAdding(true)}
-                            ></i>
-                          </div>
-                        );
-                      }
-                    }
-                  })}
-                </div>
+                            );
+                          } else if (i >= 4 && i < 6 && !addingModus) {
+                            return (
+                              <div className={s.emptySub} key={uuid()}></div>
+                            );
+                          }
+                        }
+                      })}
+                    </div>
+                  )}
               </div>
             )}
             {glavni && (
@@ -1385,16 +1519,21 @@ const EditArticles = () => {
                                         ? 0
                                         : Object.keys(article.comments).length}
                                       <i class="fas fa-share-alt"></i>{" "}
-                                      {article.shares.length === 1 &&
-                                      article.shares[0] === ""
+                                      {article.shares.constructor !== Object
                                         ? 0
-                                        : article.shares.length}
+                                        : Object.keys(article.shares).length}
                                     </span>
                                   </div>
                                 </>
                               )}{" "}
                               {clickedPos === i && (
-                                <div className={s.addArticle}>
+                                <div
+                                  className={s.addArticle}
+                                  style={{
+                                    borderTop: "0.1rem solid #e5e7eb",
+                                    borderBottom: "0.1rem solid #e5e7eb",
+                                  }}
+                                >
                                   <i
                                     class="fas fa-plus"
                                     onClick={() => setAdding(true)}
@@ -1434,17 +1573,22 @@ const EditArticles = () => {
                                       </span>
                                       <span>
                                         <i class="fas fa-share-alt"></i>{" "}
-                                        {article.shares.length === 1 &&
-                                        article.shares[0] === ""
+                                        {article.shares.constructor !== Object
                                           ? 0
-                                          : article.shares.length}
+                                          : Object.keys(article.shares).length}
                                       </span>
                                     </div>
                                   </div>
                                 </>
                               )}
                               {clickedPos === i && (
-                                <div className={s.addArticle}>
+                                <div
+                                  className={s.addArticle}
+                                  style={{
+                                    borderTop: "0.1rem solid #e5e7eb",
+                                    borderBottom: "0.1rem solid #e5e7eb",
+                                  }}
+                                >
                                   <i
                                     class="fas fa-plus"
                                     onClick={() => setAdding(true)}
@@ -1462,9 +1606,10 @@ const EditArticles = () => {
                                 ? s.addArticle
                                 : `${s.addArticle} ${s.addArticleBg}`
                             }
-                            onClick={(e) =>
-                              handleAddFetchedArticle(e, "mainContent")
-                            }
+                            style={{
+                              borderTop: "0.1rem solid #e5e7eb",
+                              borderBottom: "0.1rem solid #e5e7eb",
+                            }}
                             onMouseEnter={() => showAdding(i)}
                             key={uuid()}
                           >
@@ -1510,10 +1655,9 @@ const EditArticles = () => {
                                     ? 0
                                     : Object.keys(article.comments).length}
                                   <i class="fas fa-share-alt"></i>{" "}
-                                  {article.shares.length === 1 &&
-                                  article.shares[0] === ""
+                                  {article.shares.constructor !== Object
                                     ? 0
-                                    : article.shares.length}
+                                    : Object.keys(article.shares).length}
                                 </span>
                               </div>
                             </div>
@@ -1548,10 +1692,9 @@ const EditArticles = () => {
                                   </span>
                                   <span>
                                     <i class="fas fa-share-alt"></i>{" "}
-                                    {article.shares.length === 1 &&
-                                    article.shares[0] === ""
+                                    {article.shares.constructor !== Object
                                       ? 0
-                                      : article.shares.length}
+                                      : Object.keys(article.shares).length}
                                   </span>
                                 </div>
                               </div>

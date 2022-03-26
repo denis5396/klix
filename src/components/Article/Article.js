@@ -15,6 +15,8 @@ import { getComLength } from "../comment/Comment";
 import LoginContext from "../../context";
 import { useHistory } from "react-router-dom";
 import { db } from "../../firebase";
+import Popular from "./Popular";
+import { splitTitle } from "../HomeMain/HomeMain";
 
 const catSubCat = {
   Vijesti: [
@@ -62,13 +64,13 @@ const catSubCat = {
 };
 
 export const scrollFnSticky = (ref) => {
-  // console.log(document.getElementsByTagName("nav")[0].style);
-  const navStyles = window.getComputedStyle(
-    document.getElementsByTagName("header")[0]
-  );
-  const navHeight = +navStyles.getPropertyValue("height").split("px")[0];
   // console.log(navHeight);
   if (ref.current) {
+    console.log(document.getElementsByTagName("header")[0]);
+    const navStyles = window.getComputedStyle(
+      document.getElementsByTagName("header")[0]
+    );
+    const navHeight = +navStyles.getPropertyValue("height").split("px")[0];
     const sideBarParent = window.getComputedStyle(ref.current.parentElement);
 
     const sideBarParentMagin = +sideBarParent
@@ -118,16 +120,18 @@ const ArticleComp = () => {
   const sliderFooterBar = useRef();
   const timer = useRef(null);
   const stickLeftSideBar = useRef();
+  const stickRightSideBar = useRef();
   const fullComLength = useRef(0);
 
   useEffect(() => {
     window.scrollTo(0, 0);
     function handlerFn() {
       scrollFnSticky(stickLeftSideBar);
+      scrollFnSticky(stickRightSideBar);
     }
-    // if (window.twttr) {
-    //   alert("d");
-    // }
+    //add +1 to visited
+    console.log(articleData);
+
     if (window.twttr) {
       window.twttr.widgets.load();
     }
@@ -147,6 +151,7 @@ const ArticleComp = () => {
 
   useEffect(() => {
     if (location.state) {
+      window.scrollTo(0, 0);
       console.log(location.state);
       console.log(location.pathname);
       setArticleData({ ...location.state.articleData });
@@ -157,6 +162,60 @@ const ArticleComp = () => {
           `-${location.state.articleData.id}`
         );
       }
+
+      //add +1 to visited
+      console.log(location.state.articleData);
+      fetch("https://api.ipify.org/?format=json")
+        .then((response) => response.json())
+        .then((ip) => {
+          const dbRef = db.ref(
+            `articles/${location.state.articleData.category}/${
+              location.state.articleData.subCategory
+            }/-${location.state.articleData.id}/visited/${ip.ip
+              .split(".")
+              .join("_")}`
+          );
+          dbRef.once("value", (snap) => {
+            const data = snap.val();
+            console.log(data);
+            // if (!data) {
+            console.log("s");
+            console.log(
+              `articles/${location.state.articleData.category}/${
+                location.state.articleData.subCategory
+              }/-${location.state.articleData.id}/visited/${ip.ip
+                .split(".")
+                .join("_")}`
+            );
+            dbRef.set(ip.ip);
+            // const len = Math.floor(Math.random() * 100);
+            // const temp = [];
+            // for (let i = 0; i < len; i++) {
+            //   temp.push(
+            //     `${Math.floor(Math.random() * 100)}.${Math.floor(
+            //       Math.random() * 100
+            //     )}.${Math.floor(Math.random() * 100)}.${Math.floor(
+            //       Math.random() * 100
+            //     )}`
+            //   );
+            // }
+            // console.log(temp);
+
+            // for (let i = 0; i < temp.length; i++) {
+            //   ((ind) => {
+            //     db.ref(
+            //       `articles/${location.state.articleData.category}/${
+            //         location.state.articleData.subCategory
+            //       }/-${location.state.articleData.id}/visited/${temp[ind]
+            //         .split(".")
+            //         .join("_")}`
+            //     ).set(temp[ind]);
+            //   })(i);
+            // }
+            // }
+          });
+        });
+
       // get promos, recursion
       const dbRef = db.ref(
         `articles/Promo/${location.state.articleData.category}`
@@ -268,7 +327,7 @@ const ArticleComp = () => {
             testArr.push({
               bold: paragraph.text.slice(check + 3, i),
             });
-            i = i + 4;
+            i = i + 3;
             check = null;
             checkBool = false;
           } else if (paragraph.text[i] !== "\n" && !checkBool) {
@@ -376,7 +435,7 @@ const ArticleComp = () => {
                   // linkEmbedArr[incr] = [item[key].slice(linkPosEnd, i)];
                   // linkPosEnd = 0;
                   // incr++;
-                } else if (!tempLink && !embedThere && i - 4 > 0) {
+                } else if (!tempLink && !embedThere && i - 2 > 0) {
                   //text before link
                   for (let j = i + 6; j < item[key].length; j++) {
                     if (
@@ -534,7 +593,20 @@ const ArticleComp = () => {
           let linkText = linkInd.slice(6, linkInd.length - 7);
           console.log(linkText);
           linkText = linkText.split(" ");
-          let path = `${linkText[1]}/-${linkText[0]}`;
+          linkText.splice(linkText.length - 1);
+          //handle space in cat or sub cat like crna hronika
+          let path = `${
+            linkText.length > 2
+              ? linkText
+                  .map((item, i) => {
+                    if (i !== 0) {
+                      return item;
+                    }
+                  })
+                  .join(" ")
+                  .slice(1)
+              : linkText[1]
+          }/-${linkText[0]}`;
           console.log(path);
           const path2 = linkText[1].split("/");
           for (let key in catSubCat) {
@@ -550,7 +622,7 @@ const ArticleComp = () => {
             }
           }
           fetch(
-            `https://klix-74c29-default-rtdb.europe-west1.firebasedatabase.app/articles/${path}/-${linkText[0]}.json`
+            `https://klix-74c29-default-rtdb.europe-west1.firebasedatabase.app/articles/${path}.json`
           )
             .then((response) => response.json())
             .then((data) => {
@@ -567,16 +639,19 @@ const ArticleComp = () => {
                 .join("")
                 .split(" ")
                 .join("-");
-              setInternalLinks((old) => [
-                ...old,
-                {
+              setInternalLinks((old) => {
+                const oldArr = [...old];
+                oldArr.push({
                   title: data.title,
                   subTitle: data.subTitle,
                   imageUrl: data.images[0],
                   linkPath: `/${data.category}/${data.subCategory}/${titleSplit3}/${data.id}`,
-                  cat: data.category.toLowerCase(),
-                },
-              ]);
+                  category: data.category,
+                  subCategory: data.subCategory,
+                  id: data.id,
+                });
+                return oldArr;
+              });
               // internalLinks.push({
               //   internal: {
               //     title: data.title,
@@ -609,6 +684,7 @@ const ArticleComp = () => {
       )
         .then((response) => response.json())
         .then((data) => {
+          setInternalLinks([]);
           console.log(data);
           let commentData = [];
           let replies = [];
@@ -682,6 +758,7 @@ const ArticleComp = () => {
   let extLinkIncr = 0;
   let arrTemp = [];
   let listIncr = 0;
+  let removeBrAfterInt = false;
   console.log(text);
   text.map((textInd, l) => {
     console.log(window.twttr);
@@ -697,6 +774,7 @@ const ArticleComp = () => {
           );
         } else if (key === "link") {
           if (it[key].includes(" external")) {
+            //never runs?
             console.log(it[key]);
             console.log(linkData[0].url);
             console.log(linkData[0].text);
@@ -734,7 +812,8 @@ const ArticleComp = () => {
           } else {
             if (internalLinks.length > 0) {
               //async req
-              console.log(internalLinks[0]);
+              console.log(internalLinks);
+              console.log(intLinkIncr);
               intLinkThere = true;
               itemsarr.push(
                 <ArticleLink
@@ -743,10 +822,15 @@ const ArticleComp = () => {
                   title={internalLinks[intLinkIncr].title}
                   imageUrl={internalLinks[intLinkIncr].imageUrl}
                   linkPath={internalLinks[intLinkIncr].linkPath}
-                  category={internalLinks[intLinkIncr].cat}
+                  category={internalLinks[intLinkIncr].category}
+                  subCategory={internalLinks[intLinkIncr].subCategory}
+                  id={internalLinks[intLinkIncr].id}
                 />
               );
-              intLinkIncr++;
+              if (internalLinks.length - 1 > intLinkIncr) {
+                //fix case where we add ++ but where we havent reached the other intlinks, so when we get to a new line it all rerenders and we get intlink[1].random = undefined
+                intLinkIncr++;
+              }
             }
           }
         } else if (key === "embed") {
@@ -931,6 +1015,7 @@ const ArticleComp = () => {
                   href={separateurl}
                   target="_blank"
                   rel="noreferrer noopener"
+                  style={{ display: "block" }}
                 >
                   {separatetxt}
                 </a>
@@ -947,11 +1032,11 @@ const ArticleComp = () => {
         }
       }
     });
-
     if (intLinkThere) {
       //remove brs
       itemsarr.splice(itemsarr.length - 2, 1);
       intLinkThere = false;
+      removeBrAfterInt = true;
     } else if (imageThere) {
       imageThere = false;
     } else if (embedThere) {
@@ -964,7 +1049,11 @@ const ArticleComp = () => {
         // }, 2000);
       }
     } else {
-      itemsarr.push(<br key={uuid()}></br>);
+      if (removeBrAfterInt) {
+        removeBrAfterInt = false;
+      } else {
+        itemsarr.push(<br key={uuid()}></br>);
+      }
     }
     console.log(text.length);
     if (l === text.length - 1) {
@@ -1285,6 +1374,13 @@ const ArticleComp = () => {
               findLatestThree.filter((el) => el.id !== id).length ===
                 findLatestThree.length
             ) {
+              let artPath = data[key].articlePath.split("/");
+              artPath[2] = artPath[2].slice(1);
+              artPath.splice(2, 0, splitTitle(data[key].title));
+              delete data[key].articlePath;
+              console.log(artPath.join("/"));
+              data[key].articlePath = artPath.join("/");
+              console.log(data[key]);
               findLatestThree.push({
                 ...data[key],
                 id,
@@ -1318,6 +1414,143 @@ const ArticleComp = () => {
           setRelatedArticles([...cur]);
         });
     }
+  };
+
+  const handleTagUnderscore = () => {
+    const tgs = [];
+    location.state.articleData.tags.forEach((tag) => {
+      if (tag.value) {
+        if (tag.value.includes("_")) {
+          let valObj = { id: tag.id };
+          let val = tag.value.split("_");
+          valObj.value = val.join(".");
+          tgs.push(valObj);
+        } else {
+          tgs.push(tag);
+        }
+      } else {
+        if (tag.includes("_")) {
+          let val = tag.split("_");
+          val = val.join(".");
+          tgs.push(val);
+        } else {
+          tgs.push(tag);
+        }
+      }
+    });
+    return tgs;
+  };
+
+  const handleFbShare = () => {
+    const url = window.location.href;
+    const shareUrl = `https://www.facebook.com/sharer/sharer.phpu=${url}`;
+    const params = "menubar=no,toolbar=no,status=no,width=570,height=570";
+    window.open(shareUrl, "NewWindow", params);
+  };
+
+  const handleTwitterShare = () => {
+    const text = encodeURIComponent(articleData.title);
+    const url = window.location.href;
+    const user_id = ctx.isLoggedIn ? ctx.isLoggedIn : "anonymous";
+    const hash_tags = articleData.tags.length
+      ? articleData.tags[0].constructor === Object
+        ? articleData.tags.map((item) => item.value).join(", ")
+        : articleData.tags.join(", ")
+      : "";
+    const params = "menubar=no,toolbar=no,status=no,width=570,height=570";
+    const shareurl = `https://twitter.com/intent/tweet?url=${url}&text=${text}&via=${user_id}&hashtags=${hash_tags}`;
+    window.open(shareurl, "NewWindow", params);
+    handleShareFirebase();
+  };
+
+  const handleShareFirebase = () => {
+    const dbRef = db.ref(
+      `articles/${articleData.category}/${articleData.subCategory}/-${articleData.id}`
+    );
+    dbRef.child("shares").once("value", (snap) => {
+      console.log(snap.val());
+      const data = snap.val();
+      fetch("https://api.ipify.org/?format=json")
+        .then((response) => response.json())
+        .then((ip) => {
+          if (data.length === 1 && data[0] === "") {
+            db.ref(
+              `articles/${articleData.category}/${articleData.subCategory}/-${articleData.id}/shares`
+            ).set({ [ip.ip.split(".").join("_")]: ip.ip });
+            setArticleData((old) => {
+              const oldArr = { ...old };
+              delete oldArr.shares;
+              oldArr.shares = {};
+              oldArr.shares[ip.ip.split(".").join("_")] = ip.ip;
+              return oldArr;
+            });
+            // const len = Math.floor(Math.random() * 100 + 1);
+            // const temp = [];
+            // for (let i = 0; i < len; i++) {
+            //   temp.push(
+            //     `${Math.floor(Math.random() * 100)}.${Math.floor(
+            //       Math.random() * 100
+            //     )}.${Math.floor(Math.random() * 100)}.${Math.floor(
+            //       Math.random() * 100
+            //     )}`
+            //   );
+            // }
+
+            // for (let i = 0; i < temp.length; i++) {
+            //   ((ind) => {
+            //     db.ref(
+            //       `articles/${articleData.category}/${
+            //         articleData.subCategory
+            //       }/-${articleData.id}/shares/${temp[ind].split(".").join("_")}`
+            //     ).set(temp[ind]);
+            //   })(i);
+            // }
+          } else {
+            if (
+              !Object.values(articleData.shares).some((val) => val === ip.ip)
+            ) {
+              db.ref(
+                `articles/${articleData.category}/${articleData.subCategory}/-${
+                  articleData.id
+                }/shares/${[ip.ip.split(".").join("_")]}`
+              ).set(ip.ip);
+              setArticleData((old) => {
+                const oldArr = { ...old };
+                oldArr.shares[ip.ip.split(".").join("_")] = ip.ip;
+                return oldArr;
+              });
+              // const ips = {
+              //   11_22_333_321: "11.22.333.321",
+              //   11_22_333_422: "11.22.333.422",
+              //   11_22_333_523: "11.22.333.523",
+              //   11_22_333_624: "11.22.333.624",
+              //   11_22_333_725: "11.22.333.725",
+              //   11_22_333_826: "11.22.333.826",
+              //   11_22_333_927: "11.22.333.927",
+              //   11_22_331_228: "11.22.331.228",
+              //   11_22_332_229: "11.22.332.229",
+              //   11_22_333_220: "11.22.333.220",
+              //   11_22_334_231: "11.22.334.231",
+              //   11_22_335_232: "11.22.335.232",
+              //   11_22_336_233: "11.22.336.233",
+              //   11_22_337_234: "11.22.337.234",
+              //   11_22_338_235: "11.22.338.235",
+              // };
+              // for (let i = 0; i < Object.keys(ips).length; i++) {
+              //   ((ind) => {
+              //     db.ref(
+              //       `articles/${articleData.category}/${
+              //         articleData.subCategory
+              //       }/-${articleData.id}/shares/${Object.values(ips)
+              //         [ind].split(".")
+              //         .join("_")}`
+              //     ).set(Object.values(ips)[ind]);
+              //   })(i);
+              // }
+            }
+          }
+        });
+    });
   };
 
   return (
@@ -1412,13 +1645,29 @@ const ArticleComp = () => {
               <div id={s.comments}>
                 <h2>
                   {articleData && articleData.commentsAllowed === "Ne" ? (
-                    <i
-                      style={{
-                        color: "rgb(75,85,99)",
-                        transform: "scale(0.9)",
-                      }}
-                      class="fas fa-comment-slash"
-                    ></i>
+                    // <i
+                    //   style={{
+                    //     color: "rgb(75,85,99)",
+                    //     transform: "scale(0.9)",
+                    //   }}
+                    //   class="fas fa-comment-slash"
+                    // ></i>
+                    <svg
+                      class="h-5 w-5 inline my-1"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      style={{ width: "2rem" }}
+                    >
+                      <path
+                        style={{ color: "rgb(75,85,99)", fontSize: "1rem" }}
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"
+                      ></path>
+                    </svg>
                   ) : articleData && !articleData.comments ? (
                     0
                   ) : articleData && articleData.comments ? (
@@ -1438,16 +1687,22 @@ const ArticleComp = () => {
                 </p>
               </div>
               <div id={s.shares}>
-                <h2>{articleData ? articleData.shares[0].length : ""}</h2>
+                <h2>
+                  {articleData
+                    ? articleData.shares.constructor === Object
+                      ? Object.keys(articleData.shares).length
+                      : 0
+                    : ""}
+                </h2>
                 <p>dijeljenja</p>
               </div>
             </div>
             <div id={s.shareArticle}>
               <ul>
-                <li>
+                <li onClick={handleFbShare}>
                   <i class="fab fa-facebook"></i>
                 </li>
-                <li>
+                <li onClick={handleTwitterShare}>
                   <i class="fab fa-twitter"></i>
                 </li>
                 <li>
@@ -1474,19 +1729,25 @@ const ArticleComp = () => {
                       src={img[0]}
                       onClick={() => openSliderFromThumbnail(i)}
                     />
-                  ) : i === 4 ? (
+                  ) : i === 4 && articleData.imageText.length - 5 > 0 ? (
                     <div id={s.clickForMore} key={uuid()}>
-                      {articleData.imageText.length - 5 > 0 ? (
-                        <span onClick={() => openSliderFromThumbnail(i)}>
-                          +{articleData.imageText.length - 5}
-                        </span>
-                      ) : null}
+                      <span onClick={() => openSliderFromThumbnail(i)}>
+                        +{articleData.imageText.length - 5}
+                      </span>
                       <img
                         src={img[0]}
                         onClick={() => openSliderFromThumbnail(i)}
                       />
                     </div>
-                  ) : null
+                  ) : (
+                    i === 4 && (
+                      <img
+                        key={uuid()}
+                        src={img[0]}
+                        onClick={() => openSliderFromThumbnail(i)}
+                      />
+                    )
+                  )
                 )}
               </div>
               <p>
@@ -1551,7 +1812,9 @@ const ArticleComp = () => {
           <div id={s.tags}>
             {articleData &&
               articleData.tags &&
-              articleData.tags.map((tag) => (
+              location.state &&
+              location.state.articleData &&
+              handleTagUnderscore(articleData.tags).map((tag) => (
                 <span key={uuid()}>
                   {tag.constructor === Object ? tag.value : tag}
                 </span>
@@ -1639,7 +1902,9 @@ const ArticleComp = () => {
             </div>
           </div>
         </div>
-        <div id={s.articleSidebarRight}></div>
+        <div id={s.articleSidebarRight} ref={stickRightSideBar}>
+          <Popular />
+        </div>
       </div>
     </div>
   );

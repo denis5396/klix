@@ -151,6 +151,9 @@ const AddArticle = () => {
       if (articleData.tags) {
         setTags([...articleData.tags]);
       }
+      if (articleData.listOrder) {
+        setLists([...articleData.listOrder]);
+      }
       if (articleData.commentsAllowed === "Da") {
         commentsRadio.current.children[0].children[1].checked = true;
       } else {
@@ -372,6 +375,9 @@ const AddArticle = () => {
             value[i] === "<" &&
             value[i + 1] === "/" &&
             value[i + 2] === "l" &&
+            value[i + 3] === "i" &&
+            value[i + 4] === "n" &&
+            value[i + 5] === "k" &&
             selectionStart >= start + 1 &&
             selectionStart <= i + 6
           ) {
@@ -646,6 +652,10 @@ const AddArticle = () => {
       const check2 = handleInsert("embed");
       const check3 = handleInsert("link");
       const check4 = handleInsert("list");
+      console.log(check1);
+      console.log(check2);
+      console.log(check3);
+      console.log(check4);
       if (
         (!check1 && !check2 && !check3 && !check4) ||
         check4 === "betweenTags"
@@ -701,10 +711,36 @@ const AddArticle = () => {
 
   const handleList = (e) => {
     e.preventDefault();
+    let curClickedList = "";
+    if (e.target.tagName === "I") {
+      if (e.target.className.includes("ul")) {
+        curClickedList = "ul";
+      } else {
+        curClickedList = "ol";
+      }
+    } else if (e.target.id.includes("listOl")) {
+      if (e.target.children[0].className.includes("ul")) {
+        curClickedList = "ul";
+      } else {
+        curClickedList = "ol";
+      }
+    } else if (e.target.tagName === "LI") {
+      if (e.target.children[0].className.includes("ul")) {
+        curClickedList = "ul";
+      } else {
+        curClickedList = "ol";
+      }
+    }
+    const posOfInsertion = seeWhichList(
+      textareaRef.current.value,
+      "adding",
+      textareaRef.current.selectionStart
+    );
     if (
       document.activeElement === textareaRef.current &&
       textareaRef.current.selectionStart === textareaRef.current.selectionEnd
     ) {
+      // alert(posOfInsertion);
       const check1 = handleInsert("bold");
       const check2 = handleInsert("embed");
       const check3 = handleInsert("link");
@@ -723,26 +759,6 @@ const AddArticle = () => {
         firstPart = firstPart.concat(secondPart);
         textareaRef.current.value = firstPart;
         textareaRef.current.selectionEnd = selStart + 6;
-        let curClickedList = "";
-        if (e.target.tagName === "I") {
-          if (e.target.className.includes("ul")) {
-            curClickedList = "ul";
-          } else {
-            curClickedList = "ol";
-          }
-        } else if (e.target.id.includes("listOl")) {
-          if (e.target.children[0].className.includes("ul")) {
-            curClickedList = "ul";
-          } else {
-            curClickedList = "ol";
-          }
-        } else if (e.target.tagName === "LI") {
-          if (e.target.children[0].className.includes("ul")) {
-            curClickedList = "ul";
-          } else {
-            curClickedList = "ol";
-          }
-        }
         setLists((old) => {
           console.log(e.target);
           // if (e.target.tagName === "I") {
@@ -753,7 +769,10 @@ const AddArticle = () => {
           let oldArr = [...old];
           // alert(currentList);
           // alert(typeof currentList);
-          oldArr.push(curClickedList);
+          // oldArr.push(curClickedList);
+          console.log(oldArr);
+          oldArr.splice(posOfInsertion, 0, curClickedList);
+          console.log(oldArr);
           return oldArr;
         });
       }
@@ -777,6 +796,12 @@ const AddArticle = () => {
           textareaText.slice(selectionEnd);
         textareaRef.current.value = textareaText;
         textareaRef.current.selectionEnd = selectionEnd + 6;
+        setLists((old) => {
+          console.log(e.target);
+          let oldArr = [...old];
+          oldArr.splice(posOfInsertion, 0, curClickedList);
+          return oldArr;
+        });
       } else if (check1 || check2 || check3 || check4) {
         textareaRef.current.selectionEnd = textareaRef.current.selectionStart;
       }
@@ -811,6 +836,7 @@ const AddArticle = () => {
           textareaRef.current.focus();
         }, 1);
       } else if (check || check1 || check2 || check3) {
+        alert("hey");
         // alert(`check1${check1}`);
         // alert(`check2${check2}`);
         setTimeout(() => {
@@ -930,6 +956,7 @@ const AddArticle = () => {
     const slStart = textareaRef.current.selectionStart;
     const slEnd = textareaRef.current.selectionEnd;
     let enterPosFind = null;
+    let insideList = false;
     let enterPos = 0;
     if (e.keyCode === 13) {
       for (let i = 0; i < value.length; i++) {
@@ -937,7 +964,7 @@ const AddArticle = () => {
           value[i] === "<" &&
           value[i + 1] === "b" &&
           value[i + 2] === ">" &&
-          enterPosFind === null
+          !insideList
         ) {
           enterPosFind = i;
         } else if (
@@ -964,6 +991,7 @@ const AddArticle = () => {
           value[i + 5] === ">"
         ) {
           enterPosFind = i;
+          insideList = true;
         } else if (
           value[i] === "<" &&
           value[i + 1] === "/" &&
@@ -981,6 +1009,7 @@ const AddArticle = () => {
             enterPosFind = 0;
             return;
           }
+          insideList = false;
         }
         if (
           value[i] === "<" &&
@@ -1018,9 +1047,11 @@ const AddArticle = () => {
           value[i + 3] === "n" &&
           value[i + 4] === "k" &&
           value[i + 5] === ">" &&
-          enterPosFind === null //handle link/b tags inside list
+          !insideList
+          //handle link/b tags inside list
         ) {
           enterPosFind = i;
+          insideList = true;
         } else if (
           value[i] === "<" &&
           value[i + 1] === "/" &&
@@ -1038,6 +1069,7 @@ const AddArticle = () => {
             enterPosFind = 0;
             return;
           }
+          insideList = false;
         }
       }
     }
@@ -1148,6 +1180,9 @@ const AddArticle = () => {
       let num = undefined;
       let endStart = 0;
       let endEnd = 0;
+      const ret = seeWhichList(value, "deleting", slStart);
+      console.log(ret);
+      alert(ret);
       for (let i = 0; i < value.length; i++) {
         if (
           (value[i] === "<" &&
@@ -1554,7 +1589,7 @@ const AddArticle = () => {
               // console.log(slice3);
               let newStr = [slice.join(""), slice2.join(""), slice3.join("")];
               newStr = newStr.join("");
-              alert(listCount);
+              // alert(listCount);
               setTimeout(() => {
                 setLists((old) => {
                   let oldArr = [...old];
@@ -2348,6 +2383,10 @@ const AddArticle = () => {
         // value[0] = value[0].toUpperCase();
         // value = value.join("");
         e.target.value = "";
+        if (value.includes(".")) {
+          value = value.split(".");
+          value = value.join("_");
+        }
         setTags((old) => {
           const oldCopy = [...old];
           oldCopy.push(value);
@@ -2388,6 +2427,8 @@ const AddArticle = () => {
   const seeWhichList = (str, mode, selStart) => {
     let occurence = 0;
     let start;
+    console.log(str.length);
+    console.log(selStart);
     if (mode === "deleting") {
       for (let i = 0; i < str.length; i++) {
         if (
@@ -2409,7 +2450,7 @@ const AddArticle = () => {
           str[i + 5] === "t" &&
           str[i + 6] === ">"
         ) {
-          if (selStart >= start && selStart <= i + 6) {
+          if (selStart > start && selStart <= i + 6) {
             return occurence;
           }
         }
@@ -2427,6 +2468,8 @@ const AddArticle = () => {
           occurence++;
         }
         if (i === selStart) {
+          return occurence;
+        } else if (i === str.length - 1 && selStart === str.length) {
           return occurence;
         }
       }
@@ -2473,9 +2516,8 @@ const AddArticle = () => {
       console.log(deletedTags);
     }
     // alert(commentChoice);
-    console.log(lists);
-    console.log(location.state.articleData.listOrder);
-    return;
+    // console.log(lists);
+    // console.log(location.state.articleData.listOrder);
     if (title && subTitle && articleText) {
       if (imageArray.length > 0 && captionTxt) {
         const articleFinished = {
@@ -2490,6 +2532,7 @@ const AddArticle = () => {
           tags: tags,
           commentsAllowed: commentChoice,
           shares: [""],
+          visited: (location.state && location.state.articleData.visited) || 0,
         };
         let captTxt = [];
         if (lists.length > 0) {
@@ -2544,6 +2587,24 @@ const AddArticle = () => {
                   const imgUrls = [];
                   if (!location.state) {
                     id = data.name.slice(1);
+                    //add art to dates in the db, for newest art, most visited, most popular
+                    const d = new Date();
+                    const year = d.getFullYear();
+                    const month = d.getMonth() + 1;
+                    const day = d.getDate();
+                    fetch(
+                      `https://klix-74c29-default-rtdb.europe-west1.firebasedatabase.app/dates/${year}/${month}/${day}.json?auth=${idToken}`,
+                      {
+                        method: "POST",
+                        headers: {
+                          "Content-Type": "application/json",
+                        },
+                        body: JSON.stringify({
+                          id: data.name,
+                          path: `${articleFinished.category}/${articleFinished.subCategory}`,
+                        }),
+                      }
+                    );
                   } else {
                     if (categoriesNoChange) {
                       //patch
