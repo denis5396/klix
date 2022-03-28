@@ -52,7 +52,28 @@ function App() {
       <Nav />
       <Switch>
         <Route path="/" exact>
-          <Home />
+          <Home route="Početna" />
+        </Route>
+        <Route path="/Vijesti" exact>
+          <Home route="Vijesti" />
+        </Route>
+        <Route path="/Biznis" exact>
+          <Home route="Biznis" />
+        </Route>
+        <Route path="/Sport" exact>
+          <Home route="Sport" />
+        </Route>
+        <Route path="/Magazin" exact>
+          <Home route="Magazin" />
+        </Route>
+        <Route path="/Lifestyle" exact>
+          <Home route="Lifestyle" />
+        </Route>
+        <Route path="/Scitech" exact>
+          <Home route="Scitech" />
+        </Route>
+        <Route path="/Auto" exact>
+          <Home route="Auto" />
         </Route>
         <Route path="/login">
           <Login>

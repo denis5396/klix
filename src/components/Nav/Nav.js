@@ -16,25 +16,39 @@ const Nav = () => {
       </div>
       <ul id={s.headerUl}>
         <li>
-          <span className={s.box}></span>Vijesti
+          <Link to={{ pathname: "/Vijesti" }}>
+            <span className={s.box}></span>Vijesti
+          </Link>
         </li>
         <li>
-          <span className={s.box}></span>Biznis
+          <Link to={{ pathname: "/Biznis" }}>
+            <span className={s.box}></span>Biznis
+          </Link>
         </li>
         <li>
-          <span className={s.box}></span>Sport
+          <Link to={{ pathname: "/Sport" }}>
+            <span className={s.box}></span>Sport
+          </Link>
         </li>
         <li>
-          <span className={s.box}></span>Magazin
+          <Link to={{ pathname: "/Magazin" }}>
+            <span className={s.box}></span>Magazin
+          </Link>
         </li>
         <li>
-          <span className={s.box}></span>Lifestyle
+          <Link to={{ pathname: "/Lifestyle" }}>
+            <span className={s.box}></span>Lifestyle
+          </Link>
         </li>
         <li>
-          <span className={s.box}></span>Scitech
+          <Link to={{ pathname: "/Scitech" }}>
+            <span className={s.box}></span>Scitech
+          </Link>
         </li>
         <li>
-          <span className={s.box}></span>Auto
+          <Link to={{ pathname: "/Auto" }}>
+            <span className={s.box}></span>Auto
+          </Link>
         </li>
         <li>
           <span className={s.box}></span>Forum

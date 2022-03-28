@@ -40,6 +40,13 @@
   margin-right: 2rem;
   cursor: pointer;
 }
+#navHeader ul li a {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  text-decoration: none;
+  color: inherit;
+}
 
 #bundle {
   display: flex;
