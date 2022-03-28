@@ -850,6 +850,7 @@ const ArticleComp = () => {
           embedThere = true;
         } else if (key === "list") {
           const listArr = it[key].split(" || ");
+          console.log(listArr);
           let foundLinkVar = 0;
           let foundBoldVar = 0;
           const tempListArr = [];
@@ -950,6 +951,8 @@ const ArticleComp = () => {
               tempListArr.push(<li key={uuid()}>{listArr[i]}</li>);
             }
           }
+          console.log(articleData.listOrder);
+          console.log(articleData);
           if (articleData.listOrder[listIncr] === "ol") {
             itemsarr.push(<ol key={uuid()}>{tempListArr}</ol>);
           } else if (articleData.listOrder[listIncr] === "ul") {
@@ -1839,7 +1842,15 @@ const ArticleComp = () => {
                 <Link
                   to={
                     articleData && {
-                      pathname: `${articleData.linkPath}/komentari`,
+                      pathname: `${
+                        articleData.linkPath
+                          ? articleData.linkPath
+                          : `/${articleData.category}/${
+                              articleData.subCategory
+                            }/${splitTitle(articleData.title)}/${
+                              articleData.id
+                            }`
+                      }/komentari`,
                       state: {
                         articleData,
                       },

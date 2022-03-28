@@ -17,7 +17,6 @@ const HomeSub = ({ route }) => {
   const [articles, setArticles] = useState([]);
   const [promos, setPromos] = useState([]);
   useEffect(() => {
-    alert(clrs[route.toLowerCase()]);
     if (route === "Početna") {
       const dbRefPromo = db.ref("articles/Promo");
       dbRefPromo.once("value", (snap) => {
@@ -50,7 +49,15 @@ const HomeSub = ({ route }) => {
         let newArr = [];
         let newObj = {};
         for (let key in data) {
-          newObj[key] = Object.values(data[key])[0];
+          if (route === "Magazin") {
+            if (key === "Film") {
+              newObj["Film/TV"] = Object.values(data[key]["TV"])[0];
+            } else {
+              newObj[key] = Object.values(data[key])[0];
+            }
+          } else {
+            newObj[key] = Object.values(data[key])[0];
+          }
         }
         newArr.push({ ...newObj });
         console.log(newArr);

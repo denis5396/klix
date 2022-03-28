@@ -22,11 +22,11 @@ export const splitTitle = (title) => {
   return titleSplit3;
 };
 
-const HomeMain = () => {
+const HomeMain = ({ route }) => {
   const [articlesMain, setArticlesMain] = useState([]);
 
   useEffect(() => {
-    const dbRef = db.ref("viewContent/Glavni sadržaj/Početna");
+    const dbRef = db.ref(`viewContent/Glavni sadržaj/${route}`);
     dbRef.get().then((snapshot) => {
       if (snapshot.exists()) {
         const data = snapshot.val();
@@ -285,7 +285,7 @@ const HomeMain = () => {
             }
           })}
       </div>
-      <HomeMainSub />
+      <HomeMainSub route={route} />
     </div>
   );
 };

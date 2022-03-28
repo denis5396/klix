@@ -164,32 +164,37 @@ const getPrevDateData = (data, route) => {
 
 export const getSidebarData = (route) => {
   return new Promise(async (resolve) => {
+    console.log(route);
     let finalData = [];
     const dbRef = db.ref(`dates/2022/3/8`);
     const promisesCat = [];
     let xd1 = [];
     console.log(subcategories["vijesti"]);
-    for (let i = 0; i < subcategories["scitech"].length; i++) {
-      ((incr) => {
-        const dbRef2 = db
-          .ref(`articles/Scitech/${subcategories["scitech"][incr]}`)
-          .orderByKey()
-          .limitToLast(15);
+    if (route !== "Početna") {
+      for (let i = 0; i < subcategories[route.toLowerCase()].length; i++) {
+        ((incr) => {
+          const dbRef2 = db
+            .ref(
+              `articles/${route}/${subcategories[route.toLowerCase()][incr]}`
+            )
+            .orderByKey()
+            .limitToLast(15);
 
-        xd1.push(dbRef2.once("value", (snap) => {}));
-      })(i);
+          xd1.push(dbRef2.once("value", (snap) => {}));
+        })(i);
+      }
     }
 
-    promisesCat.sort((a, b) => {
-      if (new Date(a.date) - new Date(b.date) > 0) {
-        return -1;
-      } else if (new Date(a.date) - new Date(b.date) < 0) {
-        return 1;
-      } else {
-        return 0;
-      }
-    });
-    console.log(promisesCat);
+    // promisesCat.sort((a, b) => {
+    //   if (new Date(a.date) - new Date(b.date) > 0) {
+    //     return -1;
+    //   } else if (new Date(a.date) - new Date(b.date) < 0) {
+    //     return 1;
+    //   } else {
+    //     return 0;
+    //   }
+    // });
+    // console.log(promisesCat);
 
     const dataPaths = dbRef.once("value", (snap) => {});
 
@@ -207,7 +212,7 @@ export const getSidebarData = (route) => {
         );
       }
     }
-    if (route === "početna") {
+    if (route === "Početna") {
       // const xy = Promise.all(dataPaths);
       await dataPaths.then((data) => (dataEdit = data.val()));
       dataEdit = await Promise.all(promises);
@@ -231,9 +236,9 @@ export const getSidebarData = (route) => {
     console.log(dataEdit);
 
     let buildingFinalData = [];
-    if (route === "početna") {
+    if (route === "Početna") {
       buildingFinalData.push(dataEdit);
-    } else if (route !== "početna") {
+    } else if (route !== "Početna") {
       dataEdit[0].sort((a, b) => {
         if (new Date(a.date) - new Date(b.date) > 0) {
           return -1;
@@ -252,7 +257,7 @@ export const getSidebarData = (route) => {
     }
     console.log(buildingFinalData);
     let dataJson = JSON.parse(
-      JSON.stringify(route === "početna" ? dataEdit : dataEdit[1])
+      JSON.stringify(route === "Početna" ? dataEdit : dataEdit[1])
     );
     let visitedDataSort = [];
     let sharedDataSort = [];
@@ -304,7 +309,7 @@ export const getSidebarData = (route) => {
         return 0;
       }
     });
-    if (route !== "početna") {
+    if (route !== "Početna") {
       buildingFinalData.pop();
     }
     buildingFinalData.push(visitedDataSort);
@@ -330,7 +335,7 @@ export const getSidebarData = (route) => {
     } else {
       const retData = await getPrevDateData(
         buildingFinalData,
-        route === "početna" ? "početna" : "other"
+        route === "Početna" ? "Početna" : "other"
       ).then((data) => data);
       console.log(retData);
       resolve(retData);
@@ -338,7 +343,7 @@ export const getSidebarData = (route) => {
   });
 };
 
-const HomeMainSub = () => {
+const HomeMainSub = ({ route }) => {
   const [sideBarData, setSidebarData] = useState([
     {
       first: [],
@@ -348,7 +353,7 @@ const HomeMainSub = () => {
     },
   ]);
   useEffect(async () => {
-    let retData = getSidebarData("početnaa");
+    let retData = getSidebarData(route);
     retData = await retData.then((data) => data);
     console.log(retData);
     setSidebarData([
