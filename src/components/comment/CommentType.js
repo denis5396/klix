@@ -1,5 +1,5 @@
 import React from "react";
-import { useEffect, useRef } from "react/cjs/react.development";
+import { useEffect, useRef } from "react";
 import { auth } from "../../firebase";
 import s from "./CommentType.module.css";
 import { v1 as uuid } from "uuid";

@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Link, useHistory } from "react-router-dom";
 import { useLocation } from "react-router-dom";
-import { useEffect, useRef } from "react/cjs/react.development";
+import { useEffect, useRef } from "react";
 import s from "./CommentItem.module.css";
 
 const CommentItem = (props) => {

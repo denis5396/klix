@@ -1,7 +1,7 @@
 import React, { useContext } from "react";
 import { useLocation } from "react-router-dom";
 import { Link } from "react-router-dom";
-import { useEffect, useRef, useState } from "react/cjs/react.development";
+import { useEffect, useRef, useState } from "react";
 import { v1 as uuid } from "uuid";
 import LoginContext from "../../context";
 import s from "./Comment.module.css";
@@ -473,7 +473,8 @@ const Comment = () => {
           </div>
           <div id={s.headerShares}>
             <i class={"fas fa-share-alt"}></i>{" "}
-            {location.state.articleData.shares.constructor === Object
+            {location.state &&
+            location.state.articleData.shares.constructor === Object
               ? Object.keys(location.state.articleData.shares).length
               : 0}
           </div>
@@ -513,7 +514,8 @@ const Comment = () => {
                 </div>
                 <div>
                   <h2>
-                    {location.state.articleData.shares.constructor === Object
+                    {location.state &&
+                    location.state.articleData.shares.constructor === Object
                       ? Object.keys(location.state.articleData.shares).length
                       : 0}
                   </h2>

@@ -1,5 +1,5 @@
 import React from "react";
-import { useHistory } from "react-router-dom/cjs/react-router-dom.min";
+import { useHistory } from "react-router-dom";
 import { v1 as uuid } from "uuid";
 import s from "./ProgressBar.module.css";
 

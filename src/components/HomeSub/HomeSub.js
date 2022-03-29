@@ -1,6 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { useEffect, useState } from "react/cjs/react.development";
+import { useEffect, useState } from "react";
 import { db } from "../../firebase";
 import { subcategories } from "../AdminPanel/AddArticle";
 import {

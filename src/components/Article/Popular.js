@@ -1,5 +1,5 @@
 import React from "react";
-import { useEffect, useState } from "react/cjs/react.development";
+import { useEffect, useState } from "react";
 import { db } from "../../firebase";
 import s from "./Popular.module.css";
 import { v1 as uuid } from "uuid";

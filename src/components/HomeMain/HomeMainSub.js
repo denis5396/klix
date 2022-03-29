@@ -1,5 +1,5 @@
 import React from "react";
-import { useEffect, useState } from "react/cjs/react.development";
+import { useEffect, useState } from "react";
 import { db } from "../../firebase";
 import s from "./HomeMainSub.module.css";
 import { clrs } from "../ArticleLink/ArticleLink";

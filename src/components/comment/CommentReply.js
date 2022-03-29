@@ -1,6 +1,6 @@
 import React, { forwardRef, useEffect } from "react";
 import { useLocation } from "react-router-dom";
-import { useRef } from "react/cjs/react.development";
+import { useRef } from "react";
 import { v1 as uuid } from "uuid";
 import { auth } from "../../firebase";
 import s from "./CommentReply.module.css";
