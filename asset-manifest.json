@@ -1,8 +1,8 @@
 {
   "files": {
     "main.css": "/klix/static/css/main.012769f0.chunk.css",
-    "main.js": "/klix/static/js/main.a10c45bb.chunk.js",
-    "main.js.map": "/klix/static/js/main.a10c45bb.chunk.js.map",
+    "main.js": "/klix/static/js/main.99bed165.chunk.js",
+    "main.js.map": "/klix/static/js/main.99bed165.chunk.js.map",
     "runtime-main.js": "/klix/static/js/runtime-main.76a0993a.js",
     "runtime-main.js.map": "/klix/static/js/runtime-main.76a0993a.js.map",
     "static/js/2.a253166c.chunk.js": "/klix/static/js/2.a253166c.chunk.js",
@@ -20,6 +20,6 @@
     "static/js/runtime-main.76a0993a.js",
     "static/js/2.a253166c.chunk.js",
     "static/css/main.012769f0.chunk.css",
-    "static/js/main.a10c45bb.chunk.js"
+    "static/js/main.99bed165.chunk.js"
   ]
 }
