@@ -1,25 +1,25 @@
 {
   "files": {
     "main.css": "/klix/static/css/main.012769f0.chunk.css",
-    "main.js": "/klix/static/js/main.0e15efe9.chunk.js",
-    "main.js.map": "/klix/static/js/main.0e15efe9.chunk.js.map",
+    "main.js": "/klix/static/js/main.49b4eaef.chunk.js",
+    "main.js.map": "/klix/static/js/main.49b4eaef.chunk.js.map",
     "runtime-main.js": "/klix/static/js/runtime-main.984f7189.js",
     "runtime-main.js.map": "/klix/static/js/runtime-main.984f7189.js.map",
-    "static/js/2.221391ea.chunk.js": "/klix/static/js/2.221391ea.chunk.js",
-    "static/js/2.221391ea.chunk.js.map": "/klix/static/js/2.221391ea.chunk.js.map",
+    "static/js/2.2b320bda.chunk.js": "/klix/static/js/2.2b320bda.chunk.js",
+    "static/js/2.2b320bda.chunk.js.map": "/klix/static/js/2.2b320bda.chunk.js.map",
     "static/js/3.22bf9b98.chunk.js": "/klix/static/js/3.22bf9b98.chunk.js",
     "static/js/3.22bf9b98.chunk.js.map": "/klix/static/js/3.22bf9b98.chunk.js.map",
     "index.html": "/klix/index.html",
     "static/css/main.012769f0.chunk.css.map": "/klix/static/css/main.012769f0.chunk.css.map",
-    "static/js/2.221391ea.chunk.js.LICENSE.txt": "/klix/static/js/2.221391ea.chunk.js.LICENSE.txt",
+    "static/js/2.2b320bda.chunk.js.LICENSE.txt": "/klix/static/js/2.2b320bda.chunk.js.LICENSE.txt",
     "static/media/index.css": "/klix/static/media/FFClanProMedium.f2b2d8e2.woff",
     "static/media/gooicon.png": "/klix/static/media/gooicon.35bcce80.png",
     "static/media/powerplant.jpg": "/klix/static/media/powerplant.e7b7fee7.jpg"
   },
   "entrypoints": [
     "static/js/runtime-main.984f7189.js",
-    "static/js/2.221391ea.chunk.js",
+    "static/js/2.2b320bda.chunk.js",
     "static/css/main.012769f0.chunk.css",
-    "static/js/main.0e15efe9.chunk.js"
+    "static/js/main.49b4eaef.chunk.js"
   ]
 }
