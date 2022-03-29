@@ -1,18 +1,18 @@
-import React from 'react';
-import { BrowserRouter } from 'react-router-dom';
-import ReactDOM from 'react-dom';
-import './index.css';
-import App from './App';
-import reportWebVitals from './reportWebVitals';
-import { LoginContextProvider } from './context';
+import React from "react";
+import { BrowserRouter } from "react-router-dom";
+import ReactDOM from "react-dom";
+import "./index.css";
+import App from "./App";
+import reportWebVitals from "./reportWebVitals";
+import { LoginContextProvider } from "./context";
 
 ReactDOM.render(
   <LoginContextProvider>
-    <BrowserRouter>
+    <BrowserRouter basename="/klix">
       <App />
     </BrowserRouter>
   </LoginContextProvider>,
-  document.getElementById('root')
+  document.getElementById("root")
 );
 
 // If you want to start measuring performance in your app, pass a function
