@@ -1068,6 +1068,28 @@ const Comment = () => {
                     );
                   }
                 })}
+              <div
+                id={s.povratakNaClanak}
+                style={{
+                  justifyContent: "right",
+                  marginTop: "1rem",
+                  marginBottom: "1rem",
+                }}
+              >
+                <Link
+                  to={
+                    location.state && {
+                      pathname: location.state.articleData.linkPath,
+                      state: {
+                        articleData: location.state.articleData,
+                      },
+                    }
+                  }
+                >
+                  <i class="far fa-arrow-alt-circle-left"></i> Povratak na
+                  članak
+                </Link>
+              </div>
             </div>
           </div>
           <div id={s.commentSidebarRight} ref={stickRightSideBar}>

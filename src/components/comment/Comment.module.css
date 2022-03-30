@@ -186,6 +186,10 @@
   color: rgba(75, 85, 99, 1);
 }
 
+#povratakNaClanak:hover a {
+  color: rgb(75, 85, 99);
+}
+
 #povratakNaClanak i {
   margin-right: 0.5rem;
   font-size: 1.7rem;

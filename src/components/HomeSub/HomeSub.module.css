@@ -83,6 +83,9 @@
   font-size: 1.5rem;
   color: #111827;
 }
+.subBodyItem .itemText h3:nth-of-type(2) a:hover {
+  color: rgb(75, 85, 99);
+}
 
 .itemImg {
   height: 46%;
@@ -145,6 +148,10 @@
   color: inherit;
 }
 
+.subBodyBundleItem h3:nth-of-type(2) a:hover {
+  color: rgb(75, 85, 99);
+}
+
 .subBodyBundleItem .itemBundle {
   font-size: 1.2rem;
   color: #9ca3af;
@@ -203,4 +210,7 @@
 #promoBody a {
   text-decoration: none;
   color: inherit;
+}
+#promoBody .subBodyItem .itemText h3:nth-of-type(2) a:hover {
+  color: rgb(75, 85, 99);
 }

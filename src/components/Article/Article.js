@@ -679,6 +679,14 @@ const ArticleComp = () => {
         subCategory: deconstructPathName[2],
         id: deconstructPathName[4],
       };
+      if (
+        deconstructPathName[1] === "Magazin" &&
+        deconstructPathName[2] === "Film"
+      ) {
+        path.subCategory = `Film/TV`;
+        path.id = deconstructPathName[5];
+      }
+      console.log(JSON.parse(JSON.stringify(path)));
       fetch(
         `https://klix-74c29-default-rtdb.europe-west1.firebasedatabase.app/articles/${path.category}/${path.subCategory}/-${path.id}.json`
       )
@@ -1368,6 +1376,7 @@ const ArticleComp = () => {
           const data = snap.val();
           //we want to not include the existing article in the retailed articles and we want to not have any duplicat articles in related(same art added in many tag branches)
           for (let key in data) {
+            console.log(data[key].articlePath);
             const id =
               data[key].articlePath.split("/")[
                 data[key].articlePath.split("/").length - 1
@@ -1378,7 +1387,12 @@ const ArticleComp = () => {
                 findLatestThree.length
             ) {
               let artPath = data[key].articlePath.split("/");
-              artPath[2] = artPath[2].slice(1);
+              if (artPath[1] === "Film" && artPath[2] === "TV") {
+                artPath[1] = "Film/TV";
+                artPath[2] = artPath[3].slice(1);
+              } else {
+                artPath[2] = artPath[2].slice(1);
+              }
               artPath.splice(2, 0, splitTitle(data[key].title));
               delete data[key].articlePath;
               console.log(artPath.join("/"));

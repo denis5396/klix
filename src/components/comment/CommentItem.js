@@ -1,10 +1,12 @@
-import React, { useState } from "react";
+import React, { useContext, useState } from "react";
 import { Link, useHistory } from "react-router-dom";
 import { useLocation } from "react-router-dom";
 import { useEffect, useRef } from "react";
 import s from "./CommentItem.module.css";
+import LoginContext from "../../context";
 
 const CommentItem = (props) => {
+  const ctx = useContext(LoginContext);
   const history = useHistory();
   const location = useLocation();
   const commentLike = useRef();
@@ -725,6 +727,13 @@ const CommentItem = (props) => {
         <div className={s.reportLikeParent}>
           <span
             className={s.report}
+            style={
+              !ctx.isLoggedIn
+                ? {
+                    marginRight: "0rem",
+                  }
+                : null
+            }
             onClick={() =>
               props.handleReport({
                 commentId: Array.isArray(props.commentIndexDB)
@@ -746,14 +755,18 @@ const CommentItem = (props) => {
           >
             <i class="far fa-flag"></i> <p>Prijavi</p>
           </span>
-          <span className={s.divide} />
-          <span
-            className={s.reply}
-            onClick={() => props.handleReply(props.commentIndex)}
-          >
-            <i class="fas fa-pen"></i>
-            <p>Odgovori</p>
-          </span>
+          {ctx.isLoggedIn && (
+            <>
+              <span className={s.divide} />
+              <span
+                className={s.reply}
+                onClick={() => props.handleReply(props.commentIndex)}
+              >
+                <i class="fas fa-pen"></i>
+                <p>Odgovori</p>
+              </span>
+            </>
+          )}
         </div>
       </div>
     </div>
