@@ -1,0 +1,70 @@
+#tagsCnt {
+  width: 1280px;
+  border: 0.1rem solid #e5e7eb;
+  margin-top: 7.5rem !important;
+  margin: auto;
+  background-color: #fff;
+  height: fit-content;
+  display: grid;
+  grid-template-columns: 73% 27%;
+  margin-bottom: 3rem;
+}
+#tagsLeft {
+  border-right: 0.1rem solid #e5e7eb;
+}
+#tagsLeftHeader {
+  border-bottom: 0.1rem solid #e5e7eb;
+  display: flex;
+  justify-content: flex-start;
+  padding: 0.8rem 1.6rem;
+  font-size: 1.7rem;
+  color: #4b5563;
+}
+#tagsLeftHeader a {
+  text-decoration: none;
+  color: inherit;
+  font-weight: 500;
+}
+#tagsLeftHeader h3 span {
+  font-weight: 500;
+  margin-left: 0.5rem;
+}
+#tagsLeftHeader h3 span::before {
+  content: ">";
+  color: rgb(156, 163, 175);
+  font-size: 1.3rem;
+  margin-right: 0.9rem;
+}
+
+#tagsLeftFooter {
+  padding: 1.2rem 0.8rem;
+  display: flex;
+  justify-content: flex-end;
+}
+#tagsLeftFooter button {
+  border: 0.1rem solid rgb(209, 213, 219);
+  border-radius: 0.4rem;
+  background-color: #fff;
+  padding: 0.8rem 1.6rem;
+  cursor: pointer;
+  font-size: 1.5rem;
+  color: rgb(55, 65, 81);
+}
+#tagsLeftFooter button:hover {
+  background-color: rgb(249, 250, 251);
+}
+#tagsLeftBody {
+  height: fit-content;
+}
+#nill {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-bottom: 0.1rem solid #e5e7eb;
+  height: 20rem;
+  font-size: 1.6rem;
+  color: #111827;
+}
+#tagsLeftFooter button:nth-of-type(2) {
+  margin-left: 1.2rem;
+}

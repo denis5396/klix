@@ -45,6 +45,7 @@ const LinkToComment = (props) => {
             .then((data) => {
               console.log(data);
               setArticleData({
+                author: data.author,
                 title: data.title,
                 subTitle: data.subTitle,
                 category: data.category.toLowerCase(),
@@ -222,7 +223,12 @@ const LinkToComment = (props) => {
             </h1>
           </div>
           <div id={s.headerShares}>
-            <i class="fas fa-share-alt"></i>63
+            <i class="fas fa-share-alt"></i>{" "}
+            {articleData &&
+            articleData.shares &&
+            articleData.shares.constructor === Object
+              ? Object.keys(articleData.shares).length
+              : 0}
           </div>
         </div>
         <div id={s.commentPageContainerBody}>
@@ -242,7 +248,7 @@ const LinkToComment = (props) => {
                   ></i>
                 </div>
                 <div id={s.postedDataTwo}>
-                  <h3>R. D.</h3>
+                  <h3>{articleData.author}</h3>
                   <p>{timeDifference(articleData.date)}</p>
                 </div>
               </div>
@@ -252,7 +258,13 @@ const LinkToComment = (props) => {
                   <p>komentara</p>
                 </div>
                 <div>
-                  <h2>0</h2>
+                  <h2>
+                    {articleData &&
+                    articleData.shares &&
+                    articleData.shares.constructor === Object
+                      ? Object.keys(articleData.shares).length
+                      : 0}
+                  </h2>
                   <p>dijeljenja</p>
                 </div>
               </div>

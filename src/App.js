@@ -20,6 +20,7 @@ import CommentRulesPage from "./pages/CommentRulesPage";
 import CommentLink from "./pages/CommentLink";
 import ResetPass from "./pages/ResetPass";
 import ResetPassword from "./components/Login/ResetPassword";
+import TagsPage from "./pages/TagsPage";
 
 function App() {
   const ctx = useContext(LoginContext);
@@ -74,6 +75,9 @@ function App() {
         </Route>
         <Route path="/Auto" exact>
           <Home route="Auto" />
+        </Route>
+        <Route path="/tagovi/:category/:tagLabel">
+          <TagsPage />
         </Route>
         <Route path="/login">
           <Login>

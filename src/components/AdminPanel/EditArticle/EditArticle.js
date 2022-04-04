@@ -317,6 +317,14 @@ const EditArticles = () => {
   const handleSelectChange = (e, mode) => {
     if (mode === "dva") {
       setCurSelectTwo(e.target.value);
+      if (
+        switchSelect.current.value === "Sporedni sadržaj" &&
+        switchSelect2.current.value === "Početna"
+      ) {
+        console.log(e.target.value);
+        setSelect([...subcategories[e.target.value.toLowerCase()]]);
+        setCurSelect(subcategories[e.target.value.toLowerCase()][0]);
+      }
     } else if (mode === "jedan") {
       setCurSelect(e.target.value);
     }
@@ -326,7 +334,11 @@ const EditArticles = () => {
     //mode = jedan (editing and adding in overlay), two = main select box
     setArticleFetch([]);
     const { value } = (e && e.target) || switchSelect2.current;
-    if (mode === "two" && switchSelect2.current.value === "Početna") {
+    if (
+      mode === "two" &&
+      switchSelect2.current.value === "Početna" &&
+      switchSelect.current.value === "Glavni sadržaj"
+    ) {
       setShowSubCat(false);
     } else {
       setShowSubCat(true);
@@ -335,7 +347,36 @@ const EditArticles = () => {
       //when adding, if we do not change the subcat(so it's automatically the first subcat) and we press fetch cnt it wont work because curselect didnt change, this way we fix it
       setCurSelect(subcategories[value.toLowerCase()][0]);
     }
-    setSelect([...subcategories[value.toLowerCase()]]);
+    if (
+      switchSelect.current.value !== "Sporedni sadržaj" &&
+      switchSelect2.current.value !== "Početna"
+    ) {
+      setSelect([...subcategories[value.toLowerCase()]]);
+    } else {
+      console.log(curSelectTwo);
+      if (
+        switchSelect2.current.value === "Početna" &&
+        subcategories[curSelectTwo.toLowerCase()]
+      ) {
+        setSelect([...subcategories[curSelectTwo.toLowerCase()]]);
+        setCurSelect(subcategories[curSelectTwo.toLowerCase()][0]);
+      } else {
+        if (
+          !subcategories[curSelectTwo.toLowerCase()] &&
+          switchSelect2.current.value === "Početna"
+        ) {
+          setSelect([...subcategories.vijesti]);
+          setCurSelect(subcategories.vijesti[0]);
+        } else {
+          setSelect([
+            ...subcategories[switchSelect2.current.value.toLowerCase()],
+          ]);
+          setCurSelect(
+            subcategories[switchSelect2.current.value.toLowerCase()][0]
+          );
+        }
+      }
+    }
     switch (value) {
       case "Početna":
         if (mode === "two") {
@@ -470,13 +511,17 @@ const EditArticles = () => {
     const { id } = e.target;
     if (id.includes("overlay") && !showModal) {
       setAdding(false);
-      if (switchSelect2.current.value === "Početna") {
+      if (
+        switchSelect2.current.value === "Početna" &&
+        switchSelect.current.value === "Glavni sadržaj"
+      ) {
         setShowSubCat(false);
       }
       setArticleFetch([]);
       setClickedPos(null);
       if (editing) {
         setEditing(false);
+        handleSelectMain(null, "two");
       }
     }
   };
@@ -661,7 +706,7 @@ const EditArticles = () => {
       });
       setShowModal(false);
       setAdding(false);
-      setShowSubCat(false);
+      // setShowSubCat(false);
       setArticleFetch([]);
       setClickedPos(null);
       setFetchPos(null);
@@ -697,6 +742,7 @@ const EditArticles = () => {
       }
     } else if (input === "edituj") {
       setEditing(true);
+      setShowSubCat(false);
       if (addingModus) {
         setAddingModus(false);
       } else if (switchingModus) {
@@ -709,7 +755,10 @@ const EditArticles = () => {
     let dragNum;
     if (switchingModus) {
       if (!glavni) {
-        if (subConentCntRight.current.contains(e.target)) {
+        if (
+          subConentCntRight.current &&
+          subConentCntRight.current.contains(e.target)
+        ) {
           for (let i = 0; i < subConentCntRight.current.children.length; i++) {
             if (subConentCntRight.current.children[i].contains(e.target)) {
               if (i === 0) {
@@ -755,7 +804,10 @@ const EditArticles = () => {
     let droppedPos = 0;
     if (switchingModus) {
       if (!glavni) {
-        if (subConentCntRight.current.contains(e.target)) {
+        if (
+          subConentCntRight.current &&
+          subConentCntRight.current.contains(e.target)
+        ) {
           for (let i = 0; i < subConentCntRight.current.children.length; i++) {
             if (subConentCntRight.current.children[i].contains(e.target)) {
               if (i === 0) {
@@ -967,11 +1019,19 @@ const EditArticles = () => {
               disabled={
                 showSubCat && switchSelect2.current.value !== "Početna"
                   ? true
+                  : showSubCat &&
+                    switchSelect.current.value === "Sporedni sadržaj" &&
+                    switchSelect2.current.value === "Početna"
+                  ? true
                   : false
               }
               value={
                 showSubCat && switchSelect2.current.value !== "Početna"
                   ? switchSelect2.current.value
+                  : showSubCat &&
+                    switchSelect.current.value === "Sporedni sadržaj" &&
+                    switchSelect2.current.value === "Početna"
+                  ? curSelectTwo
                   : null
               }
             >

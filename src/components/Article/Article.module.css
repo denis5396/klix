@@ -144,6 +144,10 @@
   margin-top: 1rem;
   transition: background-color 0.1s ease-in;
 }
+#tags span a {
+  text-decoration: none;
+  color: inherit;
+}
 #tags span:hover {
   background-color: #d1d5db;
 }

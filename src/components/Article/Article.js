@@ -1833,7 +1833,13 @@ const ArticleComp = () => {
               location.state.articleData &&
               handleTagUnderscore(articleData.tags).map((tag) => (
                 <span key={uuid()}>
-                  {tag.constructor === Object ? tag.value : tag}
+                  <Link
+                    to={`/tagovi/${articleData && articleData.category}/${
+                      tag.constructor === Object ? tag.value : tag
+                    }`}
+                  >
+                    {tag.constructor === Object ? tag.value : tag}
+                  </Link>
                 </span>
               ))}
           </div>
