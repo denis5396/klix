@@ -6,6 +6,8 @@
 }
 .imageCnt {
   grid-column: 1/2;
+  min-height: 15.6rem;
+  max-height: 15.6rem;
 }
 .imageCnt img {
   width: 100%;

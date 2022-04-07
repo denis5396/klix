@@ -1,0 +1,28 @@
+#searchCnt {
+  padding: 1.15rem 1rem;
+  color: #111827;
+  font-size: 1.3rem;
+  width: 100%;
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  background-color: #e5e7eb;
+  border-radius: 0.6rem;
+  margin-bottom: 0.8rem;
+  margin-top: 0.8rem;
+  margin-left: 2rem;
+}
+#searchCnt i {
+  color: rgb(75, 85, 99);
+}
+#searchCnt input {
+  flex: 1;
+  background-color: inherit;
+  padding: 0.2rem 0.8rem;
+  border-width: 0;
+  color: rgb(55, 65, 81);
+  font-size: 1.5rem;
+}
+#searchCnt input:focus {
+  outline: none;
+}

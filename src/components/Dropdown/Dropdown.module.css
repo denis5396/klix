@@ -1,0 +1,90 @@
+#dropdown {
+  border: 0.1rem solid #e5e7eb;
+  background-color: #fff;
+  margin-top: 7rem !important;
+  width: 1280px;
+  margin: auto;
+  padding: 0.8rem;
+  color: #111827;
+  font-size: 1.5rem;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  user-select: none;
+}
+.dropdownColumn {
+  margin: 0 0.4rem;
+  text-align: left;
+}
+.dropdownItemHeader {
+  background-color: rgb(249, 250, 251);
+  padding: 0.4rem 1.2rem;
+  cursor: pointer;
+  transition: background-color 0.1s ease-in;
+}
+.dropdownItemHeader:hover {
+  background-color: rgb(229, 231, 235);
+}
+.dropdownItemHeader h3 {
+  font-weight: 500;
+  font-size: 1.5rem;
+  padding-top: 0.4rem;
+  padding-bottom: 0.4rem;
+  display: inline-block;
+}
+.dropdownItemHeader a {
+  display: block;
+  color: inherit;
+}
+.dropdownColumnItem {
+  padding: 0.4rem 1.2rem;
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  cursor: pointer;
+  transition: background-color 0.1s ease-in;
+}
+.dropdownColumnItem a {
+  color: inherit;
+  display: block;
+  flex: 1;
+}
+.dropdownColumnItem:hover {
+  background-color: rgb(243, 244, 246);
+}
+.dropdownColumnItem p {
+  padding-top: 0.4rem;
+  padding-bottom: 0.4rem;
+  display: inline-block;
+}
+.dropdownColumn span {
+  width: 1.2rem;
+  height: 1.2rem;
+  margin-right: 1.2rem;
+  background-color: #e5e7eb;
+  display: inline-block;
+  border-radius: 0.2rem;
+}
+span#početna {
+  background-color: #6b7280;
+}
+span#vijesti {
+  background-color: #d33d3d;
+}
+span#biznis {
+  background-color: #ef6f3e;
+}
+span#sport {
+  background-color: #55ac53;
+}
+span#magazin {
+  background-color: #a45091;
+}
+span#lifestyle {
+  background-color: #e2a600;
+}
+span#scitech {
+  background-color: #40afee;
+}
+span#auto {
+  background-color: #487baf;
+}

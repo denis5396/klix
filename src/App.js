@@ -76,17 +76,23 @@ function App() {
         <Route path="/Auto" exact>
           <Home route="Auto" />
         </Route>
-        <Route path="/tagovi/:category/:tagLabel">
+        <Route path="/profil/:user" exact>
+          <Login>
+            <UserInfo />
+          </Login>
+        </Route>
+        <Route path="/pretraga">
+          <TagsPage />
+        </Route>
+        <Route path="/tagovi/:category/:tagLabel" exact>
+          <TagsPage />
+        </Route>
+        <Route path="/:category/:subcategory" exact>
           <TagsPage />
         </Route>
         <Route path="/login">
           <Login>
             <LoginForm />
-          </Login>
-        </Route>
-        <Route path="/profil/:user">
-          <Login>
-            <UserInfo />
           </Login>
         </Route>
         <Route path="/mojprofil">
