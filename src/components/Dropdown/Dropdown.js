@@ -46,22 +46,58 @@ const Dropdown = forwardRef(({ showHide }, ref) => {
           </Link>
         </div>
         <div className={s.dropdownColumnItem}>
-          <span></span> <p>Najnovije</p>
+          <Link onClick={() => handleFn()} to="/najnovije">
+            <span></span>
+            <p>Najnovije</p>
+          </Link>
         </div>
         <div className={s.dropdownColumnItem}>
-          <span></span> <p>Najčitanije</p>
+          <Link
+            onClick={() => {
+              handleFn();
+            }}
+            to="/najčitanije"
+          >
+            <span></span>
+            <p>Najčitanije</p>
+          </Link>
         </div>
         <div className={s.dropdownColumnItem}>
-          <span></span> <p>Popularno</p>
+          <Link
+            onClick={() => {
+              handleFn();
+            }}
+            to="/popularno"
+          >
+            <span></span>
+            <p>Popularno</p>
+          </Link>
         </div>
         <div className={s.dropdownColumnItem}>
-          <span></span> <p>Vremenska prognoza</p>
+          <Link
+            onClick={() => {
+              handleFn();
+            }}
+            to="/vremenska prognoza"
+          >
+            <span></span>
+            <p>Vremenska prognoza</p>
+          </Link>
         </div>
         <div className={s.dropdownColumnItem}>
-          <span></span> <p>Dojavi vijest</p>
+          <Link
+            onClick={() => {
+              handleFn();
+            }}
+            to="/Dojavi vijest"
+          >
+            <span></span>
+            <p>Dojavi vijest</p>
+          </Link>
         </div>
         <div className={s.dropdownColumnItem}>
-          <span></span> <p>Forum</p>
+          <span></span>
+          <p>Forum</p>
         </div>
       </div>
       <div className={s.dropdownColumn}>

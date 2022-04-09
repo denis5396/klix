@@ -84,6 +84,15 @@ function App() {
         <Route path="/pretraga">
           <TagsPage />
         </Route>
+        <Route path="/najnovije">
+          <TagsPage />
+        </Route>
+        <Route path="/najčitanije">
+          <TagsPage />
+        </Route>
+        <Route path="/popularno">
+          <TagsPage />
+        </Route>
         <Route path="/tagovi/:category/:tagLabel" exact>
           <TagsPage />
         </Route>
