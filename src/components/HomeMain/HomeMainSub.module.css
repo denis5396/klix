@@ -99,3 +99,13 @@
   justify-content: space-between;
   padding: 1rem 0 0;
 }
+@media only screen and (max-width: 768px) {
+  #sideBar {
+    display: none !important;
+  }
+}
+@media only screen and (max-width: 1024px) {
+  #sideBar {
+    display: none !important;
+  }
+}

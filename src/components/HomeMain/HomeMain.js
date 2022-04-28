@@ -27,7 +27,7 @@ const HomeMain = ({ route }) => {
 
   useEffect(() => {
     const dbRef = db.ref(`viewContent/Glavni sadržaj/${route}`);
-    dbRef.get().then((snapshot) => {
+    dbRef.once("value", (snapshot) => {
       if (snapshot.exists()) {
         const data = snapshot.val();
         console.log(data);

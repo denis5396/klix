@@ -99,3 +99,78 @@
 #headerUl li:nth-of-type(7) span {
   background-color: #487baf;
 }
+@media only screen and (max-width: 768px) {
+  #navHeader #headerUl {
+    display: none;
+  }
+  #navHeader {
+    height: 4.9rem;
+    justify-content: center;
+    align-items: center;
+    padding: 0.4rem 1.6rem;
+  }
+  #logo {
+    position: absolute;
+  }
+  .wlogo {
+    width: 5.8rem !important;
+  }
+
+  .hlogo {
+    height: 2.4rem !important;
+  }
+  #bundle {
+    width: 100%;
+    padding-right: 0rem !important;
+  }
+  #bundle i:nth-of-type(2) {
+    order: 1;
+    margin-right: auto;
+    margin-left: 0;
+  }
+  #bundle i:nth-of-type(1) {
+    order: 2;
+  }
+  #bundle a {
+    order: 3;
+  }
+  .wlogo {
+    margin-left: 0 !important;
+  }
+}
+.wlogo {
+  width: 8rem;
+  margin-top: 0.75rem;
+  margin-bottom: 0.75rem;
+  margin-left: 1.5rem;
+}
+.hlogo {
+  height: 4rem;
+}
+@media only screen and (max-width: 1024px) {
+  #navHeader {
+    padding: 0.7rem 0.5rem;
+  }
+  #navHeader ul li {
+    font-size: 1.28rem;
+    margin-right: 1rem;
+  }
+  #navHeader ul {
+    margin-left: 2rem;
+  }
+  .box {
+    margin-right: 0.75rem;
+  }
+  .hlogo {
+    height: 2.4rem;
+  }
+  .wlogo {
+    width: 5.8rem;
+  }
+  #bundle {
+    padding-right: 1rem;
+  }
+  #bundle i {
+    margin-left: 2.5rem;
+  }
+}

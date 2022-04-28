@@ -20,7 +20,54 @@ const Nav = () => {
           <>
             <div id={s.logo}>
               <Link onClick={() => setShowDropdown(false)} to="/">
-                <h1>plus</h1>
+                {/* <h1>plus</h1> */}
+                <svg
+                  className={`${s.wlogo} ${s.hlogo}`}
+                  id="logo"
+                  data-name="logo"
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 57.93 24"
+                >
+                  <defs>
+                    <style
+                      dangerouslySetInnerHTML={{
+                        __html:
+                          ".cls-1{fill:#1599c9;}.cls-2,.cls-3{fill:#6a696e;}.cls-3{fill-rule:evenodd;}",
+                      }}
+                    />
+                  </defs>
+                  <title>Klix logo</title>
+                  <polygon
+                    className="cls-1"
+                    points="42.81 4.37 38.48 8.69 43.98 14.18 38.48 19.68 42.81 24 52.63 14.18 42.81 4.37"
+                  />
+                  <rect
+                    className="cls-2"
+                    x="29.44"
+                    y="4.74"
+                    width="6.32"
+                    height="18.95"
+                  />
+                  <rect
+                    className="cls-2"
+                    x="20.33"
+                    width="6.32"
+                    height="23.68"
+                  />
+                  <rect className="cls-2" width="6.32" height="23.68" />
+                  <polygon
+                    className="cls-3"
+                    points="17.86 8.76 13.58 4.47 8.08 9.97 3.8 14.25 8.08 18.54 13.24 23.7 17.53 23.7 17.53 19.41 12.37 14.25 17.86 8.76"
+                  />
+                  <polygon
+                    className="cls-2"
+                    points="57.93 8.69 53.18 13.56 48.86 9.24 53.6 4.37 57.93 8.69"
+                  />
+                  <polygon
+                    className="cls-2"
+                    points="48.86 19.12 53.6 24 57.93 19.68 53.18 14.8 48.86 19.12"
+                  />
+                </svg>
               </Link>
             </div>
             <ul id={s.headerUl}>
